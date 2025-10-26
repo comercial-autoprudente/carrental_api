@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: rental-price-tracker
+    env: docker
+    plan: free
+    autoDeploy: true
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_USERNAME
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: TARGET_URL
+        sync: false
+      - key: SCRAPER_SERVICE
+        sync: false
+      - key: SCRAPER_API_KEY
+        sync: false

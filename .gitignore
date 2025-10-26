@@ -1,0 +1,20 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.env
+.venv/
+.vscode/
+.idea/
+.DS_Store
+node_modules/
+static/debug/
+data.db
+car_images.db
+\n# Ignore env and virtualenv
+.env
+.venv/
+*.db
+uploads/
+__pycache__/
