@@ -341,6 +341,9 @@ TEST_ALBUFEIRA_URL = os.getenv("TEST_ALBUFEIRA_URL", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "change_me")
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
+
+# App version - Change this to force Render reload
+APP_VERSION = "2025-01-28-23-22-VEHICLES-FIX"
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -365,6 +368,14 @@ DATAMAP_RX = re.compile(r"var\s+dataMap\s*=\s*(\[.*?\]);", re.S)
 app = FastAPI(title="Rental Price Tracker")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax")
 app.add_middleware(GZipMiddleware, minimum_size=500)
+
+@app.on_event("startup")
+async def startup_event():
+    """Log app version on startup to verify deployment"""
+    print(f"========================================", flush=True)
+    print(f"🚀 APP STARTUP - VERSION: {APP_VERSION}", flush=True)
+    print(f"📦 Features: Vehicles Management, Automatic Field, Blocklist Removed", flush=True)
+    print(f"========================================", flush=True)
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
