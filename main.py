@@ -343,7 +343,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-28-23-22-VEHICLES-FIX"
+APP_VERSION = "2025-01-28-23-31-MANUAL-DEPLOY-REQUIRED"
+# ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
