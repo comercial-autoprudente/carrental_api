@@ -64,7 +64,13 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 {{g.seats or '-'}} seats | {{g.doors or '-'}} doors<br/>
-                <span class="text-xs">{{g.transmission or 'Any'}}</span>
+                <span class="text-xs">
+                  {% if g.is_automatic %}
+                  <span class="text-blue-600 font-semibold">🔄 Automatic</span>
+                  {% else %}
+                  {{g.transmission or 'Manual'}}
+                  {% endif %}
+                </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 {% if g.enabled %}

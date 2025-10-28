@@ -692,6 +692,7 @@ def _ensure_car_groups_table():
                   seats INTEGER,
                   doors INTEGER,
                   transmission TEXT,
+                  is_automatic INTEGER DEFAULT 0,
                   category TEXT,
                   photo_url TEXT,
                   sort_order INTEGER DEFAULT 0,
@@ -711,6 +712,10 @@ def _ensure_car_groups_table():
                 pass
             try:
                 con.execute("ALTER TABLE car_groups ADD COLUMN photo_url TEXT")
+            except:
+                pass
+            try:
+                con.execute("ALTER TABLE car_groups ADD COLUMN is_automatic INTEGER DEFAULT 0")
             except:
                 pass
             con.commit()
@@ -1568,7 +1573,7 @@ async def admin_car_groups(request: Request):
         with _db_lock:
             con = _db_connect()
             try:
-                cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, category, photo_url, sort_order, enabled FROM car_groups ORDER BY brand, name")
+                cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled FROM car_groups ORDER BY brand, name")
                 for r in cur.fetchall():
                     brand = r[3] or ""
                     model = r[4] or ""
@@ -1578,8 +1583,8 @@ async def admin_car_groups(request: Request):
                     groups.append({
                         "id": r[0], "code": r[1], "name": r[2], "brand": brand, "model": model,
                         "description": r[5] or "", "seats": r[6] or "", "doors": r[7] or "",
-                        "transmission": r[8] or "", "category": r[9] or "Uncategorized",
-                        "photo_url": r[10] or "", "sort_order": r[11] or 0, "enabled": bool(r[12])
+                        "transmission": r[8] or "", "is_automatic": bool(r[9]), "category": r[10] or "Uncategorized",
+                        "photo_url": r[11] or "", "sort_order": r[12] or 0, "enabled": bool(r[13])
                     })
             finally:
                 con.close()
@@ -1604,6 +1609,7 @@ async def admin_car_groups_new_post(
     seats: str = Form(""),
     doors: str = Form(""),
     transmission: str = Form(""),
+    is_automatic: str = Form("0"),
     category: str = Form(""),
     photo_url: str = Form(""),
     sort_order: str = Form("0"),
@@ -1630,8 +1636,8 @@ async def admin_car_groups_new_post(
         con = _db_connect()
         try:
             con.execute(
-                "INSERT INTO car_groups (code, name, brand, model, description, seats, doors, transmission, category, photo_url, sort_order, enabled, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (code, name, brand, model, description, seats_int, doors_int, transmission, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
+                "INSERT INTO car_groups (code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (code, name, brand, model, description, seats_int, doors_int, transmission, 1 if is_automatic in ("1","true","on") else 0, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
             )
             con.commit()
         except sqlite3.IntegrityError:
@@ -1653,7 +1659,7 @@ async def admin_car_groups_edit(request: Request, group_id: int):
     with _db_lock:
         con = _db_connect()
         try:
-            cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, category, photo_url, sort_order, enabled FROM car_groups WHERE id=?", (group_id,))
+            cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled FROM car_groups WHERE id=?", (group_id,))
             r = cur.fetchone()
             if not r:
                 raise HTTPException(status_code=404, detail="Not found")
@@ -1664,8 +1670,8 @@ async def admin_car_groups_edit(request: Request, group_id: int):
             g = {
                 "id": r[0], "code": r[1], "name": r[2], "brand": brand, "model": model,
                 "description": r[5] or "", "seats": r[6] or "", "doors": r[7] or "",
-                "transmission": r[8] or "", "category": r[9] or "Uncategorized",
-                "photo_url": r[10] or "", "sort_order": r[11] or 0, "enabled": bool(r[12])
+                "transmission": r[8] or "", "is_automatic": bool(r[9]), "category": r[10] or "Uncategorized",
+                "photo_url": r[11] or "", "sort_order": r[12] or 0, "enabled": bool(r[13])
             }
         finally:
             con.close()
@@ -1680,6 +1686,7 @@ async def admin_car_groups_edit_post(
     seats: str = Form(""),
     doors: str = Form(""),
     transmission: str = Form(""),
+    is_automatic: str = Form("0"),
     category: str = Form(""),
     photo_url: str = Form(""),
     sort_order: str = Form("0"),
@@ -1702,8 +1709,8 @@ async def admin_car_groups_edit_post(
         con = _db_connect()
         try:
             con.execute(
-                "UPDATE car_groups SET name=?, brand=?, model=?, description=?, seats=?, doors=?, transmission=?, category=?, photo_url=?, sort_order=?, enabled=? WHERE id=?",
-                (name, brand, model, description, seats_int, doors_int, transmission, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, group_id)
+                "UPDATE car_groups SET name=?, brand=?, model=?, description=?, seats=?, doors=?, transmission=?, is_automatic=?, category=?, photo_url=?, sort_order=?, enabled=? WHERE id=?",
+                (name, brand, model, description, seats_int, doors_int, transmission, 1 if is_automatic in ("1","true","on") else 0, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, group_id)
             )
             con.commit()
         finally:
