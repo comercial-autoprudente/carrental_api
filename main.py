@@ -1981,53 +1981,79 @@ async def track_by_params(request: Request):
                     page = await context.new_page()
                     
                     try:
-                        # Ir para página inicial do CarJet
-                        print(f"[PLAYWRIGHT] Acessando CarJet homepage...", file=sys.stderr, flush=True)
-                        await page.goto("https://www.carjet.com/", wait_until="networkidle", timeout=30000)
+                        # Ir para página inicial do CarJet PT
+                        print(f"[PLAYWRIGHT] Acessando CarJet homepage PT...", file=sys.stderr, flush=True)
+                        await page.goto("https://www.carjet.com/aluguel-carros/index.htm", wait_until="domcontentloaded", timeout=45000)
                         
-                        # Fechar modal de cookies se aparecer
-                        try:
-                            await page.click('button:has-text("Aceitar")', timeout=2000)
-                        except:
-                            pass
+                        # Aguardar página carregar
+                        await page.wait_for_timeout(2000)
                         
-                        # Preencher formulário
+                        # Fechar cookies via JS (mais robusto)
+                        await page.evaluate("""() => {
+                            try {
+                                document.querySelectorAll('[id*=cookie], [class*=cookie], [id*=consent], [class*=consent]').forEach(el => el.remove());
+                            } catch(e) {}
+                        }""")
+                        
+                        # Mapear localização
                         carjet_loc = location
                         if 'faro' in location.lower():
                             carjet_loc = 'Faro Aeroporto (FAO)'
                         elif 'albufeira' in location.lower():
-                            carjet_loc = 'Albufeira'
+                            carjet_loc = 'Albufeira Cidade'
                         
-                        print(f"[PLAYWRIGHT] Preenchendo formulário: {carjet_loc}", file=sys.stderr, flush=True)
+                        print(f"[PLAYWRIGHT] Preenchendo formulário via JS: {carjet_loc}", file=sys.stderr, flush=True)
                         
-                        # Preencher local de recolha
-                        await page.fill('input[name="pickup"]', carjet_loc)
-                        await page.wait_for_timeout(1000)
-                        
-                        # Selecionar sugestão
-                        try:
-                            await page.click(f'text="{carjet_loc}"', timeout=3000)
-                        except:
-                            pass
-                        
-                        # Preencher datas
+                        # Preencher formulário via JavaScript (mais robusto que seletores)
                         start_str = start_dt.strftime("%d/%m/%Y")
                         end_str = end_dt.strftime("%d/%m/%Y")
                         
-                        await page.fill('input[name="fechaRecogida"]', start_str)
-                        await page.fill('input[name="fechaEntrega"]', end_str)
+                        await page.evaluate("""(args) => {
+                            function fill(sel, val) {
+                                const el = document.querySelector(sel);
+                                if (el) {
+                                    el.value = val;
+                                    el.dispatchEvent(new Event('input', {bubbles: true}));
+                                    el.dispatchEvent(new Event('change', {bubbles: true}));
+                                    return true;
+                                }
+                                return false;
+                            }
+                            
+                            const ok1 = fill('input[name="pickup"]', args.loc);
+                            const ok2 = fill('input[name="dropoff"]', args.loc);
+                            const ok3 = fill('input[name="fechaRecogida"]', args.start);
+                            const ok4 = fill('input[name="fechaEntrega"]', args.end);
+                            
+                            const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
+                            const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
+                            if (h1) h1.value = '10:00';
+                            if (h2) h2.value = '10:00';
+                            
+                            return {ok1, ok2, ok3, ok4};
+                        }""", {"loc": carjet_loc, "start": start_str, "end": end_str})
+                        
+                        await page.wait_for_timeout(1000)
                         
                         print(f"[PLAYWRIGHT] Submetendo formulário...", file=sys.stderr, flush=True)
                         
-                        # Clicar no botão de pesquisa e aguardar navegação
-                        async with page.expect_navigation(wait_until="networkidle", timeout=60000):
-                            await page.click('button[type="submit"]')
+                        # Submeter via JS (mais confiável)
+                        await page.evaluate("""() => {
+                            const form = document.querySelector('form');
+                            if (form) form.submit();
+                        }""")
                         
-                        print(f"[PLAYWRIGHT] Aguardando resultados...", file=sys.stderr, flush=True)
-                        await page.wait_for_timeout(5000)
+                        # Aguardar navegação para página de resultados
+                        print(f"[PLAYWRIGHT] Aguardando navegação...", file=sys.stderr, flush=True)
+                        await page.wait_for_url('**/do/list/**', timeout=90000)
                         
-                        # Extrair HTML
+                        print(f"[PLAYWRIGHT] Aguardando carros carregarem...", file=sys.stderr, flush=True)
+                        await page.wait_for_timeout(8000)
+                        
+                        # Extrair URL e HTML
+                        final_url = page.url
                         html_content = await page.content()
+                        print(f"[PLAYWRIGHT] URL final: {final_url}", file=sys.stderr, flush=True)
                         print(f"[PLAYWRIGHT] ✅ HTML capturado: {len(html_content)} bytes", file=sys.stderr, flush=True)
                         
                         # Parse
