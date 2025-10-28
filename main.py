@@ -675,6 +675,37 @@ def _ensure_users_table():
         finally:
             con.close()
 
+# --- Car Groups Table ---
+def _ensure_car_groups_table():
+    with _db_lock:
+        con = _db_connect()
+        try:
+            con.execute(
+                """
+                CREATE TABLE IF NOT EXISTS car_groups (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  code TEXT UNIQUE NOT NULL,
+                  name TEXT NOT NULL,
+                  description TEXT,
+                  seats INTEGER,
+                  doors INTEGER,
+                  transmission TEXT,
+                  category TEXT,
+                  sort_order INTEGER DEFAULT 0,
+                  enabled INTEGER DEFAULT 1,
+                  created_at TEXT
+                );
+                """
+            )
+            con.commit()
+        finally:
+            con.close()
+
+try:
+    _ensure_car_groups_table()
+except Exception:
+    pass
+
 def _get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     try:
         with _db_lock:
@@ -1490,6 +1521,159 @@ async def admin_users_new_post(
     except Exception:
         pass
     return RedirectResponse(url="/admin/users", status_code=HTTP_303_SEE_OTHER)
+
+
+# --- Admin: Car Groups ---
+@app.get("/admin/car-groups", response_class=HTMLResponse)
+async def admin_car_groups(request: Request):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    groups = []
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                cur = con.execute("SELECT id, code, name, description, seats, doors, transmission, category, sort_order, enabled FROM car_groups ORDER BY sort_order, name")
+                for r in cur.fetchall():
+                    groups.append({
+                        "id": r[0], "code": r[1], "name": r[2], "description": r[3] or "",
+                        "seats": r[4] or "", "doors": r[5] or "", "transmission": r[6] or "",
+                        "category": r[7] or "", "sort_order": r[8] or 0, "enabled": bool(r[9])
+                    })
+            finally:
+                con.close()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Failed to load car groups"}, status_code=500)
+    return templates.TemplateResponse("admin_car_groups.html", {"request": request, "groups": groups})
+
+@app.get("/admin/car-groups/new", response_class=HTMLResponse)
+async def admin_car_groups_new(request: Request):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": None})
+
+@app.post("/admin/car-groups/new")
+async def admin_car_groups_new_post(
+    request: Request,
+    code: str = Form(...),
+    name: str = Form(...),
+    description: str = Form(""),
+    seats: str = Form(""),
+    doors: str = Form(""),
+    transmission: str = Form(""),
+    category: str = Form(""),
+    sort_order: str = Form("0"),
+    enabled: str = Form("1"),
+):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    code = (code or "").strip().upper()
+    name = (name or "").strip()
+    if not code or not name:
+        return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": "Code and Name required"})
+    
+    seats_int = int(seats) if seats and seats.isdigit() else None
+    doors_int = int(doors) if doors and doors.isdigit() else None
+    sort_int = int(sort_order) if sort_order and sort_order.isdigit() else 0
+    
+    with _db_lock:
+        con = _db_connect()
+        try:
+            con.execute(
+                "INSERT INTO car_groups (code, name, description, seats, doors, transmission, category, sort_order, enabled, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                (code, name, description, seats_int, doors_int, transmission, category, sort_int, 1 if enabled in ("1","true","on") else 0, time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
+            )
+            con.commit()
+        except sqlite3.IntegrityError:
+            return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": "Code already exists"})
+        finally:
+            con.close()
+    try:
+        log_activity(request, "admin_create_car_group", details=f"code={code}")
+    except Exception:
+        pass
+    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
+
+@app.get("/admin/car-groups/{group_id}/edit", response_class=HTMLResponse)
+async def admin_car_groups_edit(request: Request, group_id: int):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    with _db_lock:
+        con = _db_connect()
+        try:
+            cur = con.execute("SELECT id, code, name, description, seats, doors, transmission, category, sort_order, enabled FROM car_groups WHERE id=?", (group_id,))
+            r = cur.fetchone()
+            if not r:
+                raise HTTPException(status_code=404, detail="Not found")
+            g = {
+                "id": r[0], "code": r[1], "name": r[2], "description": r[3] or "",
+                "seats": r[4] or "", "doors": r[5] or "", "transmission": r[6] or "",
+                "category": r[7] or "", "sort_order": r[8] or 0, "enabled": bool(r[9])
+            }
+        finally:
+            con.close()
+    return templates.TemplateResponse("admin_edit_car_group.html", {"request": request, "g": g, "error": None})
+
+@app.post("/admin/car-groups/{group_id}/edit")
+async def admin_car_groups_edit_post(
+    request: Request,
+    group_id: int,
+    name: str = Form(...),
+    description: str = Form(""),
+    seats: str = Form(""),
+    doors: str = Form(""),
+    transmission: str = Form(""),
+    category: str = Form(""),
+    sort_order: str = Form("0"),
+    enabled: str = Form("1"),
+):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    
+    seats_int = int(seats) if seats and seats.isdigit() else None
+    doors_int = int(doors) if doors and doors.isdigit() else None
+    sort_int = int(sort_order) if sort_order and sort_order.isdigit() else 0
+    
+    with _db_lock:
+        con = _db_connect()
+        try:
+            con.execute(
+                "UPDATE car_groups SET name=?, description=?, seats=?, doors=?, transmission=?, category=?, sort_order=?, enabled=? WHERE id=?",
+                (name, description, seats_int, doors_int, transmission, category, sort_int, 1 if enabled in ("1","true","on") else 0, group_id)
+            )
+            con.commit()
+        finally:
+            con.close()
+    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
+
+@app.post("/admin/car-groups/{group_id}/delete")
+async def admin_car_groups_delete(request: Request, group_id: int):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    with _db_lock:
+        con = _db_connect()
+        try:
+            con.execute("DELETE FROM car_groups WHERE id=?", (group_id,))
+            con.commit()
+        finally:
+            con.close()
+    try:
+        log_activity(request, "admin_delete_car_group", details=f"id={group_id}")
+    except Exception:
+        pass
+    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
 
 
 @app.get("/api/prices")

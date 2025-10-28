@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Edit Car Group - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <header style="background:#009cb6;" class="w-full py-3">
+    <div class="mx-auto max-w-6xl px-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
+      </div>
+      <nav class="flex items-center gap-3 text-white text-sm">
+        <a href="/admin/car-groups" class="hover:underline">Car Groups</a>
+        <a href="/" class="hover:underline">Home</a>
+        <form method="post" action="/logout"><button class="hover:underline">Logout</button></form>
+      </nav>
+    </div>
+  </header>
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    <h1 class="text-2xl font-semibold text-gray-800 mb-6">Edit Car Group: {{g.code}}</h1>
+    {% if error %}
+    <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">{{error}}</div>
+    {% endif %}
+    <form method="post" class="bg-white shadow rounded-lg p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Code</label>
+        <input value="{{g.code}}" disabled class="w-full border-gray-300 rounded-md shadow-sm bg-gray-100"/>
+        <p class="text-xs text-gray-500 mt-1">Code cannot be changed</p>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+        <input name="name" value="{{g.name}}" required class="w-full border-gray-300 rounded-md shadow-sm"/>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+        <textarea name="description" rows="2" class="w-full border-gray-300 rounded-md shadow-sm">{{g.description}}</textarea>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Seats</label>
+          <input name="seats" type="number" value="{{g.seats}}" class="w-full border-gray-300 rounded-md shadow-sm"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Doors</label>
+          <input name="doors" type="number" value="{{g.doors}}" class="w-full border-gray-300 rounded-md shadow-sm"/>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Transmission</label>
+          <select name="transmission" class="w-full border-gray-300 rounded-md shadow-sm">
+            <option value="" {% if not g.transmission %}selected{% endif %}>Any</option>
+            <option value="Manual" {% if g.transmission == "Manual" %}selected{% endif %}>Manual</option>
+            <option value="Automatic" {% if g.transmission == "Automatic" %}selected{% endif %}>Automatic</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+          <input name="sort_order" type="number" value="{{g.sort_order}}" class="w-full border-gray-300 rounded-md shadow-sm"/>
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+        <input name="category" value="{{g.category}}" class="w-full border-gray-300 rounded-md shadow-sm"/>
+      </div>
+      <div class="flex items-center">
+        <input name="enabled" type="checkbox" {% if g.enabled %}checked{% endif %} class="rounded border-gray-300 mr-2"/>
+        <label class="text-sm text-gray-700">Enabled</label>
+      </div>
+      <div class="flex gap-3 pt-4">
+        <button type="submit" class="px-4 py-2 bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f] transition-colors">Save</button>
+        <a href="/admin/car-groups" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancel</a>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
