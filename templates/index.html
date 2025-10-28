@@ -165,11 +165,12 @@
           <!-- Botões -->
           <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
             <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
-            <button id="fetchAllDaysBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
-              📊 Fetch All (Todos os Dias)
-            </button>
-            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); alert('Cache e sessão limpos!');">
+            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); alert('Cache e sessão limpos!');">
               🗑️ Limpar Cache & Renovar Sessão
+            </button>
+            <!-- Fetch All temporariamente removido -->
+            <button id="fetchAllDaysBtn" type="button" class="hidden px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
+              📊 Fetch All (Todos os Dias)
             </button>
             <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
