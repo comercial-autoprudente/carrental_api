@@ -912,75 +912,56 @@
             const daysInput = document.getElementById('days');
             if (daysInput) daysInput.value = String(d);
             
-            // RENDERIZAR DIRETAMENTE DO CACHE
+            // Re-renderizar chips para mostrar seleção
+            const chipsCont = document.getElementById('daysChips');
             const locEl = document.getElementById('location');
             const sdEl = document.getElementById('startDate');
-            const resultsEl = document.getElementById('results');
             const loc = (locEl && locEl.value || '').trim();
             const date = sdEl && sdEl.value || '';
-            const key = getCacheKey(loc, date, d);
             
-            console.log('[CACHE] Key:', key);
-            console.log('[CACHE] Disponíveis:', Object.keys(cachedResults));
-            
-            if (!cachedResults[key]) {
-              console.log('[CACHE] NÃO existe! Chamando fetch...');
-              await new Promise(r => setTimeout(r, 100));
-              if (window.runBulkFetch) {
-                window.runBulkFetch({ preventDefault: () => {} });
-              }
-              return;
-            }
-            
-            const data = cachedResults[key];
-            const items = Array.isArray(data.items) ? data.items : [];
-            console.log('[CACHE] Encontrado!', items.length, 'items');
-            if (items.length > 0) {
-              console.log('[CACHE] Primeiro carro:', items[0]?.car, 'Preço:', items[0]?.price);
-            }
-            
-            if (!resultsEl) {
-              console.log('[ERROR] Elemento results não encontrado');
-              return;
-            }
-            
-            console.log('[RENDER] Limpando resultados anteriores');
-            resultsEl.innerHTML = '';
-            
-            console.log('[RENDER] Criando seção para', d, 'dias com', items.length, 'items');
-            const section = document.createElement('div');
-            section.className = 'rounded-md border';
-            
-            const html = [];
-            html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
-            
-            if (items.length === 0) {
-              html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
-            } else {
-              console.log('[RENDER] Primeiro carro:', items[0]?.car, 'Preço:', items[0]?.price);
-              console.log('[RENDER] Último carro:', items[items.length-1]?.car, 'Preço:', items[items.length-1]?.price);
-              html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
-              html.push(renderCategoryBlocks(items));
-            }
-            
-            section.innerHTML = html.join('');
-            resultsEl.appendChild(section);
-            
-            console.log('[RENDER] Completo! Total de', items.length, 'carros renderizados');
-            console.log('==========================================');
-            
-            // Re-renderizar chips SEM recriar eventos
-            const chipsCont = document.getElementById('daysChips');
             if (chipsCont) {
-              Array.from(chipsCont.children).forEach((btn, idx) => {
+              Array.from(chipsCont.children).forEach((chipBtn, idx) => {
                 const dayValue = daysList[idx];
+                const isCached = cachedResults[getCacheKey(loc, date, dayValue)];
                 if (dayValue === d) {
-                  btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
+                  chipBtn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
+                  chipBtn.innerHTML = d + 'd' + (isCached ? ' <span style="color: #fff; font-weight: 700;">✓</span>' : '');
                 } else {
-                  const isCached = cachedResults[getCacheKey(loc, date, dayValue)];
-                  btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10');
+                  chipBtn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10');
+                  chipBtn.innerHTML = dayValue + 'd' + (isCached ? ' <span style="color: #009cb6; font-weight: 700;">✓</span>' : '');
                 }
               });
+            }
+            
+            // Se estiver em cache, renderizar resultados instantaneamente
+            const key = getCacheKey(loc, date, d);
+            if (cachedResults[key]) {
+              console.log('[CACHE] Encontrado! Renderizando...');
+              const resultsEl = document.getElementById('results');
+              const data = cachedResults[key];
+              const items = Array.isArray(data.items) ? data.items : [];
+              
+              if (resultsEl) {
+                resultsEl.innerHTML = '';
+                const section = document.createElement('div');
+                section.className = 'rounded-md border';
+                
+                const html = [];
+                html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
+                
+                if (items.length === 0) {
+                  html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
+                } else {
+                  html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
+                  html.push(renderCategoryBlocks(items));
+                }
+                
+                section.innerHTML = html.join('');
+                resultsEl.appendChild(section);
+                console.log('[RENDER] Cache renderizado:', items.length, 'carros');
+              }
+            } else {
+              console.log('[CHIP] Não está em cache. Use o botão Pesquisar.');
             }
           });
           cont.appendChild(btn);
