@@ -1964,8 +1964,8 @@ async def track_by_params(request: Request):
                 traceback.print_exc(file=sys.stderr)
                 print(f"[SCRAPERAPI] Tentando fallback para Playwright...", file=sys.stderr, flush=True)
         
-        # FALLBACK: Tentar Playwright se ScraperAPI falhou
-        if TEST_MODE_LOCAL == 0 and not items and _HAS_PLAYWRIGHT:
+        # FALLBACK: Tentar Playwright se ScraperAPI falhou (DESATIVADO - usar Selenium)
+        if False and TEST_MODE_LOCAL == 0 and not items and _HAS_PLAYWRIGHT:
             try:
                 from playwright.async_api import async_playwright
                 import sys
@@ -2152,7 +2152,8 @@ async def track_by_params(request: Request):
                 import sys
                 print(f"[TEST MODE ERROR] {e}", file=sys.stderr, flush=True)
         
-        # ESTRATÉGIA: Gerar URL s/b via Selenium, depois fazer fetch simples
+        # ESTRATÉGIA: Gerar URL s/b via Selenium, depois fazer fetch simples (PRINCIPAL MÉTODO!)
+        print(f"[SELENIUM] Iniciando scraping via Selenium para {location}", file=sys.stderr, flush=True)
         try:
             from selenium import webdriver
             from selenium.webdriver.chrome.options import Options
@@ -2185,40 +2186,50 @@ async def track_by_params(request: Request):
             )
             
             try:
+                print(f"[SELENIUM] Configurando Chrome headless...", file=sys.stderr, flush=True)
                 driver.set_page_load_timeout(20)
+                print(f"[SELENIUM] Acessando CarJet homepage...", file=sys.stderr, flush=True)
                 driver.get("https://www.carjet.com/aluguel-carros/index.htm")
                 
                 # Fechar cookies via JS
+                print(f"[SELENIUM] Removendo cookies...", file=sys.stderr, flush=True)
                 driver.execute_script("try { document.querySelectorAll('[id*=cookie], [class*=cookie]').forEach(el => el.remove()); } catch(e) {}")
                 time.sleep(0.5)
                 
                 # Preencher formulário
+                print(f"[SELENIUM] Preenchendo formulário: {carjet_location}", file=sys.stderr, flush=True)
                 driver.execute_script("""
                     function fill(sel, val) {
                         const el = document.querySelector(sel);
                         if (el) { 
                             el.value = val; 
                             el.dispatchEvent(new Event('change', {bubbles: true}));
+                            return true;
                         }
+                        return false;
                     }
-                    fill('input[name="pickup"]', arguments[0]);
-                    fill('input[name="dropoff"]', arguments[0]);
-                    fill('input[name="fechaRecogida"]', arguments[1]);
-                    fill('input[name="fechaEntrega"]', arguments[2]);
+                    const r1 = fill('input[name="pickup"]', arguments[0]);
+                    const r2 = fill('input[name="dropoff"]', arguments[0]);
+                    const r3 = fill('input[name="fechaRecogida"]', arguments[1]);
+                    const r4 = fill('input[name="fechaEntrega"]', arguments[2]);
                     
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
                     if (h1) h1.value = '10:00';
                     if (h2) h2.value = '10:00';
+                    
+                    return {r1, r2, r3, r4};
                 """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
                 
                 time.sleep(0.5)
                 
                 # Submeter formulário
+                print(f"[SELENIUM] Submetendo formulário...", file=sys.stderr, flush=True)
                 driver.execute_script("document.querySelector('form').submit();")
                 
                 # Aguardar navegação para /do/list/
-                time.sleep(8)
+                print(f"[SELENIUM] Aguardando navegação (10 seg)...", file=sys.stderr, flush=True)
+                time.sleep(10)
                 
                 final_url = driver.current_url
                 
@@ -2237,17 +2248,23 @@ async def track_by_params(request: Request):
                 
                 # Se obtivemos URL s/b válida, fazer fetch dela
                 if 's=' in final_url and 'b=' in final_url:
+                    print(f"[SELENIUM] ✅ URL s/b obtida! Fazendo fetch...", file=sys.stderr, flush=True)
                     import requests
                     r = requests.get(final_url, headers={
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                         'Cookie': 'monedaForzada=EUR; moneda=EUR; currency=EUR'
                     }, timeout=15)
                     
+                    print(f"[SELENIUM] Fazendo parse de {len(r.text)} bytes...", file=sys.stderr, flush=True)
                     items = parse_prices(r.text, final_url)
+                    print(f"[SELENIUM] Parsed {len(items)} items", file=sys.stderr, flush=True)
                     items = convert_items_gbp_to_eur(items)
+                    print(f"[SELENIUM] {len(items)} após GBP→EUR", file=sys.stderr, flush=True)
                     items = apply_price_adjustments(items, final_url)
+                    print(f"[SELENIUM] {len(items)} após ajustes", file=sys.stderr, flush=True)
                     
                     if items:
+                        print(f"[SELENIUM] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
                         # SUCESSO! Retornar resultados
                         return _no_store_json({
                             "ok": True,
@@ -2259,13 +2276,18 @@ async def track_by_params(request: Request):
                             "end_time": end_dt.strftime("%H:%M"),
                             "days": days,
                         })
-            except Exception:
+                else:
+                    print(f"[SELENIUM] ⚠️ URL s/b NÃO obtida! URL: {final_url}", file=sys.stderr, flush=True)
+            except Exception as e:
+                print(f"[SELENIUM ERROR interno] {e}", file=sys.stderr, flush=True)
                 try:
                     driver.quit()
                 except:
                     pass
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[SELENIUM ERROR] {e}", file=sys.stderr, flush=True)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
         
         # Fallback se Playwright falhou
         if USE_PLAYWRIGHT and _HAS_PLAYWRIGHT:
