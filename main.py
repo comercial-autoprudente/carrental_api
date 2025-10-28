@@ -901,7 +901,7 @@ try:
                 "last_name": "Prudente",
                 "email": "comercial.autoprudente@gmail.com",
                 "mobile": "+351 911 747 478",
-                "profile_picture": "dprudente.png",
+                "profile_picture": "dprudente.jpg",
                 "is_admin": False
             }
         ]
