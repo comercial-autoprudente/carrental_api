@@ -1788,92 +1788,6 @@ async def track_by_params(request: Request):
         items: List[Dict[str, Any]] = []
         base = f"https://www.carjet.com/do/list/{lang}"
         
-        # MODO DE TESTE COM DADOS MOCKADOS (TEST_MODE_LOCAL=2)
-        if TEST_MODE_LOCAL == 2:
-            print(f"[MOCK MODE] Generating mock data for {location}, {days} days")
-            # Preço base varia por localização
-            base_price = 12.0 if 'faro' in location.lower() else 14.0
-            items = []
-            mock_cars = [
-                # B1 - Mini 4 Doors
-                ("Fiat 500", "Group B1", "Greenmotion"),
-                ("Citroen C1", "Group B1", "Goldcar"),
-                # B2 - Mini 5 Doors
-                ("Toyota Aygo", "Group B2", "Surprice"),
-                ("Volkswagen UP", "Group B2", "Centauro"),
-                ("Fiat Panda", "Group B2", "OK Mobility"),
-                # D - Economy
-                ("Renault Clio", "Group D", "Goldcar"),
-                ("Peugeot 208", "Group D", "Europcar"),
-                ("Ford Fiesta", "Group D", "Hertz"),
-                ("Seat Ibiza", "Group D", "Thrifty"),
-                ("Hyundai i20", "Group D", "Centauro"),
-                # E1 - Mini Automatic
-                ("Fiat 500 Auto", "Group E1", "OK Mobility"),
-                ("Peugeot 108 Auto", "Group E1", "Goldcar"),
-                # E2 - Economy Automatic
-                ("Opel Corsa Auto", "Group E2", "Europcar"),
-                ("Ford Fiesta Auto", "Group E2", "Hertz"),
-                # F - SUV
-                ("Nissan Juke", "Group F", "Auto Prudente Rent a Car"),
-                ("Peugeot 2008", "Group F", "Goldcar"),
-                ("Renault Captur", "Group F", "Surprice"),
-                # G - Premium
-                ("Mini Cooper Countryman", "Group G", "Thrifty"),
-                # J1 - Crossover
-                ("Citroen C3 Aircross", "Group J1", "Centauro"),
-                ("Fiat 500X", "Group J1", "OK Mobility"),
-                ("VW T-Cross", "Group J1", "Europcar"),
-                # J2 - Station Wagon
-                ("Seat Leon SW", "Group J2", "Goldcar"),
-                ("Peugeot 308 SW", "Group J2", "Hertz"),
-                # L1 - SUV Automatic
-                ("Peugeot 3008 Auto", "Group L1", "Auto Prudente Rent a Car"),
-                ("Nissan Qashqai Auto", "Group L1", "Goldcar"),
-                ("Toyota C-HR Auto", "Group L1", "Thrifty"),
-                # L2 - Station Wagon Automatic
-                ("Toyota Corolla SW Auto", "Group L2", "Europcar"),
-                ("Opel Astra SW Auto", "Group L2", "Surprice"),
-                # M1 - 7 Seater
-                ("Dacia Lodgy", "Group M1", "Greenmotion"),
-                ("Peugeot Rifter", "Group M1", "Centauro"),
-                # M2 - 7 Seater Automatic
-                ("Renault Grand Scenic Auto", "Group M2", "Goldcar"),
-                ("VW Caddy Auto", "Group M2", "Auto Prudente Rent a Car"),
-                # N - 9 Seater
-                ("Ford Tourneo", "Group N", "Europcar"),
-                ("Mercedes Vito Auto", "Group N", "Thrifty"),
-            ]
-            # Varia fornecedores por localização
-            location_modifier = 0.0 if 'faro' in location.lower() else 3.0
-            for idx, (car, cat, sup) in enumerate(mock_cars):
-                price = base_price + (idx * 1.5) + (days * 0.3) + location_modifier
-                # Varia fornecedor para Albufeira
-                if 'albufeira' in location.lower() and idx % 3 == 0:
-                    sup = "Centauro" if sup != "Centauro" else "Goldcar"
-                items.append({
-                    "id": idx,
-                    "car": car,
-                    "supplier": sup,
-                    "price": f"€{price * days:.2f}",
-                    "currency": "EUR",
-                    "category": cat,
-                    "transmission": "Automatic" if "Auto" in car else "Manual",
-                    "photo": "",
-                    "link": "",
-                })
-            print(f"[MOCK MODE] Generated {len(items)} mock items for {location} covering all groups")
-            return _no_store_json({
-                "ok": True,
-                "items": items,
-                "location": location,
-                "start_date": start_dt.date().isoformat(),
-                "start_time": start_dt.strftime("%H:%M"),
-                "end_date": end_dt.date().isoformat(),
-                "end_time": end_dt.strftime("%H:%M"),
-                "days": days,
-            })
-        
         # MODO REAL: Usar ScraperAPI para scraping dinâmico
         if TEST_MODE_LOCAL == 0 and SCRAPER_API_KEY:
             try:
@@ -1900,7 +1814,7 @@ async def track_by_params(request: Request):
                     'fechaRecogida': start_str,
                     'fechaEntrega': end_str,
                     'fechaRecogidaSelHour': '10:00',
-                    'fechaEntregaSelHour': '10:00',
+                    'fechaEntregaSelHour': '15:00',
                 }
                 target_url = f"https://www.carjet.com/aluguel-carros/index.htm?{urlencode(carjet_params)}"
                 
@@ -2028,7 +1942,7 @@ async def track_by_params(request: Request):
                             const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                             const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
                             if (h1) h1.value = '10:00';
-                            if (h2) h2.value = '10:00';
+                            if (h2) h2.value = '15:00';
                             
                             return {ok1, ok2, ok3, ok4};
                         }""", {"loc": carjet_loc, "start": start_str, "end": end_str})
@@ -2094,17 +2008,55 @@ async def track_by_params(request: Request):
                 import traceback
                 traceback.print_exc(file=sys.stderr)
         
-        # MODO DE TESTE LOCAL: Usar URL s/b pré-configurada
+        # MODO DE TESTE LOCAL: Usar URLs específicas por dias
         test_url = None
-        print(f"[DEBUG] TEST_MODE_LOCAL={TEST_MODE_LOCAL}, location={location.lower()}")
+        print(f"[DEBUG] TEST_MODE_LOCAL={TEST_MODE_LOCAL}, location={location.lower()}, days={days}")
         if TEST_MODE_LOCAL == 1:
-            print(f"[DEBUG] Checking location: faro={'faro' in location.lower()}, albufeira={'albufeira' in location.lower()}")
-            if 'faro' in location.lower() and TEST_FARO_URL:
-                test_url = TEST_FARO_URL
-                print(f"[DEBUG] Using Faro test URL")
-            elif 'albufeira' in location.lower() and TEST_ALBUFEIRA_URL:
-                test_url = TEST_ALBUFEIRA_URL
-                print(f"[DEBUG] Using Albufeira test URL")
+            # Mapear dias → variável de ambiente
+            if 'faro' in location.lower():
+                faro_urls = {
+                    1: os.getenv('FARO_1D'),
+                    2: os.getenv('FARO_2D'),
+                    3: os.getenv('FARO_3D'),
+                    4: os.getenv('FARO_4D'),
+                    5: os.getenv('FARO_5D'),
+                    6: os.getenv('FARO_6D'),
+                    7: os.getenv('FARO_7D'),
+                    8: os.getenv('FARO_8D'),
+                    9: os.getenv('FARO_9D'),
+                    14: os.getenv('FARO_14D'),
+                    22: os.getenv('FARO_22D'),
+                    28: os.getenv('FARO_28D'),
+                    31: os.getenv('FARO_31D'),
+                    60: os.getenv('FARO_60D'),
+                }
+                test_url = faro_urls.get(days)
+                if test_url:
+                    print(f"[DEBUG] ✅ Using Faro {days}D URL", file=sys.stderr, flush=True)
+                else:
+                    print(f"[DEBUG] ❌ No Faro URL for {days} days", file=sys.stderr, flush=True)
+            elif 'albufeira' in location.lower():
+                albufeira_urls = {
+                    1: os.getenv('ALBUFEIRA_1D'),
+                    2: os.getenv('ALBUFEIRA_2D'),
+                    3: os.getenv('ALBUFEIRA_3D'),
+                    4: os.getenv('ALBUFEIRA_4D'),
+                    5: os.getenv('ALBUFEIRA_5D'),
+                    6: os.getenv('ALBUFEIRA_6D'),
+                    7: os.getenv('ALBUFEIRA_7D'),
+                    8: os.getenv('ALBUFEIRA_8D'),
+                    9: os.getenv('ALBUFEIRA_9D'),
+                    14: os.getenv('ALBUFEIRA_14D'),
+                    22: os.getenv('ALBUFEIRA_22D'),
+                    28: os.getenv('ALBUFEIRA_28D'),
+                    31: os.getenv('ALBUFEIRA_31D'),
+                    60: os.getenv('ALBUFEIRA_60D'),
+                }
+                test_url = albufeira_urls.get(days)
+                if test_url:
+                    print(f"[DEBUG] ✅ Using Albufeira {days}D URL", file=sys.stderr, flush=True)
+                else:
+                    print(f"[DEBUG] ❌ No Albufeira URL for {days} days", file=sys.stderr, flush=True)
         
         if test_url:
             try:
@@ -2117,13 +2069,9 @@ async def track_by_params(request: Request):
                 }, timeout=15)
                 
                 print(f"[TEST MODE] Fetched {len(r.text)} bytes", file=sys.stderr, flush=True)
-                # DEBUG: Save HTML
-                try:
-                    with open(DEBUG_DIR / f"test_mode_html_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html", 'w') as f:
-                        f.write(r.text)
-                except:
-                    pass
-                items = parse_prices(r.text, TEST_FARO_URL)
+                print(f"[TEST MODE] URL matched for {days} days", file=sys.stderr, flush=True)
+                
+                items = parse_prices(r.text, test_url)
                 print(f"[TEST MODE] Parsed {len(items)} items", file=sys.stderr, flush=True)
                 if items:
                     print(f"[TEST MODE] Primeiro preço ANTES conversão: {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
@@ -2137,7 +2085,7 @@ async def track_by_params(request: Request):
                 print(f"[TEST MODE] After price adjustments: {len(items)} items", file=sys.stderr, flush=True)
                 
                 if items:
-                    print(f"[TEST MODE] {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                    print(f"[TEST MODE] ✅ {len(items)} carros encontrados para {days} dias!", file=sys.stderr, flush=True)
                     return _no_store_json({
                         "ok": True,
                         "items": items,
@@ -2216,7 +2164,7 @@ async def track_by_params(request: Request):
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
                     if (h1) h1.value = '10:00';
-                    if (h2) h2.value = '10:00';
+                    if (h2) h2.value = '15:00';
                     
                     return {r1, r2, r3, r4};
                 """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
@@ -2322,148 +2270,209 @@ async def track_by_params(request: Request):
                             pass
                     page.on("response", _on_resp)
                     # 1) Open homepage to mint session
+                    import sys
                     home_path = "aluguel-carros/index.htm" if lang.lower()=="pt" else "index.htm"
+                    print(f"[PLAYWRIGHT] Acessando {home_path}...", file=sys.stderr, flush=True)
                     await page.goto(f"https://www.carjet.com/{home_path}", wait_until="networkidle", timeout=35000)
-                    # Handle consent if present
+                    print(f"[PLAYWRIGHT] Página carregada!", file=sys.stderr, flush=True)
+                    
+                    # ACEITAR COOKIES - múltiplas estratégias
+                    print(f"[PLAYWRIGHT] Tentando aceitar cookies...", file=sys.stderr, flush=True)
                     try:
+                        # Estratégia 1: Clicar em botões visíveis
                         for sel in [
                             "#didomi-notice-agree-button",
                             ".didomi-continue-without-agreeing",
                             "button:has-text('Aceitar')",
+                            "button:has-text('Aceito')",
                             "button:has-text('I agree')",
                             "button:has-text('Accept')",
+                            "button:has-text('Aceptar')",
+                            "[class*='accept']",
+                            "[id*='accept']",
                         ]:
                             try:
                                 c = page.locator(sel)
                                 if await c.count() > 0:
-                                    try: await c.first.click(timeout=1500)
+                                    try: 
+                                        await c.first.click(timeout=2000)
+                                        print(f"[PLAYWRIGHT] ✅ Cookies aceites via {sel}", file=sys.stderr, flush=True)
                                     except Exception: pass
-                                    await page.wait_for_timeout(200)
+                                    await page.wait_for_timeout(500)
                                     break
                             except Exception:
                                 pass
-                    except Exception:
-                        pass
-                    # 2) Type exact location as in browser autosuggest, then submit form programmatically
+                        
+                        # Estratégia 2: Remover overlays via JavaScript
+                        await page.evaluate("""() => {
+                            try {
+                                // Remover overlays de cookies
+                                document.querySelectorAll('[id*="cookie"], [class*="cookie"], [id*="consent"], [class*="consent"], [id*="didomi"], [class*="didomi"]').forEach(el => {
+                                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                                });
+                            } catch(e) {}
+                        }""")
+                        print(f"[PLAYWRIGHT] Overlays de cookies removidos via JS", file=sys.stderr, flush=True)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] Overlays de cookies removidos via JS", file=sys.stderr, flush=True)
+                    
+                    # Screenshot após aceitar cookies
+                    try:
+                        stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                        await page.screenshot(path=str(DEBUG_DIR / f"01-after-cookies-{stamp}.png"), full_page=True)
+                        print(f"[PLAYWRIGHT] Screenshot salvo: 01-after-cookies", file=sys.stderr, flush=True)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] Erro ao salvar screenshot: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2) MÉTODO DE CLIQUES VISUAIS (testado e funcional)
+                    print(f"[PLAYWRIGHT] Iniciando preenchimento visual do formulário...", file=sys.stderr, flush=True)
+                    
+                    # 2.1) LOCAL - AGUARDAR E CLICAR
                     try:
                         exact_loc = location
                         lo = (location or '').lower()
                         if 'albufeira' in lo:
-                            exact_loc = 'Albufeira Cidade'
+                            exact_loc = 'Albufeira'
                         elif 'faro' in lo:
-                            exact_loc = 'Faro Aeroporto (FAO)'
-                        # Try common selectors for the location input
-                        loc_inp = None
-                        for sel in ["input[name='pickup']", "#pickup", "input[placeholder*='local' i]", "input[aria-label*='local' i]", "input[type='search']"]:
-                            try:
-                                h = await page.query_selector(sel)
-                                if h:
-                                    loc_inp = h; break
-                            except Exception:
-                                pass
-                        if loc_inp:
-                            try:
-                                await loc_inp.click()
-                                await loc_inp.fill("")
-                                await loc_inp.type(exact_loc, delay=50)
-                                # Wait for dropdown and click the exact match if visible
-                                try:
-                                    opt = page.locator(f"text={exact_loc}")
-                                    if await opt.count() > 0:
-                                        await opt.first.click(timeout=2000)
-                                except Exception:
-                                    # fallback: press Enter to accept first suggestion
-                                    try:
-                                        await loc_inp.press('Enter')
-                                    except Exception:
-                                        pass
-                                await page.wait_for_timeout(300)
-                            except Exception:
-                                pass
-                    except Exception:
-                        pass
-                    # 2.b) Fill pickup/dropoff dates and times via visible inputs (simulate human typing)
+                            exact_loc = 'Aeroporto de Faro'
+                        
+                        print(f"[PLAYWRIGHT] Aguardando campo local...", file=sys.stderr, flush=True)
+                        # AGUARDAR o input estar visível
+                        await page.wait_for_selector("input[name='pickup']", state='visible', timeout=10000)
+                        
+                        print(f"[PLAYWRIGHT] Preenchendo local: {exact_loc}", file=sys.stderr, flush=True)
+                        loc_inp = page.locator("input[name='pickup']").first
+                        await loc_inp.click()
+                        await page.wait_for_timeout(500)
+                        await loc_inp.fill("")
+                        await loc_inp.type(exact_loc, delay=80)
+                        
+                        # AGUARDAR a lista aparecer
+                        print(f"[PLAYWRIGHT] Aguardando lista de opções...", file=sys.stderr, flush=True)
+                        await page.wait_for_timeout(1500)
+                        
+                        # Clicar na opção da lista
+                        try:
+                            # Procurar pela opção exata na lista
+                            opt = page.locator(f"text={exact_loc}").first
+                            await opt.click(timeout=5000)
+                            print(f"[PLAYWRIGHT] ✅ '{exact_loc}' selecionado da lista", file=sys.stderr, flush=True)
+                        except:
+                            # Fallback: Enter
+                            await loc_inp.press('Enter')
+                            print(f"[PLAYWRIGHT] ✅ Local confirmado com Enter", file=sys.stderr, flush=True)
+                        
+                        await page.wait_for_timeout(1000)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao preencher local: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2.2) HORA DE RECOLHA (aleatória 14:30-17:00)
                     try:
-                        pickup_dmY = start_dt.strftime('%d/%m/%Y')
-                        dropoff_dmY = end_dt.strftime('%d/%m/%Y')
-                        pickup_HM = start_dt.strftime('%H:%M')
-                        dropoff_HM = end_dt.strftime('%H:%M')
-                        # Try native calendar UI first using the known triggers
-                        async def select_date_via_picker(trigger_alt: str, target_dmY: str):
-                            try:
-                                trig = page.locator(f"img.ui-datepicker-trigger[alt='{trigger_alt}']")
-                                if await trig.count() > 0:
-                                    await trig.first.click()
-                                    # Parse target day/month/year
-                                    td, tm, ty = target_dmY.split('/')
-                                    # Max 12 next clicks safeguard
-                                    for _ in range(13):
-                                        try:
-                                            title = await page.locator('.ui-datepicker-title').inner_text()
-                                        except Exception:
-                                            title = ''
-                                        # Title like 'Outubro 2025'
-                                        ok_month = (tm in target_dmY)  # coarse guard; we do direct day pick below
-                                        # Try clicking the exact day link
-                                        day_locator = page.locator(f".ui-datepicker-calendar td a:text-is('{int(td)}')")
-                                        if await day_locator.count() > 0:
-                                            try:
-                                                await day_locator.first.click()
-                                                await page.wait_for_timeout(200)
-                                                break
-                                            except Exception:
-                                                pass
-                                        # Navigate next month
-                                        try:
-                                            nxt = page.locator('.ui-datepicker-next')
-                                            if await nxt.count() > 0:
-                                                await nxt.first.click()
-                                                await page.wait_for_timeout(150)
-                                            else:
-                                                break
-                                        except Exception:
-                                            break
-                            except Exception:
-                                pass
-                        await select_date_via_picker('Data de recolha', pickup_dmY)
-                        await select_date_via_picker('Data de entrega', dropoff_dmY)
-                        fill_dates_js = """
-                          (pDate, pTime, dDate, dTime) => {
-                            const setVal = (sel, val) => { const el = document.querySelector(sel); if (!el) return false; el.focus(); el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); return true; };
-                            const tryAll = (sels, val) => { for (const s of sels) { if (setVal(s, val)) return true; } return false; };
-                            // Pickup date/time candidates
-                            tryAll(['#fechaRecogida','input[name=fechaRecogida]','input[name=pickupDate]','input[type=date][name*=recog]','input[type=date][name*=pickup]','input[placeholder*="recolh" i]','input[aria-label*="recolh" i]'], pDate);
-                            tryAll(['#fechaRecogidaSelHour','input[name=fechaRecogidaSelHour]','input[name=pickupTime]','input[type=time][name*=recog]','input[type=time][name*=pickup]','#h-recogida'], pTime);
-                            // Dropoff date/time candidates
-                            tryAll(['#fechaEntrega','#fechaDevolucion','input[name=fechaEntrega]','input[name=fechaDevolucion]','input[name=dropoffDate]','input[type=date][name*=entreg]','input[type=date][name*=devol]','input[placeholder*="entreg" i]','input[aria-label*="entreg" i]'], dDate);
-                            tryAll(['#fechaEntregaSelHour','#fechaDevolucionSelHour','input[name=fechaEntregaSelHour]','input[name=fechaDevolucionSelHour]','input[name=dropoffTime]','input[type=time][name*=entreg]','input[type=time][name*=devol]','input[type=time][name*=drop]','#h-devolucion'], dTime);
-                          }
-                        """
-                        await page.evaluate(fill_dates_js, pickup_dmY, pickup_HM, dropoff_dmY, dropoff_HM)
-                        await page.wait_for_timeout(300)
-                    except Exception:
-                        pass
-                    # Programmatic submit with full payload to ensure consistent parameters
-                    payload = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
-                    submit_js = """
-                      (url, data) => {
-                        const f = document.createElement('form');
-                        f.method = 'POST';
-                        f.action = url;
-                        for (const [k,v] of Object.entries(data||{})) {
-                          const i = document.createElement('input');
-                          i.type = 'hidden'; i.name = k; i.value = String(v ?? '');
-                          f.appendChild(i);
-                        }
-                        document.body.appendChild(f);
-                        f.submit();
-                      }
-                    """
-                    await page.evaluate(submit_js, f"https://www.carjet.com/do/list/{lang}", payload)
+                        import random
+                        pickup_times = ["14:30", "15:00", "15:30", "16:00", "16:30", "17:00"]
+                        selected_pickup_time = random.choice(pickup_times)
+                        
+                        print(f"[PLAYWRIGHT] Aguardando select hora recolha...", file=sys.stderr, flush=True)
+                        await page.wait_for_selector("select[name='fechaRecogidaSelHour']", state='visible', timeout=10000)
+                        
+                        print(f"[PLAYWRIGHT] Selecionando hora recolha: {selected_pickup_time}", file=sys.stderr, flush=True)
+                        hour_select = page.locator("select[name='fechaRecogidaSelHour']").first
+                        await hour_select.select_option(selected_pickup_time)
+                        print(f"[PLAYWRIGHT] ✅ Hora recolha: {selected_pickup_time}", file=sys.stderr, flush=True)
+                        await page.wait_for_timeout(500)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao selecionar hora recolha: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2.3) CALENDÁRIO - 2 CLIQUES (data recolha + data entrega)
                     try:
-                        await page.wait_for_load_state("networkidle", timeout=40000)
-                    except Exception:
+                        pickup_day = start_dt.day
+                        dropoff_day = end_dt.day
+                        
+                        print(f"[PLAYWRIGHT] Aguardando ícone do calendário...", file=sys.stderr, flush=True)
+                        await page.wait_for_selector("img.ui-datepicker-trigger[alt='Data de recolha']", state='visible', timeout=10000)
+                        
+                        print(f"[PLAYWRIGHT] Abrindo calendário...", file=sys.stderr, flush=True)
+                        cal_trigger = page.locator("img.ui-datepicker-trigger[alt='Data de recolha']").first
+                        await cal_trigger.click()
+                        await page.wait_for_timeout(1000)
+                        
+                        # Aguardar calendário aparecer
+                        await page.wait_for_selector(".ui-datepicker-calendar", state='visible', timeout=5000)
+                        print(f"[PLAYWRIGHT] ✅ Calendário aberto", file=sys.stderr, flush=True)
+                        
+                        # PRIMEIRO CLIQUE: Data de recolha
+                        print(f"[PLAYWRIGHT] Selecionando data recolha (dia {pickup_day})...", file=sys.stderr, flush=True)
+                        pickup_day_link = page.locator(f".ui-datepicker-calendar td a:text-is('{pickup_day}')").first
+                        await pickup_day_link.click()
+                        await page.wait_for_timeout(1000)
+                        print(f"[PLAYWRIGHT] ✅ Data recolha: dia {pickup_day}", file=sys.stderr, flush=True)
+                        
+                        # SEGUNDO CLIQUE: Data de entrega (no mesmo calendário)
+                        print(f"[PLAYWRIGHT] Selecionando data entrega (dia {dropoff_day})...", file=sys.stderr, flush=True)
+                        dropoff_day_link = page.locator(f".ui-datepicker-calendar td a:text-is('{dropoff_day}')").first
+                        await dropoff_day_link.click()
+                        await page.wait_for_timeout(1000)
+                        print(f"[PLAYWRIGHT] ✅ Data entrega: dia {dropoff_day}", file=sys.stderr, flush=True)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao selecionar datas: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2.4) HORA DE ENTREGA (10:00)
+                    try:
+                        print(f"[PLAYWRIGHT] Aguardando select hora entrega...", file=sys.stderr, flush=True)
+                        await page.wait_for_selector("select[name='fechaEntregaSelHour']", state='visible', timeout=10000)
+                        
+                        print(f"[PLAYWRIGHT] Selecionando hora entrega: 10:00", file=sys.stderr, flush=True)
+                        dropoff_hour_select = page.locator("select[name='fechaEntregaSelHour']").first
+                        await dropoff_hour_select.select_option("10:00")
+                        print(f"[PLAYWRIGHT] ✅ Hora entrega: 10:00", file=sys.stderr, flush=True)
+                        await page.wait_for_timeout(500)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao selecionar hora entrega: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2.5) CLICAR BOTÃO PESQUISAR
+                    try:
+                        print(f"[PLAYWRIGHT] Aguardando botão Pesquisar...", file=sys.stderr, flush=True)
+                        await page.wait_for_selector("button:has-text('Pesquisar')", state='visible', timeout=10000)
+                        
+                        print(f"[PLAYWRIGHT] Clicando botão Pesquisar...", file=sys.stderr, flush=True)
+                        search_btn = page.locator("button:has-text('Pesquisar')").first
+                        await search_btn.click()
+                        print(f"[PLAYWRIGHT] ✅ Botão Pesquisar clicado!", file=sys.stderr, flush=True)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao clicar Pesquisar: {e}", file=sys.stderr, flush=True)
+                    
+                    # 2.6) AGUARDAR RESULTADOS
+                    print(f"[PLAYWRIGHT] Aguardando navegação para resultados...", file=sys.stderr, flush=True)
+                    await page.wait_for_timeout(10000)
+                    
+                    # RE-ACEITAR COOKIES se aparecerem novamente
+                    try:
+                        cookie_btn = page.locator("#didomi-notice-agree-button").first
+                        if await cookie_btn.count() > 0:
+                            await cookie_btn.click(timeout=2000)
+                            print(f"[PLAYWRIGHT] ✅ Cookies re-aceites após resultados", file=sys.stderr, flush=True)
+                    except:
                         pass
+                    
+                    await page.wait_for_timeout(3000)
+                    
+                    # Verificar URL e contar articles
+                    current_url = page.url
+                    print(f"[PLAYWRIGHT] URL final: {current_url}", file=sys.stderr, flush=True)
+                    
+                    # Verificar se deu erro
+                    if 'war=' in current_url:
+                        war_code = current_url.split('war=')[1].split('&')[0]
+                        print(f"[PLAYWRIGHT] ⚠️ Erro war={war_code}", file=sys.stderr, flush=True)
+                    
+                    # Contar articles
+                    try:
+                        articles_count = await page.locator('.newcarlist article').count()
+                        print(f"[PLAYWRIGHT] Articles encontrados: {articles_count}", file=sys.stderr, flush=True)
+                        if articles_count > 0:
+                            print(f"[PLAYWRIGHT] ✅ Sucesso! {articles_count} carros encontrados!", file=sys.stderr, flush=True)
+                    except Exception as e:
+                        print(f"[PLAYWRIGHT] ⚠️ Erro ao contar articles: {e}", file=sys.stderr, flush=True)
                     # Additionally trigger native on-page submit to mimic button onclick
                     try:
                         await page.evaluate("""
@@ -2546,9 +2555,19 @@ async def track_by_params(request: Request):
                         pass
                     html_pw = await page.content()
                     final_url = page.url
-                    print(f"[DEBUG] Fechando browser, URL final: {final_url}", file=sys.stderr, flush=True)
+                    print(f"[DEBUG] URL final: {final_url}", file=sys.stderr, flush=True)
+                    
+                    # Screenshot final e salvar HTML
+                    try:
+                        stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                        await page.screenshot(path=str(DEBUG_DIR / f"03-final-page-{stamp}.png"), full_page=True)
+                        (DEBUG_DIR / f"03-final-page-{stamp}.html").write_text(html_pw, encoding='utf-8')
+                        print(f"[PLAYWRIGHT] Screenshot e HTML salvos: 03-final-page ({len(html_pw)} bytes)", file=sys.stderr, flush=True)
+                    except:
+                        pass
+                    
                     await context.close(); await browser.close()
-                    print(f"[DEBUG] Browser fechado, HTML size: {len(html_pw)} bytes", file=sys.stderr, flush=True)
+                    print(f"[DEBUG] Browser fechado", file=sys.stderr, flush=True)
                 if html_pw:
                     items_pw = parse_prices(html_pw, final_url or base)
                     items_pw = convert_items_gbp_to_eur(items_pw)
@@ -3489,7 +3508,11 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
         cards_blocked = 0
         for card in cards:
             # price (broaden selectors and do not require explicit currency symbol)
-            let_price = card.select_one(".price, .amount, [class*='price'], .nfoPriceDest, .nfoPrice, [data-price]")
+            # IMPORTANT: Prioritize EUR prices over GBP to avoid currency conversion issues
+            let_price = card.select_one(".price.pr-euros, .pr-euros, .price-euros, [class*='price-euro']")
+            if not let_price:
+                # Fallback to generic price selectors
+                let_price = card.select_one(".price, .amount, [class*='price'], .nfoPriceDest, .nfoPrice, [data-price]")
             price_text = (let_price.get_text(strip=True) if let_price else "") or (card.get("data-price") or "")
             if not price_text:
                 continue
@@ -4608,10 +4631,20 @@ def try_direct_carjet(location_name: str, start_dt, end_dt, lang: str = "pt", cu
 
 def build_carjet_form(location_name: str, start_dt, end_dt, lang: str = "pt", currency: str = "EUR") -> Dict[str, Any]:
     # Build server-expected fields; include hidden destination IDs when possible
+    import random
     pickup_dmY = start_dt.strftime("%d/%m/%Y")
     dropoff_dmY = end_dt.strftime("%d/%m/%Y")
-    pickup_HM = start_dt.strftime("%H:%M")
-    dropoff_HM = end_dt.strftime("%H:%M")
+    
+    # IMPORTANTE: CarJet rejeita se entrega for muito cedo
+    # Pickup: aleatório entre 14:30-17:00
+    # Dropoff: sempre 10:00
+    pickup_hours = ['14:30', '15:00', '15:30', '16:00', '16:30', '17:00']
+    pickup_HM = random.choice(pickup_hours)
+    dropoff_HM = '10:00'
+    
+    import sys
+    print(f"[BUILD_FORM] Pickup: {pickup_dmY} {pickup_HM} | Dropoff: {dropoff_dmY} {dropoff_HM}", file=sys.stderr, flush=True)
+    
     code = LOCATION_CODES.get((location_name or "").lower(), "")
     form = {
         # free text
@@ -4871,6 +4904,108 @@ async def bulk_prices(request: Request):
     return JSONResponse({"ok": True, "results": results})
 
 
+@app.get("/api/get-session-urls")
+async def get_session_urls(request: Request):
+    """Retorna URLs atuais de sessão e status de validade"""
+    try:
+        require_auth(request)
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Not authenticated"}, status_code=401)
+    
+    import os
+    faro_url = os.getenv("TEST_FARO_URL", "")
+    albufeira_url = os.getenv("TEST_ALBUFEIRA_URL", "")
+    
+    # Verificar se URLs parecem válidas (têm parâmetros s= e b=)
+    faro_valid = bool(faro_url and 's=' in faro_url and 'b=' in faro_url)
+    albufeira_valid = bool(albufeira_url and 's=' in albufeira_url and 'b=' in albufeira_url)
+    
+    return JSONResponse({
+        "ok": True,
+        "faro_url": faro_url,
+        "albufeira_url": albufeira_url,
+        "faro_valid": faro_valid,
+        "albufeira_valid": albufeira_valid
+    })
+
+
+@app.post("/api/update-session-urls")
+async def update_session_urls(request: Request):
+    """Valida e atualiza URLs de sessão no .env"""
+    try:
+        require_auth(request)
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Not authenticated"}, status_code=401)
+    
+    body = await request.json()
+    faro_url = body.get("faro_url", "").strip()
+    albufeira_url = body.get("albufeira_url", "").strip()
+    
+    # Validar formato básico das URLs
+    faro_valid = False
+    albufeira_valid = False
+    
+    if faro_url:
+        faro_valid = 's=' in faro_url and 'b=' in faro_url and 'carjet.com' in faro_url
+    
+    if albufeira_url:
+        albufeira_valid = 's=' in albufeira_url and 'b=' in albufeira_url and 'carjet.com' in albufeira_url
+    
+    # Atualizar .env file
+    import os
+    from pathlib import Path
+    
+    env_path = Path(__file__).parent / ".env"
+    
+    if env_path.exists():
+        with open(env_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        # Atualizar ou adicionar linhas
+        updated_lines = []
+        faro_found = False
+        albufeira_found = False
+        
+        for line in lines:
+            if line.startswith("TEST_FARO_URL="):
+                if faro_url:
+                    updated_lines.append(f"TEST_FARO_URL={faro_url}\n")
+                    faro_found = True
+                else:
+                    updated_lines.append(line)
+            elif line.startswith("TEST_ALBUFEIRA_URL="):
+                if albufeira_url:
+                    updated_lines.append(f"TEST_ALBUFEIRA_URL={albufeira_url}\n")
+                    albufeira_found = True
+                else:
+                    updated_lines.append(line)
+            else:
+                updated_lines.append(line)
+        
+        # Adicionar se não encontrado
+        if faro_url and not faro_found:
+            updated_lines.append(f"TEST_FARO_URL={faro_url}\n")
+        if albufeira_url and not albufeira_found:
+            updated_lines.append(f"TEST_ALBUFEIRA_URL={albufeira_url}\n")
+        
+        # Escrever de volta
+        with open(env_path, 'w', encoding='utf-8') as f:
+            f.writelines(updated_lines)
+        
+        # Atualizar variáveis de ambiente em memória
+        if faro_url:
+            os.environ["TEST_FARO_URL"] = faro_url
+        if albufeira_url:
+            os.environ["TEST_ALBUFEIRA_URL"] = albufeira_url
+    
+    return JSONResponse({
+        "ok": True,
+        "faro_valid": faro_valid,
+        "albufeira_valid": albufeira_valid,
+        "message": "URLs atualizadas com sucesso"
+    })
+
+
 @app.post("/api/track-by-url")
 async def track_by_url(request: Request):
     try:
@@ -4897,7 +5032,7 @@ async def track_by_url(request: Request):
                 start_dt = datetime.fromisoformat(pickup_date + "T" + pickup_time)
             except Exception:
                 start_dt = None
-        # 0) 60s in-memory cache by normalized URL
+        # 0) 60s in-memory cache by normalized URL + days + date
         try:
             from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
             pr0 = urlparse(url)
@@ -4905,10 +5040,12 @@ async def track_by_url(request: Request):
             # normalize currency/lang params position for stable key
             norm_q = urlencode(sorted(qd.items()))
             norm_url = urlunparse((pr0.scheme, pr0.netloc, pr0.path, pr0.params, norm_q, pr0.fragment))
+            # IMPORTANT: Include days and pickup_date in cache key to avoid conflicts
+            cache_key = f"{norm_url}|{pickup_date}|{days}"
         except Exception:
-            norm_url = url
+            cache_key = f"{url}|{pickup_date}|{days}"
         now_ts = time.time()
-        cached = _URL_CACHE.get(norm_url)
+        cached = _URL_CACHE.get(cache_key)
         if (not no_cache) and cached and (now_ts - cached[0] < 60):
             payload = dict(cached[1])
             # Avoid serving cached empty results
@@ -4970,7 +5107,7 @@ async def track_by_url(request: Request):
                     "days": days,
                     "last_updated": time.strftime('%Y-%m-%d %H:%M:%S'),
                 }
-                _URL_CACHE[norm_url] = (time.time(), dict(payload))
+                _URL_CACHE[cache_key] = (time.time(), dict(payload))
                 return _no_store_json(payload)
             except Exception:
                 pass
@@ -5316,7 +5453,7 @@ async def track_by_url(request: Request):
         # store in cache only if we have items
         try:
             if items:
-                _URL_CACHE[norm_url] = (time.time(), payload)
+                _URL_CACHE[cache_key] = (time.time(), payload)
         except Exception:
             pass
         # If still empty, write a small debug note (non-fatal)
@@ -5956,3 +6093,8 @@ async def get_history(request: Request):
         for r in rows
     ]
     return JSONResponse({"ok": True, "count": len(items), "items": items})
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8080)
