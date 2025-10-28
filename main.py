@@ -3343,85 +3343,9 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
         except Exception:
             return False
 
-    # Blocklist of car models to exclude
-    _blocked_models = [
-        "Mercedes S Class Auto",
-        "MG ZS Auto",
-        "Mercedes CLA Coupe Auto",
-        "Mercedes A Class",
-        "Mercedes A Class Auto",
-        "BMW 1 Series Auto",
-        "BMW 3 Series SW Auto",
-        "Volvo V60 Auto",
-        "Volvo XC40 Auto",
-        "Mercedes C Class Auto",
-        "Tesla Model 3 Auto",
-        "Electric",
-        "BMW 2 Series Gran Coupe Auto",
-        "Mercedes C Class SW Auto",
-        "Mercedes E Class Auto",
-        "Mercedes E Class SW Auto",
-        "BMW 5 Series SW Auto",
-        "BMW X1 Auto",
-        "Mercedes CLE Coupe Auto",
-        "Volkswagen T-Roc Cabrio",
-        "Mercedes GLA Auto",
-        "Volvo XC60 Auto",
-        "Volvo EX30 Auto",
-        "BMW 3 Series Auto",
-        "Volvo V60 4x4 Auto",
-        "Hybrid",
-        "Mazda MX5 Cabrio Auto",
-        "Mercedes CLA Auto",
-    ]
-
-    def _norm_text(s: str) -> str:
-        s = (s or "").strip().lower()
-        # remove duplicate spaces and commas spacing
-        s = " ".join(s.replace(",", " ").split())
-        return s
-
-    _blocked_norm = set(_norm_text(x) for x in _blocked_models)
-
+    # Blocklist DISABLED - Show all cars
     def _is_blocked_model(name: str) -> bool:
-        n = _norm_text(name)
-        if not n:
-            return False
-        if n in _blocked_norm:
-            return True
-        # Regex-based strong match on key model families and powertrains
-        patterns = [
-            r"\bmercedes\s+s\s*class\b",
-            r"\bmercedes\s+cla\b",
-            r"\bmercedes\s+cle\b",
-            r"\bmercedes\s+a\s*class\b",
-            r"\bmercedes\s+c\s*class\b",
-            r"\bmercedes\s+e\s*class\b",
-            r"\bmercedes\s+gla\b",
-            r"\bbmw\s+1\s*series\b",
-            r"\bbmw\s+2\s*series\b",
-            r"\bbmw\s+3\s*series\b",
-            r"\bbmw\s+5\s*series\b",
-            r"\bbmw\s*x1\b",
-            r"\bvolvo\s+v60\b",
-            r"\bvolvo\s+xc40\b",
-            r"\bvolvo\s+xc60\b",
-            r"\bvolvo\s+ex30\b",
-            r"\btesla\s+model\s*3\b",
-            r"\bmg\s+zs\b",
-            r"\bmazda\s+mx5\b",
-            r"\bvolkswagen\s+t-roc\b",
-            r"\belectric\b",
-            r"\bhybrid\b",
-        ]
-        import re as _re
-        for p in patterns:
-            if _re.search(p, n):
-                return True
-        # also check if any blocked long phrase is contained in name
-        for b in _blocked_norm:
-            if len(b) >= 6 and b in n:
-                return True
+        # Return False to show all cars (no blocking)
         return False
 
     # --- Photo cache helpers (SQLite) ---
@@ -5636,78 +5560,8 @@ async def track_by_url(request: Request):
 
 
 def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[str]) -> List[Dict[str, Any]]:
-    # Secondary guard: blocklist filter to ensure unwanted vehicles never appear
-    _blocked_models = [
-        "Mercedes S Class Auto",
-        "MG ZS Auto",
-        "Mercedes CLA Coupe Auto",
-        "Mercedes A Class",
-        "Mercedes A Class Auto",
-        "BMW 1 Series Auto",
-        "BMW 3 Series SW Auto",
-        "Volvo V60 Auto",
-        "Volvo XC40 Auto",
-        "Mercedes C Class Auto",
-        "Tesla Model 3 Auto",
-        "Electric",
-        "BMW 2 Series Gran Coupe Auto",
-        "Mercedes C Class SW Auto",
-        "Mercedes E Class Auto",
-        "Mercedes E Class SW Auto",
-        "BMW 5 Series SW Auto",
-        "BMW X1 Auto",
-        "Mercedes CLE Coupe Auto",
-        "Volkswagen T-Roc Cabrio",
-        "Mercedes GLA Auto",
-        "Volvo XC60 Auto",
-        "Volvo EX30 Auto",
-        "BMW 3 Series Auto",
-        "Volvo V60 4x4 Auto",
-        "Hybrid",
-        "Mazda MX5 Cabrio Auto",
-        "Mercedes CLA Auto",
-    ]
-    def _norm_text(s: str) -> str:
-        s = (s or "").strip().lower()
-        return " ".join(s.replace(",", " ").split())
-    _blocked_norm = set(_norm_text(x) for x in _blocked_models)
-    import re as _re
-    _patterns = [
-        r"\bmercedes\s+s\s*class\b",
-        r"\bmercedes\s+cla\b",
-        r"\bmercedes\s+cle\b",
-        r"\bmercedes\s+a\s*class\b",
-        r"\bmercedes\s+c\s*class\b",
-        r"\bmercedes\s+e\s*class\b",
-        r"\bmercedes\s+gla\b",
-        r"\bbmw\s+1\s*series\b",
-        r"\bbmw\s+2\s*series\b",
-        r"\bbmw\s+3\s*series\b",
-        r"\bbmw\s+5\s*series\b",
-        r"\bbmw\s*x1\b",
-        r"\bvolvo\s+v60\b",
-        r"\bvolvo\s+xc40\b",
-        r"\bvolvo\s+xc60\b",
-        r"\bvolvo\s+ex30\b",
-        r"\btesla\s+model\s*3\b",
-        r"\bmg\s+zs\b",
-        r"\bmazda\s+mx5\b",
-        r"\bvolkswagen\s+t-roc\b",
-        r"\belectric\b",
-        r"\bhybrid\b",
-    ]
+    # Blocklist DISABLED - Show all cars
     def _blocked(name: str) -> bool:
-        n = _norm_text(name)
-        if not n:
-            return False
-        if n in _blocked_norm:
-            return True
-        for p in _patterns:
-            if _re.search(p, n):
-                return True
-        for b in _blocked_norm:
-            if len(b) >= 6 and b in n:
-                return True
         return False
 
     detailed: List[Dict[str, Any]] = []
