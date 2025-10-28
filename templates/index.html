@@ -1,9 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rental Prices</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    <meta name="cache-bust" content="v3-RESTORE-COMPLEX"/>
+    <title>Rental Prices v3 FULL</title>
     <link rel="icon" type="image/png" href="/static/autoprudente-favicon.png?v=2" />
     <link rel="shortcut icon" href="/static/autoprudente-favicon.png?v=2" />
     <link rel="apple-touch-icon" href="/static/autoprudente-favicon.png?v=2" />
@@ -67,18 +71,28 @@
       .accordion-content { max-height: 70vh; overflow-y: auto; }
       @media (min-width: 768px) { .accordion-content { max-height: none; overflow: visible; } }
       /* Inline form styling resembling Carjet */
-      .seg { display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; }
-      .seg-badge { background:#009cb6; color:#fff; font-weight:700; border-radius:6px; padding:4px 8px; line-height:1; min-width:26px; text-align:center; }
-      .seg input, .seg select { background:#fff; }
+      .seg { display:flex; align-items:center; gap:8px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; height:48px; }
+      .seg-badge { background:#009cb6; color:#fff; font-weight:700; border-radius:6px; padding:4px 8px; line-height:1; min-width:26px; text-align:center; flex-shrink:0; }
+      .seg input, .seg select { background:#fff; border:1px solid #d1d5db; border-radius:6px; padding:4px 8px; font-size:14px; line-height:1.4; height:32px; }
       .seg .label { font-size:12px; color:#374151; margin-right:4px; }
       .btn-search { background:#009cb6; color:#fff; font-weight:600; border-radius:8px; padding:10px 16px; }
       .btn-search:hover, .btn-search:focus { background: var(--brand-yellow); color:#fff; }
       button:hover, button:focus { background-color: var(--brand-yellow); color:#fff; }
       .lowest-badge { background: var(--brand-header); color:#fff; padding:2px 8px; border-radius:9999px; font-size:10px; line-height:1; }
-      .date-input { min-width: 150px; }
+      .date-input { min-width: 120px; max-width: 140px; }
       .time-input { min-width: 90px; }
       .days-input { min-width: 80px; }
       .nowrap { white-space: nowrap; }
+      /* Calendário maior no desktop */
+      @media (min-width: 768px) {
+        input[type="date"]::-webkit-calendar-picker-indicator {
+          font-size: 20px;
+          cursor: pointer;
+        }
+        input[type="date"] {
+          font-size: 16px;
+        }
+      }
       .bar { display:block; height:6px; border-radius:3px; }
       .bar-blue { background:#009cb6; width:36px; }
       .bar-yellow { background: var(--brand-yellow); width:28px; }
@@ -132,7 +146,7 @@
         <form id="paramForm" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end" onsubmit="return false">
           <div class="md:col-span-3 seg">
             <label class="sr-only">Local de entrega</label>
-            <select id="location" class="w-full rounded-md border-gray-300">
+            <select id="location" style="flex:1; min-width:0;">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
               <option value="Albufeira">Albufeira</option>
             </select>
@@ -141,7 +155,7 @@
           <div class="md:col-span-2 seg">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
             <label class="sr-only">Início (data)</label>
-            <input id="startDate" type="date" placeholder="Início" class="date-input w-full rounded-md border-gray-300" />
+            <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;"/>
           </div>
           <!-- Dias (terceiro campo na mesma linha) -->
           <div class="md:col-span-7 seg" style="flex-wrap: nowrap; overflow-x: auto;">
@@ -149,9 +163,13 @@
             <input id="days" type="hidden" value="7" />
             <div id="daysChips" class="flex flex-nowrap gap-1"></div>
           </div>
-          <!-- Botão Pesquisar (linha abaixo de todos os campos) -->
-          <div class="md:col-span-12">
+          <!-- Botões -->
+          <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
             <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
+            <button id="fetchAllDaysBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
+              📊 Fetch All (Todos os Dias)
+            </button>
+            <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
           <div class="md:col-span-1 seg hidden">
             <label class="sr-only">Início (hora)</label>
@@ -287,6 +305,8 @@
     </div>
 
     <script>
+      console.log('[INIT] Versão: v2025-01-28-10-00');
+      
       // Register service worker for PWA (guarded)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
@@ -309,41 +329,80 @@
     <script>
       // Track-by-Date was removed; no rerender of date-based blocks
 
+      // Cache global para resultados de todos os dias
+      let cachedResults = {}; // Formato: { "location-date-days": { items: [...], ... } }
+      
+      // Limpar cache quando localização muda
+      document.addEventListener('DOMContentLoaded', () => {
+        const locEl = document.getElementById('location');
+        if (locEl) {
+          locEl.addEventListener('change', () => {
+            console.log('[CACHE] Localização mudou, limpando cache...');
+            cachedResults = {};
+            // Limpar resultados exibidos
+            const resultsEl = document.getElementById('results');
+            if (resultsEl) resultsEl.innerHTML = '';
+            // Re-renderizar chips sem checkmarks
+            try {
+              const daysInput = document.getElementById('days');
+              const chipsCont = document.getElementById('daysChips');
+              if (daysInput && chipsCont) {
+                const presets = [1,2,3,4,5,6,7,8,9,14,22,31,60];
+                const onChange = (d) => {
+                  window.selectedDays = d;
+                  daysInput.value = String(d);
+                  daysInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  renderChips('daysChips', presets, onChange);
+                };
+                renderChips('daysChips', presets, onChange);
+              }
+            } catch(_) {}
+          });
+        }
+      });
+      
+      function getCacheKey(location, date, days) {
+        return `${location}-${date}-${days}`;
+      }
+
       // Date helpers
       function fmtDate(d){ const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${m}-${day}`; }
       function toDate(v){ const d=new Date(v); return isNaN(d.getTime())?null:d; }
       function setupDateMath(){
-        const sd = document.getElementById('startDate');
-        const ed = document.getElementById('endDate');
-        const days = document.getElementById('days');
-        if (!sd || !ed || !days) return;
+        // In this UX, the visible date ('startDate') is DELIVERY date.
+        // We compute PICKUP date = DELIVERY - days, and store it in hidden 'endDate'.
+        const deliveryEl = document.getElementById('startDate');
+        const pickupHiddenEl = document.getElementById('endDate');
+        const daysEl = document.getElementById('days');
+        if (!deliveryEl || !pickupHiddenEl || !daysEl) return;
         function recompute(){
-          const n = parseInt(days.value||'0',10);
-          const s = toDate(sd.value); if(!s||!n) return;
-          const e = new Date(s); e.setDate(e.getDate()+n);
-          ed.value = fmtDate(e);
+          const n = parseInt(daysEl.value||'0',10);
+          const delivery = toDate(deliveryEl.value); if(!delivery||!n) return;
+          const pickup = new Date(delivery); pickup.setDate(pickup.getDate()-n);
+          pickupHiddenEl.value = fmtDate(pickup);
         }
-        ['input','change'].forEach(ev=>{ sd.addEventListener(ev, recompute); days.addEventListener(ev, recompute); });
-        sd.addEventListener('change', ()=>{ try{ sd.blur(); }catch(_){ } recompute(); });
+        ['input','change'].forEach(ev=>{ deliveryEl.addEventListener(ev, recompute); daysEl.addEventListener(ev, recompute); });
+        deliveryEl.addEventListener('change', ()=>{ try{ deliveryEl.blur(); }catch(_){ } recompute(); });
         recompute();
       }
       // Initialize date math and days selector once DOM is ready
       setupDateMath();
+      // Variável global para selectedDays
+      window.selectedDays = 7;
+      
       function setupDaysSelector(){
         try {
           const daysInput = document.getElementById('days');
           const chipsCont = document.getElementById('daysChips');
           if (!daysInput || !chipsCont) return;
           const presets = [1,2,3,4,5,6,7,8,9,14,22,31,60];
-          let selectedDays = parseInt(daysInput.value || '7', 10) || 7;
+          window.selectedDays = parseInt(daysInput.value || '7', 10) || 7;
           function onChange(d){
-            selectedDays = d;
+            window.selectedDays = d;
             daysInput.value = String(d);
             try { daysInput.dispatchEvent(new Event('input', { bubbles: true })); } catch(_){ }
             renderChips('daysChips', presets, onChange);
           }
-          // Patch renderChips to highlight selected
-          window.selectedDays = selectedDays;
           renderChips('daysChips', presets, onChange);
         } catch(_) { }
       }
@@ -826,20 +885,117 @@
         if (!cont) return;
         cont.classList.remove('hidden');
         cont.innerHTML = '';
+        
+        // Verificar quais estão em cache
+        const locEl = document.getElementById('location');
+        const sdEl = document.getElementById('startDate');
+        const location = (locEl && locEl.value || '').trim();
+        const delivery_date = sdEl && sdEl.value || '';
+        
         for (const d of daysList) {
           const btn = document.createElement('button');
-          btn.className = 'px-2.5 py-1 rounded-md border text-xs transition-colors ' + (d === selectedDays ? 'bg-[#f6b511] text-white border-[#f6b511]' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f6b511]/10');
-          btn.textContent = d + 'd';
-          btn.addEventListener('click', () => { selectedDays = d; onChange(d); renderChips(containerId, daysList, onChange); });
+          const isSelected = d === window.selectedDays;
+          const cacheKey = getCacheKey(location, delivery_date, d);
+          const isCached = location && delivery_date && cachedResults[cacheKey];
+          
+          btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isSelected ? 'bg-[#f4ad0f] text-white border-[#f4ad0f]' : (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10'));
+          btn.innerHTML = d + 'd' + (isCached ? (isSelected ? ' <span style="color: #fff; font-weight: 700;">✓</span>' : ' <span style="color: #009cb6; font-weight: 700;">✓</span>') : '');
+          btn.title = isCached ? 'Pré-carregado (instantâneo)' : 'Clique para carregar';
+          btn.addEventListener('click', async (e) => { 
+            e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('[CHIP] Clicado:', d, 'dias');
+            
+            // Atualizar selectedDays e input
+            window.selectedDays = d;
+            const daysInput = document.getElementById('days');
+            if (daysInput) daysInput.value = String(d);
+            
+            // RENDERIZAR DIRETAMENTE DO CACHE
+            const locEl = document.getElementById('location');
+            const sdEl = document.getElementById('startDate');
+            const resultsEl = document.getElementById('results');
+            const loc = (locEl && locEl.value || '').trim();
+            const date = sdEl && sdEl.value || '';
+            const key = getCacheKey(loc, date, d);
+            
+            console.log('[CACHE] Key:', key);
+            console.log('[CACHE] Disponíveis:', Object.keys(cachedResults));
+            
+            if (!cachedResults[key]) {
+              console.log('[CACHE] NÃO existe! Chamando fetch...');
+              await new Promise(r => setTimeout(r, 100));
+              if (window.runBulkFetch) {
+                window.runBulkFetch({ preventDefault: () => {} });
+              }
+              return;
+            }
+            
+            const data = cachedResults[key];
+            const items = Array.isArray(data.items) ? data.items : [];
+            console.log('[CACHE] Encontrado!', items.length, 'items');
+            if (items.length > 0) {
+              console.log('[CACHE] Primeiro carro:', items[0]?.car, 'Preço:', items[0]?.price);
+            }
+            
+            if (!resultsEl) {
+              console.log('[ERROR] Elemento results não encontrado');
+              return;
+            }
+            
+            console.log('[RENDER] Limpando resultados anteriores');
+            resultsEl.innerHTML = '';
+            
+            console.log('[RENDER] Criando seção para', d, 'dias com', items.length, 'items');
+            const section = document.createElement('div');
+            section.className = 'rounded-md border';
+            
+            const html = [];
+            html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
+            
+            if (items.length === 0) {
+              html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
+            } else {
+              console.log('[RENDER] Primeiro carro:', items[0]?.car, 'Preço:', items[0]?.price);
+              console.log('[RENDER] Último carro:', items[items.length-1]?.car, 'Preço:', items[items.length-1]?.price);
+              html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
+              html.push(renderCategoryBlocks(items));
+            }
+            
+            section.innerHTML = html.join('');
+            resultsEl.appendChild(section);
+            
+            console.log('[RENDER] Completo! Total de', items.length, 'carros renderizados');
+            console.log('==========================================');
+            
+            // Re-renderizar chips SEM recriar eventos
+            const chipsCont = document.getElementById('daysChips');
+            if (chipsCont) {
+              Array.from(chipsCont.children).forEach((btn, idx) => {
+                const dayValue = daysList[idx];
+                if (dayValue === d) {
+                  btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
+                } else {
+                  const isCached = cachedResults[getCacheKey(loc, date, dayValue)];
+                  btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10');
+                }
+              });
+            }
+          });
           cont.appendChild(btn);
         }
       }
       const fetchAllBtn = document.getElementById('fetchAllBtn');
       function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; }
       let fetchInFlight = false;
-      async function runBulkFetch(e){
-        e.preventDefault();
-        if (fetchInFlight) return;
+      // Tornar global para poder chamar dos chips
+      window.runBulkFetch = async function runBulkFetch(e){
+        if (e && e.preventDefault) e.preventDefault();
+        if (fetchInFlight) {
+          console.log('⚠️ Fetch já em andamento, ignorando...');
+          return;
+        }
         const status = document.getElementById('status');
         const results = document.getElementById('results');
         const locEl = document.getElementById('location');
@@ -848,13 +1004,49 @@
         // end date/time are computed in background and hidden; request will use days only
         const daysEl = document.getElementById('days');
         const location = (locEl && locEl.value || '').trim();
-        const start_date = sdEl && sdEl.value || '';
+        const delivery_date = sdEl && sdEl.value || '';
         const start_time = stEl && (stEl.value || '10:00') || '10:00';
         const days = parseInt((daysEl && daysEl.value) || '0', 10) || 0;
-        if (!location || !start_date || !days){
+        console.log('[FETCH] Iniciado - Location:', location, 'Date:', delivery_date, 'Days:', days);
+        
+        if (!location || !delivery_date || !days){
+          console.log('[FETCH] Parâmetros inválidos');
           if (status) status.textContent = 'Preencha local, data de início e dias ou data de fim.';
           return;
         }
+        
+        // Verificar se está em cache
+        const cacheKey = getCacheKey(location, delivery_date, days);
+        console.log('[CACHE] Key:', cacheKey, '| Existe?', !!cachedResults[cacheKey]);
+        
+        if (cachedResults[cacheKey]) {
+          console.log('[CACHE] Usando cache para', days, 'dias');
+          const data = cachedResults[cacheKey];
+          const items = Array.isArray(data.items) ? data.items : [];
+          console.log('[CACHE]', items.length, 'items | Primeiro:', items[0]?.car, items[0]?.price);
+          
+          if (results) results.innerHTML = '';
+          
+          const section = document.createElement('div');
+          section.className = 'rounded-md border';
+          const inner = [];
+          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-')} day(s) — ${escapeHtml(data.location || '-')} <span class=\"text-blue-600 ml-2\">⚡ Cache</span><\/div>`);
+          
+          if (items.length === 0) {
+            inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\"><p class="mb-2">⚠️ Nenhum resultado encontrado</p><\/div>`);
+          } else {
+            inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
+            inner.push(renderCategoryBlocks(items));
+          }
+          
+          section.innerHTML = inner.join('');
+          if (results) {
+            results.appendChild(section);
+            console.log('[RENDER] Completo do cache');
+          }
+          return;
+        }
+        
         fetchInFlight = true;
         fetchAllBtn.disabled = true; fetchAllBtn.classList.add('opacity-50','cursor-not-allowed');
         if (status) status.textContent = '';
@@ -862,8 +1054,34 @@
         const modal = document.getElementById('loadingModal');
         const bar = document.querySelector('#loadingModal .progress .bar');
         if (modal) { modal.classList.add('loading'); modal.classList.remove('hidden'); }
+        // Progressive loading bar controller
+        let progTimer = null;
+        function setBarWidth(p){ try { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; } catch(_){} }
+        let prog = 5; // start at 5%
+        setBarWidth(prog);
+        try { if (progTimer) clearInterval(progTimer); } catch(_){}
+        progTimer = setInterval(() => {
+          try {
+            // Progressive animation até 100% (mais lento perto do fim)
+            if (prog < 100) {
+              let step;
+              if (prog < 30) step = 2;        // rápido no início
+              else if (prog < 60) step = 1.5; // médio
+              else if (prog < 85) step = 1;   // lento
+              else step = 0.3;                // muito lento perto do fim
+              prog = Math.min(100, prog + step);
+              setBarWidth(prog);
+            }
+          } catch(_){}
+        }, 200);
         try {
-          const body = { location, start_date, start_time, days, lang: 'pt', currency: 'EUR' };
+          // Compute pickup date from delivery_date - days to match CarJet UX
+          let pickup_date = '';
+          try {
+            const d = toDate(delivery_date);
+            if (d && days>0) { const p = new Date(d); p.setDate(p.getDate()-days); pickup_date = fmtDate(p); }
+          } catch(_){}
+          const body = { location, start_date: pickup_date || delivery_date, start_time, days, lang: 'pt', currency: 'EUR' };
           // Proactive warmup to avoid first-click issues
           try { await fetch('/healthz', { credentials: 'same-origin', cache: 'no-store', keepalive: true }); } catch(_) {}
           // Ensure date input is committed
@@ -895,27 +1113,174 @@
             } catch(_) { data = undefined; }
           }
           if (!data) throw new Error('Não foi possível obter resultados. Tente novamente.');
-          if (bar) { bar.style.width = '90%'; }
           const items = Array.isArray(data.items) ? data.items : [];
+          
+          // Salvar no cache para uso futuro
+          const cacheKey = getCacheKey(location, delivery_date, days);
+          cachedResults[cacheKey] = data;
+          
           const section = document.createElement('div');
           section.className = 'rounded-md border';
           const inner = [];
-          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-') } day(s) — ${escapeHtml(data.location || '-') }</div>`);
-          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category</div>`);
-          inner.push(renderCategoryBlocks(items));
+          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-') } day(s) — ${escapeHtml(data.location || '-')}<\/div>`);
+          
+          if (items.length === 0) {
+            inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\">
+              <p class="mb-2">⚠️ Nenhum resultado encontrado</p>
+              <p class="text-sm">A sessão pode ter expirado. Por favor, tente novamente.</p>
+            <\/div>`);
+          } else {
+            inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
+            inner.push(renderCategoryBlocks(items));
+          }
+          
           section.innerHTML = inner.join('');
           if (results) results.appendChild(section);
         } catch (err) {
           if (status) status.textContent = 'Falha: ' + err;
         } finally {
           fetchInFlight = false; fetchAllBtn.disabled = false; fetchAllBtn.classList.remove('opacity-50','cursor-not-allowed');
-          if (bar) { bar.style.width = '100%'; }
-          if (modal) { setTimeout(() => { modal.classList.remove('loading'); modal.classList.add('hidden'); if (bar) bar.style.width = '0%'; }, 300); }
-          try { if (progTimer) clearInterval(progTimer); } catch(_){ }
+          // Garantir que barra chegue a 100% suavemente
+          if (prog < 100) {
+            const finalInterval = setInterval(() => {
+              if (prog < 100) {
+                prog = Math.min(100, prog + 2);
+                setBarWidth(prog);
+              } else {
+                clearInterval(finalInterval);
+              }
+            }, 50);
+          }
+          // Fechar modal depois que barra chegar a 100%
+          setTimeout(() => {
+            if (modal) { modal.classList.remove('loading'); modal.classList.add('hidden'); setBarWidth(0); prog = 0; }
+            try { if (progTimer) clearInterval(progTimer); } catch(_){ }
+          }, prog >= 100 ? 300 : 1000);
         }
       }
-      if (fetchAllBtn && !fetchAllBtn._bound) { fetchAllBtn.addEventListener('click', runBulkFetch); fetchAllBtn._bound = true; }
-      try { const pf = document.getElementById('paramForm'); if (pf && !pf._bound) { pf.addEventListener('submit', runBulkFetch); pf.addEventListener('keydown', (e)=>{ if (e.key==='Enter') { e.preventDefault(); runBulkFetch(e); } }); pf._bound = true; } } catch(_) {}
+      if (fetchAllBtn && !fetchAllBtn._bound) { fetchAllBtn.addEventListener('click', window.runBulkFetch); fetchAllBtn._bound = true; }
+      try { const pf = document.getElementById('paramForm'); if (pf && !pf._bound) { pf.addEventListener('submit', window.runBulkFetch); pf.addEventListener('keydown', (e)=>{ if (e.key==='Enter') { e.preventDefault(); window.runBulkFetch(e); } }); pf._bound = true; } } catch(_) {}
+
+      // Fetch All Days - pré-carregar todos os períodos
+      const fetchAllDaysBtn = document.getElementById('fetchAllDaysBtn');
+      const fetchAllStatus = document.getElementById('fetchAllStatus');
+      
+      if (fetchAllDaysBtn && !fetchAllDaysBtn._bound) {
+        fetchAllDaysBtn.addEventListener('click', async () => {
+          const locEl = document.getElementById('location');
+          const sdEl = document.getElementById('startDate');
+          const stEl = document.getElementById('startTime');
+          
+          const location = (locEl && locEl.value || '').trim();
+          const delivery_date = sdEl && sdEl.value || '';
+          const start_time = stEl && (stEl.value || '10:00') || '10:00';
+          
+          if (!location || !delivery_date) {
+            if (fetchAllStatus) fetchAllStatus.textContent = '⚠️ Preencha local e data primeiro';
+            return;
+          }
+          
+          const daysList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 31, 60];
+          
+          try {
+            fetchAllDaysBtn.disabled = true;
+            fetchAllDaysBtn.textContent = '⏳ Carregando...';
+            if (fetchAllStatus) {
+              fetchAllStatus.textContent = 'Carregando 0/' + daysList.length;
+              fetchAllStatus.className = 'text-xs font-medium';
+              fetchAllStatus.style.color = '#009cb6';
+            }
+            
+            let completed = 0;
+            
+            for (const days of daysList) {
+              try {
+                let pickup_date = '';
+                try {
+                  const d = toDate(delivery_date);
+                  if (d && days>0) { const p = new Date(d); p.setDate(p.getDate()-days); pickup_date = fmtDate(p); }
+                } catch(_){}
+                
+                const body = { location, start_date: pickup_date || delivery_date, start_time, days, lang: 'pt', currency: 'EUR' };
+                console.log(`[FETCH ALL] ${days}d - Enviando request...`);
+                
+                const resp = await fetch('/api/track-by-params', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'same-origin',
+                  cache: 'no-store',
+                  body: JSON.stringify(body)
+                });
+                
+                if (resp.status === 401) {
+                  throw new Error('Não autorizado - faça login novamente');
+                }
+                
+                const data = await resp.json();
+                
+                if (data && data.ok !== false) {
+                  const cacheKey = getCacheKey(location, delivery_date, days);
+                  cachedResults[cacheKey] = data;
+                  console.log(`[FETCH ALL] ${days}d - Cache salvo (${data.items?.length || 0} items)`);
+                }
+                
+                completed++;
+                if (fetchAllStatus) {
+                  fetchAllStatus.innerHTML = `<span style="background: #f4ad0f; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 700; margin-right: 4px;">✓</span> ${completed}/${daysList.length} períodos carregados`;
+                  fetchAllStatus.style.color = '#009cb6';
+                }
+              } catch (err) {
+                console.error(`❌ Erro ao carregar ${days}d:`, err);
+                completed++;
+                if (fetchAllStatus) {
+                  fetchAllStatus.textContent = `⚠️ ${completed}/${daysList.length} (erro em ${days}d)`;
+                  fetchAllStatus.className = 'text-xs font-medium';
+                  fetchAllStatus.style.color = '#f4ad0f';
+                }
+              }
+            }
+            
+            if (fetchAllStatus) {
+              fetchAllStatus.innerHTML = `<span style="background: #f4ad0f; color: white; padding: 2px 4px; border-radius: 3px; font-weight: 700; margin-right: 4px;">✓</span> ${completed}/${daysList.length} períodos prontos!`;
+              fetchAllStatus.className = 'text-xs font-medium';
+              fetchAllStatus.style.color = '#009cb6';
+            }
+            
+            // Atualizar chips para mostrar checkmarks
+            try {
+              const daysInput = document.getElementById('days');
+              if (daysInput) {
+                const onChange = (d) => {
+                  window.selectedDays = d;
+                  daysInput.value = String(d);
+                  daysInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  renderChips('daysChips', daysList, onChange);
+                };
+                renderChips('daysChips', daysList, onChange);
+              }
+            } catch(_) {}
+            
+            // Limpar status após 5s
+            setTimeout(() => {
+              if (fetchAllStatus) {
+                fetchAllStatus.textContent = '';
+                fetchAllStatus.className = 'text-xs text-gray-500';
+              }
+            }, 5000);
+            
+          } catch (err) {
+            if (fetchAllStatus) {
+              fetchAllStatus.textContent = '❌ Erro: ' + err.message;
+              fetchAllStatus.className = 'text-xs font-medium';
+              fetchAllStatus.style.color = '#f4ad0f';
+            }
+          } finally {
+            fetchAllDaysBtn.disabled = false;
+            fetchAllDaysBtn.textContent = '📊 Fetch All (Todos os Dias)';
+          }
+        });
+        fetchAllDaysBtn._bound = true;
+      }
 
       // Warmup to reduce first-click issues (ensures session/cookies)
       try { fetch('/healthz', { credentials: 'same-origin', cache: 'no-store', keepalive: true }).catch(()=>{}); } catch(_){ }

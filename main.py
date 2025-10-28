@@ -133,8 +133,42 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
             except Exception:
                 pass
             page.goto(url, wait_until="networkidle", timeout=35000)
+            # Try clicking the primary search/submit button if the page requires it to load results
             try:
-                page.wait_for_selector("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row", timeout=15000)
+                btn = None
+                # Prefer role-based lookup, then fall back to text and CSS selectors
+                try:
+                    btn = page.get_by_role("button", name=re.compile(r"(Pesquisar|Buscar|Search)", re.I))
+                except Exception:
+                    btn = None
+                if btn and btn.is_visible():
+                    btn.click(timeout=3000)
+                else:
+                    cand = page.locator("button:has-text('Pesquisar'), button:has-text('Buscar'), button:has-text('Search'), input[type=submit], button[type=submit]")
+                    if cand and (cand.count() or 0) > 0:
+                        try:
+                            cand.first.click(timeout=3000)
+                        except Exception:
+                            pass
+                # After clicking, wait for network to settle and results to appear
+                try:
+                    page.wait_for_load_state("networkidle", timeout=10000)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+            # Incremental scroll to trigger lazy loading
+            try:
+                for _ in range(5):
+                    try:
+                        page.mouse.wheel(0, 2000)
+                    except Exception:
+                        pass
+                    page.wait_for_timeout(400)
+            except Exception:
+                pass
+            try:
+                page.wait_for_selector("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row", timeout=30000)
             except Exception:
                 pass
 
@@ -228,6 +262,24 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                         "link": link or url,
                     })
                     idx += 1
+            # If no items collected via card scanning, try parsing the full rendered HTML
+            try:
+                if not items:
+                    html_full = page.content()
+                    try:
+                        # Best-effort: save debug HTML for inspection
+                        stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+                        (DEBUG_DIR / f"playwright-capture-{stamp}.html").write_text(html_full or "", encoding="utf-8")
+                    except Exception:
+                        pass
+                    try:
+                        items2 = parse_prices(html_full, url)
+                        if items2:
+                            items = items2
+                    except Exception:
+                        pass
+            except Exception:
+                pass
             context.close()
             browser.close()
     except Exception:
@@ -270,16 +322,22 @@ try:
 except Exception:
     _HTTPX_CLIENT = None
     _HTTPX_ASYNC = None
+
+# Load environment variables FIRST before checking USE_PLAYWRIGHT
+load_dotenv()
+
 try:
     from playwright.sync_api import sync_playwright  # type: ignore
     _HAS_PLAYWRIGHT = True
 except Exception:
     _HAS_PLAYWRIGHT = False
-# Rollback mode: always disable Playwright paths
-_HAS_PLAYWRIGHT = False
 
-load_dotenv()
-
+# Environment variables
+USE_PLAYWRIGHT = str(os.getenv("USE_PLAYWRIGHT", "")).strip().lower() in ("1","true","yes","on")
+_test_mode_val = os.getenv("TEST_MODE_LOCAL", "0").strip()
+TEST_MODE_LOCAL = int(_test_mode_val) if _test_mode_val.isdigit() else (1 if _test_mode_val.lower() in ("true", "yes") else 0)
+TEST_FARO_URL = os.getenv("TEST_FARO_URL", "")
+TEST_ALBUFEIRA_URL = os.getenv("TEST_ALBUFEIRA_URL", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "change_me")
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
@@ -287,7 +345,6 @@ SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
 APP_USERNAME = os.getenv("APP_USERNAME", "user")
-USE_PLAYWRIGHT = False
 CARJET_PRICE_ADJUSTMENT_PCT = float(os.getenv("CARJET_PRICE_ADJUSTMENT_PCT", "0") or 0)
 CARJET_PRICE_OFFSET_EUR = float(os.getenv("CARJET_PRICE_OFFSET_EUR", "0") or 0)
 AUDIT_RETENTION_DAYS = int(os.getenv("AUDIT_RETENTION_DAYS", "90") or 90)
@@ -898,13 +955,15 @@ def convert_items_gbp_to_eur(items: List[Dict[str, Any]]) -> List[Dict[str, Any]
         out.append(it)
     return out
 
-# CarJet destination codes we target
+# CarJet destination codes we target  
 LOCATION_CODES = {
     "albufeira": "ABF01",
     "albufeira cidade": "ABF01",
-    "faro airport": "FAO02",
-    "faro aeroporto": "FAO02",
-    "aeroporto de faro": "FAO02",
+    "faro": "FAO01",
+    "faro airport": "FAO01",
+    "faro aeroporto": "FAO01",
+    "faro aeroporto (fao)": "FAO01",
+    "aeroporto de faro": "FAO01",
 }
 
 def init_db():
@@ -1051,7 +1110,12 @@ async def home(request: Request):
             user_ctx = _get_user_by_username(uname)
     except Exception:
         user_ctx = None
-    return templates.TemplateResponse("index.html", {"request": request, "current_user": user_ctx})
+    # FORCE NO CACHE - prevent browser from caching HTML/JS
+    response = templates.TemplateResponse("index.html", {"request": request, "current_user": user_ctx})
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.get("/admin")
 async def admin_root():
@@ -1374,14 +1438,284 @@ async def admin_users_new_post(
 async def get_prices(request: Request):
     require_auth(request)
     url = request.query_params.get("url") or TARGET_URL
+    refresh = str(request.query_params.get("refresh", "")).strip().lower() in ("1","true","yes","on")
     # Serve from cache if fresh
-    cached = _cache_get(url)
-    if cached:
-        # also refresh in background to keep fresh
-        asyncio.create_task(_refresh_prices_background(url))
-        return JSONResponse(cached)
+    if not refresh:
+        cached = _cache_get(url)
+        if cached:
+            # also refresh in background to keep fresh
+            asyncio.create_task(_refresh_prices_background(url))
+            return JSONResponse(cached)
+    else:
+        try:
+            # Invalidate cache entry if exists
+            _PRICES_CACHE.pop(url, None)
+        except Exception:
+            pass
     # If we have stale data (beyond TTL) we could still serve it while refreshing. For simplicity, compute now.
     try:
+        # Fast path: direct fetch for CarJet s/b URLs (often returns full list without UI)
+        if isinstance(url, str) and ("carjet.com/do/list/" in url) and ("s=" in url) and ("b=" in url):
+            try:
+                data_fast = await _compute_prices_for(url)
+                fast_items = (data_fast or {}).get("items") or []
+                if fast_items:
+                    out = {"ok": True, "items": fast_items}
+                    try:
+                        # Persist the HTML if provided for inspection
+                        html_fast = (data_fast or {}).get("html") or ""
+                        if html_fast:
+                            stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                            (DEBUG_DIR / f"pw-url-direct-fast-{stamp}.html").write_text(html_fast, encoding='utf-8')
+                    except Exception:
+                        pass
+                    _cache_set(url, out)
+                    return JSONResponse(out)
+            except Exception:
+                pass
+        # Playwright-first for CarJet list pages to ensure the search is triggered (UI-driven)
+        if USE_PLAYWRIGHT and _HAS_PLAYWRIGHT and isinstance(url, str) and ("carjet.com/do/list/" in url):
+            try:
+                from playwright.async_api import async_playwright
+                async with async_playwright() as p:
+                    # Try WebKit (Safari) first
+                    async def run_with(browser):
+                        context = await browser.new_context(
+                            locale="pt-PT",
+                            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
+                        )
+                        page = await context.new_page()
+                        # Best-effort: set currency/lang cookies upfront
+                        try:
+                            await context.add_cookies([
+                                {"name": "monedaForzada", "value": "EUR", "domain": ".carjet.com", "path": "/"},
+                                {"name": "moneda", "value": "EUR", "domain": ".carjet.com", "path": "/"},
+                                {"name": "currency", "value": "EUR", "domain": ".carjet.com", "path": "/"},
+                                {"name": "country", "value": "PT", "domain": ".carjet.com", "path": "/"},
+                                {"name": "idioma", "value": "PT", "domain": ".carjet.com", "path": "/"},
+                                {"name": "lang", "value": "pt", "domain": ".carjet.com", "path": "/"},
+                            ])
+                        except Exception:
+                            pass
+                        captured = []
+                        async def _on_resp(resp):
+                            try:
+                                u = resp.url or ""
+                                if any(k in u for k in ("modalFilter.asp", "carList.asp", "/do/list/pt", "filtroUso.asp")):
+                                    t = await resp.text()
+                                    if t:
+                                        captured.append((u, t))
+                                        # Persist capture for offline inspection
+                                        try:
+                                            stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                            name = "pw-url-capture-" + re.sub(r"[^a-z0-9]+", "-", (u or "").lower())[-60:]
+                                            (DEBUG_DIR / f"{name}-{stamp}.html").write_text(t, encoding='utf-8')
+                                        except Exception:
+                                            pass
+                            except Exception:
+                                pass
+                        page.on("response", _on_resp)
+                        # Warm up session on homepage before opening s/b URL
+                        try:
+                            base_lang = "pt"
+                            m = re.search(r"/do/list/([a-z]{2})", url)
+                            if m: base_lang = m.group(1)
+                            home_path = "aluguel-carros/index.htm" if base_lang.lower()=="pt" else "index.htm"
+                            await page.goto(f"https://www.carjet.com/{home_path}", wait_until="networkidle", timeout=25000)
+                            try:
+                                await page.evaluate("""try{ document.cookie='moneda=EUR; path=/; domain=.carjet.com'; document.cookie='lang=pt; path=/; domain=.carjet.com'; }catch(e){}""")
+                            except Exception:
+                                pass
+                            try:
+                                await page.wait_for_timeout(500)
+                            except Exception:
+                                pass
+                        except Exception:
+                            pass
+                        await page.goto(url, wait_until="networkidle", timeout=35000)
+                        # Handle consent if present
+                        try:
+                            for sel in [
+                                "#didomi-notice-agree-button",
+                                ".didomi-continue-without-agreeing",
+                                "button:has-text('Aceitar')",
+                                "button:has-text('I agree')",
+                                "button:has-text('Accept')",
+                            ]:
+                                try:
+                                    c = page.locator(sel)
+                                    if await c.count() > 0:
+                                        try: await c.first.click(timeout=1500)
+                                        except Exception: pass
+                                        await page.wait_for_timeout(200)
+                                        break
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                        # Click "Atualizar/Pesquisar" if present and trigger native submit
+                        try:
+                            # Try specific CarJet selectors first
+                            for sel in [
+                                "button[name=send].btn-search",
+                                "#btn_search",
+                                ".btn-search",
+                                "button:has-text('Pesquisar')",
+                                "button:has-text('Atualizar')",
+                                "input[type=submit]",
+                                "button[type=submit]",
+                            ]:
+                                try:
+                                    b = page.locator(sel)
+                                    if await b.count() > 0:
+                                        try: await b.first.click(timeout=2000)
+                                        except Exception: pass
+                                        break
+                                except Exception:
+                                    pass
+                            try:
+                                await page.evaluate("""
+                                  try { if (typeof comprobar_errores_3==='function' && comprobar_errores_3()) { if (typeof filtroUsoForm==='function') filtroUsoForm(); if (typeof submit_fechas==='function') submit_fechas('/do/list/pt'); } } catch(e) {}
+                                """)
+                            except Exception:
+                                pass
+                            try: await page.wait_for_load_state('networkidle', timeout=40000)
+                            except Exception: pass
+                        except Exception:
+                            pass
+                        # Screenshot and scroll cycles
+                        try:
+                            stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                            await page.screenshot(path=str(DEBUG_DIR / f"pw-url-after-search-{stamp}.png"), full_page=True)
+                        except Exception:
+                            pass
+                        try:
+                            for _ in range(3):
+                                for __ in range(5):
+                                    try: await page.mouse.wheel(0, 1600)
+                                    except Exception: pass
+                                    await page.wait_for_timeout(250)
+                                try:
+                                    ok = await page.locator("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row").count()
+                                    if (ok or 0) > 0:
+                                        break
+                                except Exception:
+                                    pass
+                                try: await page.wait_for_load_state('networkidle', timeout=8000)
+                                except Exception: pass
+                        except Exception:
+                            pass
+                        # Explicit waits for known XHRs to maximize chances
+                        try:
+                            await page.wait_for_response(lambda r: 'modalFilter.asp' in (r.url or ''), timeout=40000)
+                        except Exception:
+                            pass
+                        try:
+                            await page.wait_for_response(lambda r: 'carList.asp' in (r.url or ''), timeout=40000)
+                        except Exception:
+                            pass
+                        html = await page.content()
+                        final_url = page.url
+                        await context.close()
+                        return html, final_url, captured
+
+                    # Chromium-first
+                    browser = await p.chromium.launch(headless=True)
+                    html_pw, final_url_pw, cap_pw = await run_with(browser)
+                    await browser.close()
+                    items = []
+                    # Prefer parsing captured bodies first
+                    if (not items) and cap_pw:
+                        try:
+                            base_net = "https://www.carjet.com/do/list/pt"
+                            for (_u, body) in cap_pw:
+                                its = parse_prices(body, base_net)
+                                its = convert_items_gbp_to_eur(its)
+                                its = apply_price_adjustments(its, base_net)
+                                if its: items = its; break
+                        except Exception:
+                            pass
+                    if (not items) and html_pw:
+                        try:
+                            items = parse_prices(html_pw, final_url_pw or url)
+                            items = convert_items_gbp_to_eur(items)
+                            items = apply_price_adjustments(items, final_url_pw or url)
+                        except Exception:
+                            items = []
+                    # WebKit fallback if still empty
+                    if not items:
+                        try:
+                            browser2 = await p.webkit.launch(headless=True)
+                            html2, final2, cap2 = await run_with(browser2)
+                            await browser2.close()
+                            # Prefer captured responses
+                            if (not items) and cap2:
+                                base_net = "https://www.carjet.com/do/list/pt"
+                                for (_u, body) in cap2:
+                                    its = parse_prices(body, base_net)
+                                    its = convert_items_gbp_to_eur(its)
+                                    its = apply_price_adjustments(its, base_net)
+                                    if its: items = its; break
+                            if (not items) and html2:
+                                its = parse_prices(html2, final2 or url)
+                                its = convert_items_gbp_to_eur(its)
+                                its = apply_price_adjustments(its, final2 or url)
+                                if its: items = its
+                        except Exception:
+                            pass
+                    if items:
+                        data = {"ok": True, "items": items}
+                        _cache_set(url, data)
+                        return JSONResponse(data)
+                    # Direct POST fallback using page.request (within session)
+                    try:
+                        async with async_playwright() as p3:
+                            browser3 = await p3.chromium.launch(headless=True)
+                            context3 = await browser3.new_context(
+                                locale="pt-PT",
+                            )
+                            page3 = await context3.new_page()
+                            form_data = {}
+                            try:
+                                form_data = await page3.evaluate("""
+                                  () => {
+                                    try {
+                                      const f = document.querySelector('form');
+                                      if (!f) return {};
+                                      const fd = new FormData(f);
+                                      const o = Object.fromEntries(fd.entries());
+                                      return o;
+                                    } catch(e) { return {}; }
+                                  }
+                                """)
+                            except Exception:
+                                form_data = {}
+                            # Ensure minimal fields
+                            if not form_data or Object.keys(form_data).length < 3:
+                                form_data = {"moneda":"EUR", "idioma":"PT"}
+                            r3 = await page3.request.post("https://www.carjet.com/do/list/pt", data=form_data)
+                            html3 = ""
+                            try: html3 = await r3.text()
+                            except Exception: html3 = ""
+                            if html3:
+                                try:
+                                    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                    (DEBUG_DIR / f"pw-url-direct-post-{stamp}.html").write_text(html3, encoding='utf-8')
+                                except Exception:
+                                    pass
+                                its3 = parse_prices(html3, "https://www.carjet.com/do/list/pt")
+                                its3 = convert_items_gbp_to_eur(its3)
+                                its3 = apply_price_adjustments(its3, "https://www.carjet.com/do/list/pt")
+                                if its3:
+                                    data = {"ok": True, "items": its3}
+                                    _cache_set(url, data)
+                                    await context3.close(); await browser3.close()
+                                    return JSONResponse(data)
+                            await context3.close(); await browser3.close()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
         data = await _compute_prices_for(url)
         _cache_set(url, data)
         return JSONResponse(data)
@@ -1410,8 +1744,21 @@ async def track_by_params(request: Request):
         days = 0
     lang = str(body.get("lang") or "pt").strip() or "pt"
     currency = str(body.get("currency") or "EUR").strip() or "EUR"
+    # quick=1 enables fast mode (skip some waits/screenshots)
+    try:
+        quick = int(body.get("quick") or 0)
+    except Exception:
+        quick = 0
     if not location or not start_date:
         return _no_store_json({"ok": False, "error": "Missing location or start_date"}, status_code=400)
+    
+    # LOG REQUEST PARAMS
+    import sys
+    print(f"\n{'='*60}")
+    print(f"[API] REQUEST: location={location}, start_date={start_date}, days={days}")
+    print(f"{'='*60}\n")
+    print(f"[API] REQUEST: location={location}, start_date={start_date}, days={days}", file=sys.stderr, flush=True)
+    
     try:
         # Build start datetime with provided time
         start_dt = datetime.fromisoformat(f"{start_date}T{start_time}")
@@ -1430,21 +1777,889 @@ async def track_by_params(request: Request):
         if days <= 0:
             return _no_store_json({"ok": False, "error": "Missing days or end_date"}, status_code=400)
         end_dt = start_dt + timedelta(days=days)
+    print(f"[API] COMPUTED: start_dt={start_dt.date()}, end_dt={end_dt.date()}, days={days}")
+    print(f"[API] COMPUTED: start_dt={start_dt.date()}, end_dt={end_dt.date()}, days={days}", file=sys.stderr, flush=True)
     try:
-        html = try_direct_carjet(location, start_dt, end_dt, lang=lang, currency=currency)
+        items: List[Dict[str, Any]] = []
+        base = f"https://www.carjet.com/do/list/{lang}"
+        
+        # MODO DE TESTE COM DADOS MOCKADOS (TEST_MODE_LOCAL=2)
+        if TEST_MODE_LOCAL == 2:
+            print(f"[MOCK MODE] Generating mock data for {location}, {days} days")
+            # Preço base varia por localização
+            base_price = 12.0 if 'faro' in location.lower() else 14.0
+            items = []
+            mock_cars = [
+                # B1 - Mini 4 Doors
+                ("Fiat 500", "Group B1", "Greenmotion"),
+                ("Citroen C1", "Group B1", "Goldcar"),
+                # B2 - Mini 5 Doors
+                ("Toyota Aygo", "Group B2", "Surprice"),
+                ("Volkswagen UP", "Group B2", "Centauro"),
+                ("Fiat Panda", "Group B2", "OK Mobility"),
+                # D - Economy
+                ("Renault Clio", "Group D", "Goldcar"),
+                ("Peugeot 208", "Group D", "Europcar"),
+                ("Ford Fiesta", "Group D", "Hertz"),
+                ("Seat Ibiza", "Group D", "Thrifty"),
+                ("Hyundai i20", "Group D", "Centauro"),
+                # E1 - Mini Automatic
+                ("Fiat 500 Auto", "Group E1", "OK Mobility"),
+                ("Peugeot 108 Auto", "Group E1", "Goldcar"),
+                # E2 - Economy Automatic
+                ("Opel Corsa Auto", "Group E2", "Europcar"),
+                ("Ford Fiesta Auto", "Group E2", "Hertz"),
+                # F - SUV
+                ("Nissan Juke", "Group F", "Auto Prudente Rent a Car"),
+                ("Peugeot 2008", "Group F", "Goldcar"),
+                ("Renault Captur", "Group F", "Surprice"),
+                # G - Premium
+                ("Mini Cooper Countryman", "Group G", "Thrifty"),
+                # J1 - Crossover
+                ("Citroen C3 Aircross", "Group J1", "Centauro"),
+                ("Fiat 500X", "Group J1", "OK Mobility"),
+                ("VW T-Cross", "Group J1", "Europcar"),
+                # J2 - Station Wagon
+                ("Seat Leon SW", "Group J2", "Goldcar"),
+                ("Peugeot 308 SW", "Group J2", "Hertz"),
+                # L1 - SUV Automatic
+                ("Peugeot 3008 Auto", "Group L1", "Auto Prudente Rent a Car"),
+                ("Nissan Qashqai Auto", "Group L1", "Goldcar"),
+                ("Toyota C-HR Auto", "Group L1", "Thrifty"),
+                # L2 - Station Wagon Automatic
+                ("Toyota Corolla SW Auto", "Group L2", "Europcar"),
+                ("Opel Astra SW Auto", "Group L2", "Surprice"),
+                # M1 - 7 Seater
+                ("Dacia Lodgy", "Group M1", "Greenmotion"),
+                ("Peugeot Rifter", "Group M1", "Centauro"),
+                # M2 - 7 Seater Automatic
+                ("Renault Grand Scenic Auto", "Group M2", "Goldcar"),
+                ("VW Caddy Auto", "Group M2", "Auto Prudente Rent a Car"),
+                # N - 9 Seater
+                ("Ford Tourneo", "Group N", "Europcar"),
+                ("Mercedes Vito Auto", "Group N", "Thrifty"),
+            ]
+            # Varia fornecedores por localização
+            location_modifier = 0.0 if 'faro' in location.lower() else 3.0
+            for idx, (car, cat, sup) in enumerate(mock_cars):
+                price = base_price + (idx * 1.5) + (days * 0.3) + location_modifier
+                # Varia fornecedor para Albufeira
+                if 'albufeira' in location.lower() and idx % 3 == 0:
+                    sup = "Centauro" if sup != "Centauro" else "Goldcar"
+                items.append({
+                    "id": idx,
+                    "car": car,
+                    "supplier": sup,
+                    "price": f"€{price * days:.2f}",
+                    "currency": "EUR",
+                    "category": cat,
+                    "transmission": "Automatic" if "Auto" in car else "Manual",
+                    "photo": "",
+                    "link": "",
+                })
+            print(f"[MOCK MODE] Generated {len(items)} mock items for {location} covering all groups")
+            return _no_store_json({
+                "ok": True,
+                "items": items,
+                "location": location,
+                "start_date": start_dt.date().isoformat(),
+                "start_time": start_dt.strftime("%H:%M"),
+                "end_date": end_dt.date().isoformat(),
+                "end_time": end_dt.strftime("%H:%M"),
+                "days": days,
+            })
+        
+        # MODO REAL: Usar ScraperAPI para scraping dinâmico
+        if TEST_MODE_LOCAL == 0 and SCRAPER_API_KEY:
+            try:
+                import httpx
+                import sys
+                from urllib.parse import urlencode
+                print(f"[SCRAPERAPI] Iniciando scraping para {location}", file=sys.stderr, flush=True)
+                
+                # Mapear localização
+                carjet_loc = location
+                if 'faro' in location.lower():
+                    carjet_loc = 'Faro Aeroporto (FAO)'
+                elif 'albufeira' in location.lower():
+                    carjet_loc = 'Albufeira Cidade'
+                
+                # Formato de datas para CarJet (dd/mm/yyyy)
+                start_str = start_dt.strftime("%d/%m/%Y")
+                end_str = end_dt.strftime("%d/%m/%Y")
+                
+                # Construir URL CarJet com parâmetros
+                carjet_params = {
+                    'pickup': carjet_loc,
+                    'dropoff': carjet_loc,
+                    'fechaRecogida': start_str,
+                    'fechaEntrega': end_str,
+                    'fechaRecogidaSelHour': '10:00',
+                    'fechaEntregaSelHour': '10:00',
+                }
+                target_url = f"https://www.carjet.com/aluguel-carros/index.htm?{urlencode(carjet_params)}"
+                
+                # Construir URL ScraperAPI
+                scraper_params = {
+                    'api_key': SCRAPER_API_KEY,
+                    'url': target_url,
+                    'render_js': 'true',
+                    'wait': '3000',
+                    'country': 'pt',
+                }
+                scraper_url = f"http://api.scrapeops.io/v1/?{urlencode(scraper_params)}"
+                
+                print(f"[SCRAPERAPI] Target: {target_url[:100]}...", file=sys.stderr, flush=True)
+                print(f"[SCRAPERAPI] Fazendo request via ScraperOps...", file=sys.stderr, flush=True)
+                
+                # Fazer request via ScraperAPI
+                async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
+                    response = await client.get(scraper_url)
+                
+                
+                if response.status_code == 200:
+                    html_content = response.text
+                    print(f"[SCRAPERAPI] ✅ HTML recebido: {len(html_content)} bytes", file=sys.stderr, flush=True)
+                    
+                    # Parse o HTML
+                    items = parse_prices(html_content, target_url)
+                    print(f"[SCRAPERAPI] Parsed {len(items)} items antes conversão", file=sys.stderr, flush=True)
+                    
+                    # Converter GBP para EUR
+                    items = convert_items_gbp_to_eur(items)
+                    print(f"[SCRAPERAPI] {len(items)} items após GBP→EUR", file=sys.stderr, flush=True)
+                    
+                    # Aplicar ajustes
+                    items = apply_price_adjustments(items, target_url)
+                    print(f"[SCRAPERAPI] {len(items)} items após ajustes", file=sys.stderr, flush=True)
+                    
+                    if items:
+                        print(f"[SCRAPERAPI] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                        if items:
+                            print(f"[SCRAPERAPI] Primeiro: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                        return _no_store_json({
+                            "ok": True,
+                            "items": items,
+                            "location": location,
+                            "start_date": start_dt.date().isoformat(),
+                            "start_time": start_dt.strftime("%H:%M"),
+                            "end_date": end_dt.date().isoformat(),
+                            "end_time": end_dt.strftime("%H:%M"),
+                            "days": days,
+                        })
+                    else:
+                        print(f"[SCRAPERAPI] ⚠️ Parse retornou 0 items", file=sys.stderr, flush=True)
+                else:
+                    print(f"[SCRAPERAPI] ❌ HTTP {response.status_code}", file=sys.stderr, flush=True)
+            except Exception as e:
+                import sys
+                print(f"[SCRAPERAPI ERROR] {e}", file=sys.stderr, flush=True)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+        
+        # MODO DE TESTE LOCAL: Usar URL s/b pré-configurada
+        test_url = None
+        print(f"[DEBUG] TEST_MODE_LOCAL={TEST_MODE_LOCAL}, location={location.lower()}")
+        if TEST_MODE_LOCAL == 1:
+            print(f"[DEBUG] Checking location: faro={'faro' in location.lower()}, albufeira={'albufeira' in location.lower()}")
+            if 'faro' in location.lower() and TEST_FARO_URL:
+                test_url = TEST_FARO_URL
+                print(f"[DEBUG] Using Faro test URL")
+            elif 'albufeira' in location.lower() and TEST_ALBUFEIRA_URL:
+                test_url = TEST_ALBUFEIRA_URL
+                print(f"[DEBUG] Using Albufeira test URL")
+        
+        if test_url:
+            try:
+                import requests
+                import sys
+                print(f"[TEST MODE] Usando URL pré-configurada para {location}", file=sys.stderr, flush=True)
+                r = requests.get(test_url, headers={
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Cookie': 'monedaForzada=EUR; moneda=EUR; currency=EUR'
+                }, timeout=15)
+                
+                print(f"[TEST MODE] Fetched {len(r.text)} bytes", file=sys.stderr, flush=True)
+                # DEBUG: Save HTML
+                try:
+                    with open(DEBUG_DIR / f"test_mode_html_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html", 'w') as f:
+                        f.write(r.text)
+                except:
+                    pass
+                items = parse_prices(r.text, TEST_FARO_URL)
+                print(f"[TEST MODE] Parsed {len(items)} items", file=sys.stderr, flush=True)
+                if items:
+                    print(f"[TEST MODE] Primeiro preço ANTES conversão: {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                # CONVERTER GBP→EUR pois CarJet retorna em Libras
+                items = convert_items_gbp_to_eur(items)
+                print(f"[TEST MODE] After GBP→EUR conversion: {len(items)} items", file=sys.stderr, flush=True)
+                if items:
+                    print(f"[TEST MODE] Primeiro preço DEPOIS conversão: {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                # Aplicar ajustes de preço se configurados
+                items = apply_price_adjustments(items, test_url)
+                print(f"[TEST MODE] After price adjustments: {len(items)} items", file=sys.stderr, flush=True)
+                
+                if items:
+                    print(f"[TEST MODE] {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                    return _no_store_json({
+                        "ok": True,
+                        "items": items,
+                        "location": location,
+                        "start_date": start_dt.date().isoformat(),
+                        "start_time": start_dt.strftime("%H:%M"),
+                        "end_date": end_dt.date().isoformat(),
+                        "end_time": end_dt.strftime("%H:%M"),
+                        "days": days,
+                    })
+            except Exception as e:
+                import sys
+                print(f"[TEST MODE ERROR] {e}", file=sys.stderr, flush=True)
+        
+        # ESTRATÉGIA: Gerar URL s/b via Selenium, depois fazer fetch simples
+        try:
+            from selenium import webdriver
+            from selenium.webdriver.chrome.options import Options
+            from selenium.webdriver.chrome.service import Service
+            from webdriver_manager.chrome import ChromeDriverManager
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+            import time
+            
+            # Mapear location para formato CarJet
+            carjet_location = location
+            if 'faro' in location.lower():
+                carjet_location = 'Faro Aeroporto (FAO)'
+            elif 'albufeira' in location.lower():
+                carjet_location = 'Albufeira Cidade'
+            
+            # Configurar Chrome headless
+            chrome_options = Options()
+            chrome_options.add_argument('--headless')
+            chrome_options.add_argument('--no-sandbox')
+            chrome_options.add_argument('--disable-dev-shm-usage')
+            chrome_options.add_argument('--disable-gpu')
+            chrome_options.add_argument('user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36')
+            
+            # Iniciar driver
+            driver = webdriver.Chrome(
+                service=Service(ChromeDriverManager().install()),
+                options=chrome_options
+            )
+            
+            try:
+                driver.set_page_load_timeout(20)
+                driver.get("https://www.carjet.com/aluguel-carros/index.htm")
+                
+                # Fechar cookies via JS
+                driver.execute_script("try { document.querySelectorAll('[id*=cookie], [class*=cookie]').forEach(el => el.remove()); } catch(e) {}")
+                time.sleep(0.5)
+                
+                # Preencher formulário
+                driver.execute_script("""
+                    function fill(sel, val) {
+                        const el = document.querySelector(sel);
+                        if (el) { 
+                            el.value = val; 
+                            el.dispatchEvent(new Event('change', {bubbles: true}));
+                        }
+                    }
+                    fill('input[name="pickup"]', arguments[0]);
+                    fill('input[name="dropoff"]', arguments[0]);
+                    fill('input[name="fechaRecogida"]', arguments[1]);
+                    fill('input[name="fechaEntrega"]', arguments[2]);
+                    
+                    const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
+                    const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
+                    if (h1) h1.value = '10:00';
+                    if (h2) h2.value = '10:00';
+                """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
+                
+                time.sleep(0.5)
+                
+                # Submeter formulário
+                driver.execute_script("document.querySelector('form').submit();")
+                
+                # Aguardar navegação para /do/list/
+                time.sleep(8)
+                
+                final_url = driver.current_url
+                
+                # DEBUG: Salvar URL e HTML para análise
+                try:
+                    import sys
+                    print(f"[SELENIUM] URL final: {final_url}", file=sys.stderr, flush=True)
+                    with open(DEBUG_DIR / f"selenium_url_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt", 'w') as f:
+                        f.write(f"Final URL: {final_url}\n")
+                        f.write(f"Has s=: {'s=' in final_url}\n")
+                        f.write(f"Has b=: {'b=' in final_url}\n")
+                except:
+                    pass
+                
+                driver.quit()
+                
+                # Se obtivemos URL s/b válida, fazer fetch dela
+                if 's=' in final_url and 'b=' in final_url:
+                    import requests
+                    r = requests.get(final_url, headers={
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Cookie': 'monedaForzada=EUR; moneda=EUR; currency=EUR'
+                    }, timeout=15)
+                    
+                    items = parse_prices(r.text, final_url)
+                    items = convert_items_gbp_to_eur(items)
+                    items = apply_price_adjustments(items, final_url)
+                    
+                    if items:
+                        # SUCESSO! Retornar resultados
+                        return _no_store_json({
+                            "ok": True,
+                            "items": items,
+                            "location": location,
+                            "start_date": start_dt.date().isoformat(),
+                            "start_time": start_dt.strftime("%H:%M"),
+                            "end_date": end_dt.date().isoformat(),
+                            "end_time": end_dt.strftime("%H:%M"),
+                            "days": days,
+                        })
+            except Exception:
+                try:
+                    driver.quit()
+                except:
+                    pass
+        except Exception:
+            pass
+        
+        # Fallback se Playwright falhou
+        if USE_PLAYWRIGHT and _HAS_PLAYWRIGHT:
+            try:
+                from playwright.async_api import async_playwright
+                async with async_playwright() as p:
+                    # Chromium-first strategy
+                    browser = await p.chromium.launch(headless=True)
+                    context = await browser.new_context(
+                        locale="pt-PT",
+                        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+                    )
+                    page = await context.new_page()
+                    captured_bodies: List[str] = []
+                    async def _on_resp(resp):
+                        try:
+                            u = resp.url or ""
+                            if any(k in u for k in ("modalFilter.asp", "carList.asp", "/do/list/pt", "filtroUso.asp")):
+                                try:
+                                    t = await resp.text()
+                                    if t:
+                                        captured_bodies.append(t)
+                                        try:
+                                            stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                            name = "pw-capture-" + re.sub(r"[^a-z0-9]+", "-", u.lower())[-60:]
+                                            (DEBUG_DIR / f"{name}-{stamp}.html").write_text(t, encoding='utf-8')
+                                        except Exception:
+                                            pass
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                    page.on("response", _on_resp)
+                    # 1) Open homepage to mint session
+                    home_path = "aluguel-carros/index.htm" if lang.lower()=="pt" else "index.htm"
+                    await page.goto(f"https://www.carjet.com/{home_path}", wait_until="networkidle", timeout=35000)
+                    # Handle consent if present
+                    try:
+                        for sel in [
+                            "#didomi-notice-agree-button",
+                            ".didomi-continue-without-agreeing",
+                            "button:has-text('Aceitar')",
+                            "button:has-text('I agree')",
+                            "button:has-text('Accept')",
+                        ]:
+                            try:
+                                c = page.locator(sel)
+                                if await c.count() > 0:
+                                    try: await c.first.click(timeout=1500)
+                                    except Exception: pass
+                                    await page.wait_for_timeout(200)
+                                    break
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    # 2) Type exact location as in browser autosuggest, then submit form programmatically
+                    try:
+                        exact_loc = location
+                        lo = (location or '').lower()
+                        if 'albufeira' in lo:
+                            exact_loc = 'Albufeira Cidade'
+                        elif 'faro' in lo:
+                            exact_loc = 'Faro Aeroporto (FAO)'
+                        # Try common selectors for the location input
+                        loc_inp = None
+                        for sel in ["input[name='pickup']", "#pickup", "input[placeholder*='local' i]", "input[aria-label*='local' i]", "input[type='search']"]:
+                            try:
+                                h = await page.query_selector(sel)
+                                if h:
+                                    loc_inp = h; break
+                            except Exception:
+                                pass
+                        if loc_inp:
+                            try:
+                                await loc_inp.click()
+                                await loc_inp.fill("")
+                                await loc_inp.type(exact_loc, delay=50)
+                                # Wait for dropdown and click the exact match if visible
+                                try:
+                                    opt = page.locator(f"text={exact_loc}")
+                                    if await opt.count() > 0:
+                                        await opt.first.click(timeout=2000)
+                                except Exception:
+                                    # fallback: press Enter to accept first suggestion
+                                    try:
+                                        await loc_inp.press('Enter')
+                                    except Exception:
+                                        pass
+                                await page.wait_for_timeout(300)
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    # 2.b) Fill pickup/dropoff dates and times via visible inputs (simulate human typing)
+                    try:
+                        pickup_dmY = start_dt.strftime('%d/%m/%Y')
+                        dropoff_dmY = end_dt.strftime('%d/%m/%Y')
+                        pickup_HM = start_dt.strftime('%H:%M')
+                        dropoff_HM = end_dt.strftime('%H:%M')
+                        # Try native calendar UI first using the known triggers
+                        async def select_date_via_picker(trigger_alt: str, target_dmY: str):
+                            try:
+                                trig = page.locator(f"img.ui-datepicker-trigger[alt='{trigger_alt}']")
+                                if await trig.count() > 0:
+                                    await trig.first.click()
+                                    # Parse target day/month/year
+                                    td, tm, ty = target_dmY.split('/')
+                                    # Max 12 next clicks safeguard
+                                    for _ in range(13):
+                                        try:
+                                            title = await page.locator('.ui-datepicker-title').inner_text()
+                                        except Exception:
+                                            title = ''
+                                        # Title like 'Outubro 2025'
+                                        ok_month = (tm in target_dmY)  # coarse guard; we do direct day pick below
+                                        # Try clicking the exact day link
+                                        day_locator = page.locator(f".ui-datepicker-calendar td a:text-is('{int(td)}')")
+                                        if await day_locator.count() > 0:
+                                            try:
+                                                await day_locator.first.click()
+                                                await page.wait_for_timeout(200)
+                                                break
+                                            except Exception:
+                                                pass
+                                        # Navigate next month
+                                        try:
+                                            nxt = page.locator('.ui-datepicker-next')
+                                            if await nxt.count() > 0:
+                                                await nxt.first.click()
+                                                await page.wait_for_timeout(150)
+                                            else:
+                                                break
+                                        except Exception:
+                                            break
+                            except Exception:
+                                pass
+                        await select_date_via_picker('Data de recolha', pickup_dmY)
+                        await select_date_via_picker('Data de entrega', dropoff_dmY)
+                        fill_dates_js = """
+                          (pDate, pTime, dDate, dTime) => {
+                            const setVal = (sel, val) => { const el = document.querySelector(sel); if (!el) return false; el.focus(); el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); return true; };
+                            const tryAll = (sels, val) => { for (const s of sels) { if (setVal(s, val)) return true; } return false; };
+                            // Pickup date/time candidates
+                            tryAll(['#fechaRecogida','input[name=fechaRecogida]','input[name=pickupDate]','input[type=date][name*=recog]','input[type=date][name*=pickup]','input[placeholder*="recolh" i]','input[aria-label*="recolh" i]'], pDate);
+                            tryAll(['#fechaRecogidaSelHour','input[name=fechaRecogidaSelHour]','input[name=pickupTime]','input[type=time][name*=recog]','input[type=time][name*=pickup]','#h-recogida'], pTime);
+                            // Dropoff date/time candidates
+                            tryAll(['#fechaEntrega','#fechaDevolucion','input[name=fechaEntrega]','input[name=fechaDevolucion]','input[name=dropoffDate]','input[type=date][name*=entreg]','input[type=date][name*=devol]','input[placeholder*="entreg" i]','input[aria-label*="entreg" i]'], dDate);
+                            tryAll(['#fechaEntregaSelHour','#fechaDevolucionSelHour','input[name=fechaEntregaSelHour]','input[name=fechaDevolucionSelHour]','input[name=dropoffTime]','input[type=time][name*=entreg]','input[type=time][name*=devol]','input[type=time][name*=drop]','#h-devolucion'], dTime);
+                          }
+                        """
+                        await page.evaluate(fill_dates_js, pickup_dmY, pickup_HM, dropoff_dmY, dropoff_HM)
+                        await page.wait_for_timeout(300)
+                    except Exception:
+                        pass
+                    # Programmatic submit with full payload to ensure consistent parameters
+                    payload = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                    submit_js = """
+                      (url, data) => {
+                        const f = document.createElement('form');
+                        f.method = 'POST';
+                        f.action = url;
+                        for (const [k,v] of Object.entries(data||{})) {
+                          const i = document.createElement('input');
+                          i.type = 'hidden'; i.name = k; i.value = String(v ?? '');
+                          f.appendChild(i);
+                        }
+                        document.body.appendChild(f);
+                        f.submit();
+                      }
+                    """
+                    await page.evaluate(submit_js, f"https://www.carjet.com/do/list/{lang}", payload)
+                    try:
+                        await page.wait_for_load_state("networkidle", timeout=40000)
+                    except Exception:
+                        pass
+                    # Additionally trigger native on-page submit to mimic button onclick
+                    try:
+                        await page.evaluate("""
+                          try {
+                            if (typeof comprobar_errores_3 === 'function') {
+                              if (comprobar_errores_3()) {
+                                if (typeof filtroUsoForm === 'function') filtroUsoForm();
+                                if (typeof submit_fechas === 'function') submit_fechas('/do/list/pt');
+                              }
+                            }
+                          } catch (e) {}
+                        """)
+                        try:
+                            await page.wait_for_load_state("networkidle", timeout=40000)
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+                    # 3-5) Up to 3 cycles: click 'Pesquisar' (if present), scroll, wait for results
+                    for _ in range(3):
+                        try:
+                            btn = page.locator("button:has-text('Pesquisar'), button:has-text('Buscar'), input[type=submit], button[type=submit]")
+                            if await btn.count() > 0:
+                                try:
+                                    await btn.first.click(timeout=3000)
+                                except Exception:
+                                    pass
+                        except Exception:
+                            pass
+                        try:
+                            await page.wait_for_load_state("networkidle", timeout=40000)
+                        except Exception:
+                            pass
+                        # Best-effort screenshot after search click (skip if quick=1)
+                        if not quick:
+                            try:
+                                stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                await page.screenshot(path=str(DEBUG_DIR / f"pw-after-search-{stamp}.png"), full_page=True)
+                            except Exception:
+                                pass
+                        try:
+                            for __ in range(5):
+                                try:
+                                    await page.mouse.wheel(0, 1600)
+                                except Exception:
+                                    pass
+                                await page.wait_for_timeout(300)
+                        except Exception:
+                            pass
+                        # Check if results appeared; if so, break
+                        try:
+                            ok = await page.locator("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row").count()
+                            if (ok or 0) > 0:
+                                break
+                        except Exception:
+                            pass
+                    # Wait specifically for known backend calls and dump responses
+                    mf_body = ""; cl_body = ""
+                    try:
+                        resp_mf = await page.wait_for_response(lambda r: 'modalFilter.asp' in (r.url or ''), timeout=40000)
+                        try:
+                            mf_body = await resp_mf.text()
+                            if mf_body:
+                                stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                (DEBUG_DIR / f"pw-modalFilter-{stamp}.html").write_text(mf_body, encoding='utf-8')
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+                    try:
+                        resp_cl = await page.wait_for_response(lambda r: 'carList.asp' in (r.url or ''), timeout=40000)
+                        try:
+                            cl_body = await resp_cl.text()
+                            if cl_body:
+                                stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                (DEBUG_DIR / f"pw-carList-{stamp}.html").write_text(cl_body, encoding='utf-8')
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+                    html_pw = await page.content()
+                    final_url = page.url
+                    print(f"[DEBUG] Fechando browser, URL final: {final_url}", file=sys.stderr, flush=True)
+                    await context.close(); await browser.close()
+                    print(f"[DEBUG] Browser fechado, HTML size: {len(html_pw)} bytes", file=sys.stderr, flush=True)
+                if html_pw:
+                    items_pw = parse_prices(html_pw, final_url or base)
+                    items_pw = convert_items_gbp_to_eur(items_pw)
+                    items_pw = apply_price_adjustments(items_pw, final_url or base)
+                    items = items_pw
+                # If still empty, try parsing network-captured bodies
+                if (not items) and (cl_body or mf_body):
+                    try:
+                        base_net = "https://www.carjet.com/do/list/pt"
+                        if cl_body:
+                            its = parse_prices(cl_body, base_net)
+                            its = convert_items_gbp_to_eur(its)
+                            its = apply_price_adjustments(its, base_net)
+                            if its:
+                                items = its
+                        if (not items) and mf_body:
+                            its2 = parse_prices(mf_body, base_net)
+                            its2 = convert_items_gbp_to_eur(its2)
+                            its2 = apply_price_adjustments(its2, base_net)
+                            if its2:
+                                items = its2
+                    except Exception:
+                        pass
+                if (not items) and captured_bodies:
+                    try:
+                        base_net = "https://www.carjet.com/do/list/pt"
+                        for body in captured_bodies:
+                            its = parse_prices(body, base_net)
+                            its = convert_items_gbp_to_eur(its)
+                            its = apply_price_adjustments(its, base_net)
+                            if its:
+                                items = its
+                                break
+                    except Exception:
+                        pass
+                # Final fallback: if we ended on a CarJet list URL, delegate to URL-based compute
+                try:
+                    if (not items) and (final_url or '').startswith("https://www.carjet.com/do/list/"):
+                        data_f = await _compute_prices_for(final_url)
+                        its_f = (data_f or {}).get('items') or []
+                        if its_f:
+                            items = its_f
+                except Exception:
+                    pass
+                # Direct POST fallback within Playwright session
+                try:
+                    if not items:
+                        payload_dp = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                        rdp = await page.request.post(f"https://www.carjet.com/do/list/{lang}", data=payload_dp)
+                        try:
+                            html_dp = await rdp.text()
+                        except Exception:
+                            html_dp = ""
+                        if html_dp:
+                            try:
+                                stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                (DEBUG_DIR / f"pw-direct-post-{stamp}.html").write_text(html_dp, encoding='utf-8')
+                            except Exception:
+                                pass
+                            its_dp = parse_prices(html_dp, f"https://www.carjet.com/do/list/{lang}")
+                            its_dp = convert_items_gbp_to_eur(its_dp)
+                            its_dp = apply_price_adjustments(its_dp, f"https://www.carjet.com/do/list/{lang}")
+                            if its_dp:
+                                items = its_dp
+                except Exception:
+                    pass
+                # Engine fallback: if Chromium didn't produce items, try WebKit with Safari UA
+                if (not items) and USE_PLAYWRIGHT and _HAS_PLAYWRIGHT:
+                    try:
+                        from playwright.async_api import async_playwright
+                        async with async_playwright() as p2:
+                            browser2 = await p2.webkit.launch(headless=True)
+                            context2 = await browser2.new_context(
+                                locale="pt-PT",
+                                user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
+                            )
+                            page2 = await context2.new_page()
+                            captured2: List[str] = []
+                            async def _on_resp2(resp):
+                                try:
+                                    u = resp.url or ""
+                                    if any(k in u for k in ("modalFilter.asp", "carList.asp", "/do/list/pt", "filtroUso.asp")):
+                                        try:
+                                            t = await resp.text()
+                                            if t:
+                                                captured2.append(t)
+                                                try:
+                                                    stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                                    name = "pw2-capture-" + re.sub(r"[^a-z0-9]+", "-", u.lower())[-60:]
+                                                    (DEBUG_DIR / f"{name}-{stamp}.html").write_text(t, encoding='utf-8')
+                                                except Exception:
+                                                    pass
+                                        except Exception:
+                                            pass
+                                except Exception:
+                                    pass
+                            page2.on("response", _on_resp2)
+                            # Open homepage and perform same submission
+                            home_path2 = "aluguel-carros/index.htm" if lang.lower()=="pt" else "index.htm"
+                            await page2.goto(f"https://www.carjet.com/{home_path2}", wait_until="networkidle", timeout=35000)
+                            # Type exact location per autosuggest
+                            try:
+                                exact_loc2 = location
+                                lo2 = (location or '').lower()
+                                if 'albufeira' in lo2:
+                                    exact_loc2 = 'Albufeira Cidade'
+                                elif 'faro' in lo2:
+                                    exact_loc2 = 'Faro Aeroporto (FAO)'
+                                loc2 = None
+                                for sel in ["input[name='pickup']", "#pickup", "input[placeholder*='local' i]", "input[aria-label*='local' i]", "input[type='search']"]:
+                                    try:
+                                        h = await page2.query_selector(sel)
+                                        if h:
+                                            loc2 = h; break
+                                    except Exception:
+                                        pass
+                                if loc2:
+                                    try:
+                                        await loc2.click(); await loc2.fill(""); await loc2.type(exact_loc2, delay=50)
+                                        try:
+                                            opt2 = page2.locator(f"text={exact_loc2}")
+                                            if await opt2.count() > 0:
+                                                await opt2.first.click(timeout=2000)
+                                        except Exception:
+                                            try: await loc2.press('Enter')
+                                            except Exception: pass
+                                        await page2.wait_for_timeout(300)
+                                    except Exception:
+                                        pass
+                            except Exception:
+                                pass
+                            # Dates and hours
+                            try:
+                                pickup_dmY2 = start_dt.strftime('%d/%m/%Y')
+                                dropoff_dmY2 = end_dt.strftime('%d/%m/%Y')
+                                pickup_HM2 = start_dt.strftime('%H:%M')
+                                dropoff_HM2 = end_dt.strftime('%H:%M')
+                                fill_js2 = """
+                                  (pDate, pTime, dDate, dTime) => {
+                                    const setVal = (sel, val) => { const el = document.querySelector(sel); if (!el) return false; el.focus(); el.value = val; el.dispatchEvent(new Event('input', {bubbles:true})); el.dispatchEvent(new Event('change', {bubbles:true})); return true; };
+                                    const tryAll = (sels, val) => { for (const s of sels) { if (setVal(s, val)) return true; } return false; };
+                                    tryAll(['#fechaRecogida','input[name=fechaRecogida]','input[name=pickupDate]','input[type=date][name*=recog]','input[type=date][name*=pickup]','input[placeholder*="recolh" i]','input[aria-label*="recolh" i]'], pDate);
+                                    tryAll(['#fechaRecogidaSelHour','input[name=fechaRecogidaSelHour]','input[name=pickupTime]','input[type=time][name*=recog]','input[type=time][name*=pickup]','#h-recogida'], pTime);
+                                    tryAll(['#fechaEntrega','#fechaDevolucion','input[name=fechaEntrega]','input[name=fechaDevolucion]','input[name=dropoffDate]','input[type=date][name*=entreg]','input[type=date][name*=devol]','input[placeholder*="entreg" i]','input[aria-label*="entreg" i]'], dDate);
+                                    tryAll(['#fechaEntregaSelHour','#fechaDevolucionSelHour','input[name=fechaEntregaSelHour]','input[name=fechaDevolucionSelHour]','input[name=dropoffTime]','input[type=time][name*=entreg]','input[type=time][name*=devol]','input[type=time][name*=drop]','#h-devolucion'], dTime);
+                                  }
+                                """
+                                await page2.evaluate(fill_js2, pickup_dmY2, pickup_HM2, dropoff_dmY2, dropoff_HM2)
+                                await page2.wait_for_timeout(300)
+                            except Exception:
+                                pass
+                            # Submit programmatically and via native function
+                            try:
+                                payload2 = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                                submit_js2 = """
+                                  (url, data) => { const f = document.createElement('form'); f.method='POST'; f.action=url; for (const [k,v] of Object.entries(data||{})) { const i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=String(v??''); f.appendChild(i);} document.body.appendChild(f); f.submit(); }
+                                """
+                                await page2.evaluate(submit_js2, f"https://www.carjet.com/do/list/{lang}", payload2)
+                                await page2.wait_for_load_state('networkidle', timeout=40000)
+                                try:
+                                    await page2.evaluate("""
+                                      try { if (typeof comprobar_errores_3==='function' && comprobar_errores_3()) { if (typeof filtroUsoForm==='function') filtroUsoForm(); if (typeof submit_fechas==='function') submit_fechas('/do/list/pt'); } } catch(e) {}
+                                    """)
+                                    await page2.wait_for_load_state('networkidle', timeout=40000)
+                                except Exception:
+                                    pass
+                            except Exception:
+                                pass
+                            # Wait for known responses
+                            mf2 = ""; cl2 = ""
+                            try:
+                                r1 = await page2.wait_for_response(lambda r: 'modalFilter.asp' in (r.url or ''), timeout=40000)
+                                try: mf2 = await r1.text()
+                                except Exception: mf2 = ""
+                            except Exception:
+                                pass
+                            try:
+                                r2 = await page2.wait_for_response(lambda r: 'carList.asp' in (r.url or ''), timeout=40000)
+                                try: cl2 = await r2.text()
+                                except Exception: cl2 = ""
+                            except Exception:
+                                pass
+                            html2 = await page2.content()
+                            final2 = page2.url
+                            await context2.close(); await browser2.close()
+                        # parse order: DOM, carList, modalFilter, captured list
+                        if not items:
+                            try:
+                                if html2:
+                                    its = parse_prices(html2, final2 or base)
+                                    its = convert_items_gbp_to_eur(its); its = apply_price_adjustments(its, final2 or base)
+                                    if its: items = its
+                            except Exception:
+                                pass
+                        if (not items) and cl2:
+                            try:
+                                base_net2 = "https://www.carjet.com/do/list/pt"
+                                its = parse_prices(cl2, base_net2); its = convert_items_gbp_to_eur(its); its = apply_price_adjustments(its, base_net2)
+                                if its: items = its
+                            except Exception:
+                                pass
+                        if (not items) and mf2:
+                            try:
+                                base_net2 = "https://www.carjet.com/do/list/pt"
+                                its = parse_prices(mf2, base_net2); its = convert_items_gbp_to_eur(its); its = apply_price_adjustments(its, base_net2)
+                                if its: items = its
+                            except Exception:
+                                pass
+                        if (not items) and captured2:
+                            try:
+                                base_net2 = "https://www.carjet.com/do/list/pt"
+                                for body in captured2:
+                                    its = parse_prices(body, base_net2); its = convert_items_gbp_to_eur(its); its = apply_price_adjustments(its, base_net2)
+                                    if its:
+                                        items = its; break
+                            except Exception:
+                                pass
+                        # Final fallback for Chromium attempt: try URL-based compute if we have a CarJet list URL
+                        try:
+                            if (not items) and (final2 or '').startswith("https://www.carjet.com/do/list/"):
+                                data_f2 = await _compute_prices_for(final2)
+                                its_f2 = (data_f2 or {}).get('items') or []
+                                if its_f2:
+                                    items = its_f2
+                        except Exception:
+                            pass
+                        # Direct POST fallback within Playwright session (Chromium)
+                        try:
+                            if not items:
+                                payload_dp2 = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                                rdp2 = await page2.request.post(f"https://www.carjet.com/do/list/{lang}", data=payload_dp2)
+                                try:
+                                    html_dp2 = await rdp2.text()
+                                except Exception:
+                                    html_dp2 = ""
+                                if html_dp2:
+                                    try:
+                                        stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+                                        (DEBUG_DIR / f"pw2-direct-post-{stamp}.html").write_text(html_dp2, encoding='utf-8')
+                                    except Exception:
+                                        pass
+                                    its_dp2 = parse_prices(html_dp2, f"https://www.carjet.com/do/list/{lang}")
+                                    its_dp2 = convert_items_gbp_to_eur(its_dp2)
+                                    its_dp2 = apply_price_adjustments(its_dp2, f"https://www.carjet.com/do/list/{lang}")
+                                    if its_dp2:
+                                        items = its_dp2
+                        except Exception:
+                            pass
+                    except Exception:
+                        pass
+            except Exception:
+                # Playwright falhou silenciosamente, tentar fallback
+                items = []
+        html = ""
+        if not items:
+            html = try_direct_carjet(location, start_dt, end_dt, lang=lang, currency=currency)
         # DEBUG: persist fetched HTML for troubleshooting
         try:
             _stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
             _loc_tag = re.sub(r"[^a-z0-9]+", "-", (location or "").lower())
-            (_fp := (DEBUG_DIR / f"track_params-{_loc_tag}-{start_dt.date()}-{days}d-{_stamp}.html")).write_text(html or "", encoding="utf-8")
+            if html:
+                (_fp := (DEBUG_DIR / f"track_params-{_loc_tag}-{start_dt.date()}-{days}d-{_stamp}.html")).write_text(html or "", encoding="utf-8")
         except Exception:
             pass
-        if not html:
-            return _no_store_json({"ok": False, "error": "Upstream fetch failed"}, status_code=502)
-        base = f"https://www.carjet.com/do/list/{lang}"
-        items = parse_prices(html, base)
-        items = convert_items_gbp_to_eur(items)
-        items = apply_price_adjustments(items, base)
+        if not items:
+            if not html:
+                return _no_store_json({"ok": False, "error": "Upstream fetch failed"}, status_code=502)
+            items = parse_prices(html, base)
+            items = convert_items_gbp_to_eur(items)
+            items = apply_price_adjustments(items, base)
         # DEBUG: write a compact summary JSON (count and first 5 items)
         try:
             import json as _json
@@ -1460,6 +2675,16 @@ async def track_by_params(request: Request):
             (DEBUG_DIR / f"track_params-summary-{_loc_tag}-{_stamp}.json").write_text(_json.dumps(_sum, ensure_ascii=False, indent=2), encoding="utf-8")
         except Exception:
             pass
+        # No additional fallback needed; Playwright was already attempted first when enabled
+        print(f"\n[API] ✅ RESPONSE: {len(items)} items for {days} days")
+        if items:
+            print(f"[API] First car: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}")
+        else:
+            print(f"[API] ⚠️  NO ITEMS RETURNED!")
+        print(f"{'='*60}\n")
+        print(f"[API] RESPONSE: {len(items)} items, days={days}, start={start_dt.date()}, end={end_dt.date()}", file=sys.stderr, flush=True)
+        if items:
+            print(f"[API] First car: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
         return _no_store_json({
             "ok": True,
             "items": items,
@@ -1472,6 +2697,14 @@ async def track_by_params(request: Request):
         })
     except Exception as e:
         return _no_store_json({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/debug/vars")
+async def debug_vars():
+    return JSONResponse({
+        "USE_PLAYWRIGHT": USE_PLAYWRIGHT,
+        "_HAS_PLAYWRIGHT": _HAS_PLAYWRIGHT,
+        "SCRAPER_SERVICE": SCRAPER_SERVICE,
+    })
 
 @app.get("/ph")
 async def placeholder_image(car: str = "Car"):
@@ -2090,13 +3323,18 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
     # Pass 2: try to parse explicit car cards/rows from the HTML (preferred over regex)
     try:
         cards = soup.select("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row")
+        print(f"[PARSE] Found {len(cards)} cards to parse")
         idx = 0
+        cards_with_price = 0
+        cards_with_name = 0
+        cards_blocked = 0
         for card in cards:
             # price (broaden selectors and do not require explicit currency symbol)
             let_price = card.select_one(".price, .amount, [class*='price'], .nfoPriceDest, .nfoPrice, [data-price]")
             price_text = (let_price.get_text(strip=True) if let_price else "") or (card.get("data-price") or "")
             if not price_text:
                 continue
+            cards_with_price += 1
             # car/model
             name_el = card.select_one(
                 ".veh-name, .vehicle-name, .model, .titleCar, .title, h3, h2, [class*='veh-name'], [class*='vehicle-name'], [class*='model']"
@@ -2109,6 +3347,8 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                     if v:
                         car_name = v
                         break
+            if car_name:
+                cards_with_name += 1
             # supplier: try to extract provider code from logo_XXX.* in img src, then map via alias
             supplier = ""
             try:
@@ -2902,6 +4142,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 pass
             # Skip blocked models
             if car_name and _is_blocked_model(car_name):
+                cards_blocked += 1
                 continue
             items.append({
                 "id": idx,
@@ -2915,7 +4156,9 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 "link": link,
             })
             idx += 1
+        print(f"[PARSE] Stats: price={cards_with_price}, name={cards_with_name}, blocked={cards_blocked}, items={len(items)}")
         if items:
+            print(f"[PARSE] Returning {len(items)} items from card parsing")
             return items
     except Exception:
         pass
@@ -3251,7 +4494,13 @@ def fetch_with_optional_proxy(url: str, headers: Dict[str, str]):
     try:
         from urllib.parse import urlparse as _urlparse
         pr = _urlparse(url)
-        if pr.netloc.endswith("carjet.com"):
+        # Allow forcing proxy usage for CarJet via env flag (FORCE_PROXY_FOR_CARJET=1/true)
+        _force_proxy_cj = False
+        try:
+            _force_proxy_cj = str(os.getenv("FORCE_PROXY_FOR_CARJET", "")).strip().lower() in ("1", "true", "yes", "on")
+        except Exception:
+            _force_proxy_cj = False
+        if pr.netloc.endswith("carjet.com") and not _force_proxy_cj:
             h2 = dict(headers or {})
             h2["Cookie"] = "monedaForzada=EUR; moneda=EUR; currency=EUR; country=PT; idioma=PT; lang=pt"
             if _HTTPX_CLIENT:
@@ -3296,7 +4545,13 @@ async def async_fetch_with_optional_proxy(url: str, headers: Dict[str, str]):
     try:
         from urllib.parse import urlparse as _urlparse
         pr = _urlparse(url)
-        if pr.netloc.endswith("carjet.com"):
+        # Allow forcing proxy usage for CarJet via env flag (FORCE_PROXY_FOR_CARJET=1/true)
+        _force_proxy_cj = False
+        try:
+            _force_proxy_cj = str(os.getenv("FORCE_PROXY_FOR_CARJET", "")).strip().lower() in ("1", "true", "yes", "on")
+        except Exception:
+            _force_proxy_cj = False
+        if pr.netloc.endswith("carjet.com") and not _force_proxy_cj:
             h2 = dict(headers or {})
             h2["Cookie"] = "monedaForzada=EUR; moneda=EUR; currency=EUR; country=PT; idioma=PT; lang=pt"
             if _HTTPX_ASYNC:
