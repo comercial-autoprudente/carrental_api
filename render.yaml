@@ -12,9 +12,23 @@ services:
         sync: false
       - key: SECRET_KEY
         generateValue: true
-      - key: TARGET_URL
-        sync: false
+      - key: USE_PLAYWRIGHT
+        value: "1"
+      - key: TEST_MODE_LOCAL
+        value: "0"  # Real scraping mode (0=real scraping, 1=test URLs)
       - key: SCRAPER_SERVICE
-        sync: false
+        value: "scrapeops"
       - key: SCRAPER_API_KEY
         sync: false
+      - key: SCRAPER_COUNTRY
+        value: "pt"
+      - key: TEST_FARO_URL
+        sync: false
+      - key: TEST_ALBUFEIRA_URL
+        sync: false
+      - key: TARGET_URL
+        sync: false
+      - key: CARJET_PRICE_ADJUSTMENT_PCT
+        value: "3.12"
+      - key: CARJET_PRICE_OFFSET_EUR
+        value: "0"
