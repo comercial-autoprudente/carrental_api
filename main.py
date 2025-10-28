@@ -870,21 +870,74 @@ _URL_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}  # key normalized URL -
 
 # Ensure users table and seed initial admin on startup
 try:
-    _ensure_users_table()
-    with _db_lock:
-        con = _db_connect()
+    # === Ensure default admin users exist ===
+    def _ensure_default_users():
+        """Create default users if they don't exist"""
+        default_users = [
+            {
+                "username": "admin",
+                "password": APP_PASSWORD,
+                "first_name": "Filipe",
+                "last_name": "Pacheco",
+                "email": "carlpac82@hotmail.com",
+                "mobile": "+351 964 805 750",
+                "profile_picture": "carlpac82.png",
+                "is_admin": True
+            },
+            {
+                "username": "carlpac82",
+                "password": "Frederico.2025",
+                "first_name": "Filipe",
+                "last_name": "Pacheco",
+                "email": "carlpac82@hotmail.com",
+                "mobile": "+351 964 805 750",
+                "profile_picture": "carlpac82.png",
+                "is_admin": True
+            },
+            {
+                "username": "dprudente",
+                "password": "dprudente",
+                "first_name": "Daniell",
+                "last_name": "Prudente",
+                "email": "comercial.autoprudente@gmail.com",
+                "mobile": "+351 911 747 478",
+                "profile_picture": "dprudente.png",
+                "is_admin": False
+            }
+        ]
+        
         try:
-            cur = con.execute("SELECT id FROM users WHERE username=?", (APP_USERNAME,))
-            row = cur.fetchone()
-            if not row:
-                pw_hash = _hash_password(APP_PASSWORD)
-                con.execute(
-                    "INSERT INTO users (username, password_hash, first_name, last_name, email, is_admin, enabled, created_at) VALUES (?,?,?,?,?,?,?,?)",
-                    (APP_USERNAME, pw_hash, "", "", "", 1, 1, time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
-                )
-                con.commit()
-        finally:
-            con.close()
+            with _db_lock:
+                con = _db_connect()
+                try:
+                    for user in default_users:
+                        cur = con.execute("SELECT id FROM users WHERE username=?", (user["username"],))
+                        row = cur.fetchone()
+                        if not row:
+                            pw_hash = _hash_password(user["password"])
+                            con.execute(
+                                "INSERT INTO users (username, password_hash, first_name, last_name, email, mobile, profile_picture_path, is_admin, enabled, created_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                                (
+                                    user["username"],
+                                    pw_hash,
+                                    user["first_name"],
+                                    user["last_name"],
+                                    user["email"],
+                                    user["mobile"],
+                                    user["profile_picture"],
+                                    1 if user["is_admin"] else 0,
+                                    1,
+                                    time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
+                                )
+                            )
+                            print(f"[INIT] Created user: {user['username']}", file=sys.stderr)
+                    con.commit()
+                finally:
+                    con.close()
+        except Exception as e:
+            print(f"[INIT] Error creating default users: {e}", file=sys.stderr)
+    
+    _ensure_default_users()
 except Exception:
     pass
 
