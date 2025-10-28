@@ -138,7 +138,6 @@
 
     <main class="mx-auto max-w-6xl px-4 py-6 space-y-8">
       
-
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
           <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Pesquisar por parâmetros</h2>
@@ -169,11 +168,14 @@
             <button id="fetchAllDaysBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
               📊 Fetch All (Todos os Dias)
             </button>
+            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); alert('Cache e sessão limpos!');">
+              🗑️ Limpar Cache & Renovar Sessão
+            </button>
             <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
           <div class="md:col-span-1 seg hidden">
             <label class="sr-only">Início (hora)</label>
-            <input id="startTime" type="time" value="10:00" placeholder="10:00" class="time-input w-full rounded-md border-gray-300" />
+            <input id="startTime" type="time" value="15:00" placeholder="15:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-2 seg hidden">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
@@ -347,7 +349,7 @@
               const daysInput = document.getElementById('days');
               const chipsCont = document.getElementById('daysChips');
               if (daysInput && chipsCont) {
-                const presets = [1,2,3,4,5,6,7,8,9,14,22,31,60];
+                const presets = [1,2,3,4,5,6,7,8,9,14,22,28,31,60];
                 const onChange = (d) => {
                   window.selectedDays = d;
                   daysInput.value = String(d);
@@ -362,27 +364,29 @@
       });
       
       function getCacheKey(location, date, days) {
-        return `${location}-${date}-${days}`;
+        const key = `${location}-${date}-${days}`;
+        console.log('[CACHE KEY]', key);
+        return key;
       }
 
       // Date helpers
       function fmtDate(d){ const m=String(d.getMonth()+1).padStart(2,'0'); const day=String(d.getDate()).padStart(2,'0'); return `${d.getFullYear()}-${m}-${day}`; }
       function toDate(v){ const d=new Date(v); return isNaN(d.getTime())?null:d; }
       function setupDateMath(){
-        // In this UX, the visible date ('startDate') is DELIVERY date.
-        // We compute PICKUP date = DELIVERY - days, and store it in hidden 'endDate'.
-        const deliveryEl = document.getElementById('startDate');
-        const pickupHiddenEl = document.getElementById('endDate');
+        // CORRECTED: startDate is PICKUP date (data de recolha)
+        // We compute DELIVERY date = PICKUP + days, and store it in hidden 'endDate'.
+        const pickupEl = document.getElementById('startDate');
+        const deliveryHiddenEl = document.getElementById('endDate');
         const daysEl = document.getElementById('days');
-        if (!deliveryEl || !pickupHiddenEl || !daysEl) return;
+        if (!pickupEl || !deliveryHiddenEl || !daysEl) return;
         function recompute(){
           const n = parseInt(daysEl.value||'0',10);
-          const delivery = toDate(deliveryEl.value); if(!delivery||!n) return;
-          const pickup = new Date(delivery); pickup.setDate(pickup.getDate()-n);
-          pickupHiddenEl.value = fmtDate(pickup);
+          const pickup = toDate(pickupEl.value); if(!pickup||!n) return;
+          const delivery = new Date(pickup); delivery.setDate(delivery.getDate()+n);
+          deliveryHiddenEl.value = fmtDate(delivery);
         }
-        ['input','change'].forEach(ev=>{ deliveryEl.addEventListener(ev, recompute); daysEl.addEventListener(ev, recompute); });
-        deliveryEl.addEventListener('change', ()=>{ try{ deliveryEl.blur(); }catch(_){ } recompute(); });
+        ['input','change'].forEach(ev=>{ pickupEl.addEventListener(ev, recompute); daysEl.addEventListener(ev, recompute); });
+        pickupEl.addEventListener('change', ()=>{ try{ pickupEl.blur(); }catch(_){ } recompute(); });
         recompute();
       }
       // Initialize date math and days selector once DOM is ready
@@ -890,13 +894,13 @@
         const locEl = document.getElementById('location');
         const sdEl = document.getElementById('startDate');
         const location = (locEl && locEl.value || '').trim();
-        const delivery_date = sdEl && sdEl.value || '';
+        const pickup_date = sdEl && sdEl.value || '';
         
         for (const d of daysList) {
           const btn = document.createElement('button');
           const isSelected = d === window.selectedDays;
-          const cacheKey = getCacheKey(location, delivery_date, d);
-          const isCached = location && delivery_date && cachedResults[cacheKey];
+          const cacheKey = getCacheKey(location, pickup_date, d);
+          const isCached = location && pickup_date && cachedResults[cacheKey];
           
           btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isSelected ? 'bg-[#f4ad0f] text-white border-[#f4ad0f]' : (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10'));
           btn.innerHTML = d + 'd' + (isCached ? (isSelected ? ' <span style="color: #fff; font-weight: 700;">✓</span>' : ' <span style="color: #009cb6; font-weight: 700;">✓</span>') : '');
@@ -985,19 +989,19 @@
         // end date/time are computed in background and hidden; request will use days only
         const daysEl = document.getElementById('days');
         const location = (locEl && locEl.value || '').trim();
-        const delivery_date = sdEl && sdEl.value || '';
-        const start_time = stEl && (stEl.value || '10:00') || '10:00';
+        const pickup_date = sdEl && sdEl.value || '';
+        const start_time = stEl && (stEl.value || '15:00') || '15:00';
         const days = parseInt((daysEl && daysEl.value) || '0', 10) || 0;
-        console.log('[FETCH] Iniciado - Location:', location, 'Date:', delivery_date, 'Days:', days);
+        console.log('[FETCH] Iniciado - Location:', location, 'Pickup Date:', pickup_date, 'Days:', days);
         
-        if (!location || !delivery_date || !days){
+        if (!location || !pickup_date || !days){
           console.log('[FETCH] Parâmetros inválidos');
           if (status) status.textContent = 'Preencha local, data de início e dias ou data de fim.';
           return;
         }
         
         // Verificar se está em cache
-        const cacheKey = getCacheKey(location, delivery_date, days);
+        const cacheKey = getCacheKey(location, pickup_date, days);
         console.log('[CACHE] Key:', cacheKey, '| Existe?', !!cachedResults[cacheKey]);
         
         if (cachedResults[cacheKey]) {
@@ -1056,18 +1060,8 @@
           } catch(_){}
         }, 200);
         try {
-          // Compute pickup date from delivery_date - days to match CarJet UX
-          let pickup_date = '';
-          try {
-            const d = toDate(delivery_date);
-            if (d && days>0) { const p = new Date(d); p.setDate(p.getDate()-days); pickup_date = fmtDate(p); }
-          } catch(_){}
-          const body = { location, start_date: pickup_date || delivery_date, start_time, days, lang: 'pt', currency: 'EUR' };
-          // Proactive warmup to avoid first-click issues
-          try { await fetch('/healthz', { credentials: 'same-origin', cache: 'no-store', keepalive: true }); } catch(_) {}
-          // Ensure date input is committed
-          try { if (sdEl) { sdEl.blur(); sdEl.dispatchEvent(new Event('change', { bubbles: true })); } } catch(_){ }
-          await new Promise(r=>setTimeout(r, 300));
+          // CORRECTED: startDate is already the pickup date, use it directly
+          const body = { location, start_date: pickup_date, start_time, days, lang: 'pt', currency: 'EUR' };
           async function doFetchOnce() {
             const resp = await fetch('/api/track-by-params', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', cache: 'no-store', redirect: 'follow', body: JSON.stringify(body) });
             if (resp.status === 401) throw new Error('unauthorized');
@@ -1082,13 +1076,10 @@
             return json;
           }
           let data;
-          const attempts = [0, 300, 700, 1200]; // add a stronger 4th attempt
+          const attempts = [0, 500]; // Simplified: only 2 fast attempts
           for (let i=0; i<attempts.length; i++) {
             if (attempts[i] > 0) await new Promise(r=>setTimeout(r, attempts[i]));
             try {
-              if (i===1) { if (status) status.textContent = 'A iniciar sessão...'; try { await fetch('/healthz', { credentials: 'same-origin', cache: 'no-store', keepalive: true }); } catch(_) {} }
-              if (i===2) { if (status) status.textContent = 'A sincronizar...'; try { await fetch('/healthz', { credentials: 'same-origin', cache: 'no-store', keepalive: true }); } catch(_) {} }
-              if (i===3) { if (status) status.textContent = 'A estabelecer sessão...'; try { await fetch('/', { credentials: 'same-origin', cache: 'no-store' }); } catch(_) {} }
               data = await doFetchOnce();
               break;
             } catch(_) { data = undefined; }
@@ -1096,13 +1087,28 @@
           if (!data) throw new Error('Não foi possível obter resultados. Tente novamente.');
           const items = Array.isArray(data.items) ? data.items : [];
           
+          // DEBUG: Log server response
+          console.log('[SERVER RESPONSE]', {
+            location: data.location,
+            days: data.days,
+            start_date: data.start_date,
+            itemCount: items.length,
+            firstPrice: items[0]?.price
+          });
+          
           // Salvar no cache para uso futuro
-          const cacheKey = getCacheKey(location, delivery_date, days);
+          const cacheKey = getCacheKey(location, pickup_date, days);
           cachedResults[cacheKey] = data;
+          console.log('[CACHE SAVE]', cacheKey, '→', items.length, 'items');
           
           const section = document.createElement('div');
           section.className = 'rounded-md border';
           const inner = [];
+          // Mostrar aviso se houver
+          if (data.warning) {
+            inner.push(`<div class=\"px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm\">${escapeHtml(data.warning)}<\/div>`);
+          }
+          
           inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-') } day(s) — ${escapeHtml(data.location || '-')}<\/div>`);
           
           if (items.length === 0) {
@@ -1153,15 +1159,15 @@
           const stEl = document.getElementById('startTime');
           
           const location = (locEl && locEl.value || '').trim();
-          const delivery_date = sdEl && sdEl.value || '';
-          const start_time = stEl && (stEl.value || '10:00') || '10:00';
+          const pickup_date = sdEl && sdEl.value || '';
+          const start_time = stEl && (stEl.value || '15:00') || '15:00';
           
-          if (!location || !delivery_date) {
+          if (!location || !pickup_date) {
             if (fetchAllStatus) fetchAllStatus.textContent = '⚠️ Preencha local e data primeiro';
             return;
           }
           
-          const daysList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 31, 60];
+          const daysList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31, 60];
           
           try {
             fetchAllDaysBtn.disabled = true;
@@ -1176,13 +1182,8 @@
             
             for (const days of daysList) {
               try {
-                let pickup_date = '';
-                try {
-                  const d = toDate(delivery_date);
-                  if (d && days>0) { const p = new Date(d); p.setDate(p.getDate()-days); pickup_date = fmtDate(p); }
-                } catch(_){}
-                
-                const body = { location, start_date: pickup_date || delivery_date, start_time, days, lang: 'pt', currency: 'EUR' };
+                // CORRECTED: pickup_date is already the start date from the form
+                const body = { location, start_date: pickup_date, start_time, days, lang: 'pt', currency: 'EUR' };
                 console.log(`[FETCH ALL] ${days}d - Enviando request...`);
                 
                 const resp = await fetch('/api/track-by-params', {
@@ -1200,7 +1201,7 @@
                 const data = await resp.json();
                 
                 if (data && data.ok !== false) {
-                  const cacheKey = getCacheKey(location, delivery_date, days);
+                  const cacheKey = getCacheKey(location, pickup_date, days);
                   cachedResults[cacheKey] = data;
                   console.log(`[FETCH ALL] ${days}d - Cache salvo (${data.items?.length || 0} items)`);
                 }
