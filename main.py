@@ -1956,9 +1956,115 @@ async def track_by_params(request: Request):
                         print(f"[SCRAPERAPI] ⚠️ Parse retornou 0 items", file=sys.stderr, flush=True)
                 else:
                     print(f"[SCRAPERAPI] ❌ HTTP {response.status_code}", file=sys.stderr, flush=True)
+                    print(f"[SCRAPERAPI] Tentando fallback para Playwright...", file=sys.stderr, flush=True)
             except Exception as e:
                 import sys
                 print(f"[SCRAPERAPI ERROR] {e}", file=sys.stderr, flush=True)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+                print(f"[SCRAPERAPI] Tentando fallback para Playwright...", file=sys.stderr, flush=True)
+        
+        # FALLBACK: Tentar Playwright se ScraperAPI falhou
+        if TEST_MODE_LOCAL == 0 and not items and _HAS_PLAYWRIGHT:
+            try:
+                from playwright.async_api import async_playwright
+                import sys
+                print(f"[PLAYWRIGHT] Iniciando scraping direto para {location}", file=sys.stderr, flush=True)
+                
+                async with async_playwright() as p:
+                    browser = await p.chromium.launch(headless=True)
+                    context = await browser.new_context(
+                        locale="pt-PT",
+                        viewport={"width": 1920, "height": 1080},
+                        user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    )
+                    page = await context.new_page()
+                    
+                    try:
+                        # Ir para página inicial do CarJet
+                        print(f"[PLAYWRIGHT] Acessando CarJet homepage...", file=sys.stderr, flush=True)
+                        await page.goto("https://www.carjet.com/", wait_until="networkidle", timeout=30000)
+                        
+                        # Fechar modal de cookies se aparecer
+                        try:
+                            await page.click('button:has-text("Aceitar")', timeout=2000)
+                        except:
+                            pass
+                        
+                        # Preencher formulário
+                        carjet_loc = location
+                        if 'faro' in location.lower():
+                            carjet_loc = 'Faro Aeroporto (FAO)'
+                        elif 'albufeira' in location.lower():
+                            carjet_loc = 'Albufeira'
+                        
+                        print(f"[PLAYWRIGHT] Preenchendo formulário: {carjet_loc}", file=sys.stderr, flush=True)
+                        
+                        # Preencher local de recolha
+                        await page.fill('input[name="pickup"]', carjet_loc)
+                        await page.wait_for_timeout(1000)
+                        
+                        # Selecionar sugestão
+                        try:
+                            await page.click(f'text="{carjet_loc}"', timeout=3000)
+                        except:
+                            pass
+                        
+                        # Preencher datas
+                        start_str = start_dt.strftime("%d/%m/%Y")
+                        end_str = end_dt.strftime("%d/%m/%Y")
+                        
+                        await page.fill('input[name="fechaRecogida"]', start_str)
+                        await page.fill('input[name="fechaEntrega"]', end_str)
+                        
+                        print(f"[PLAYWRIGHT] Submetendo formulário...", file=sys.stderr, flush=True)
+                        
+                        # Clicar no botão de pesquisa e aguardar navegação
+                        async with page.expect_navigation(wait_until="networkidle", timeout=60000):
+                            await page.click('button[type="submit"]')
+                        
+                        print(f"[PLAYWRIGHT] Aguardando resultados...", file=sys.stderr, flush=True)
+                        await page.wait_for_timeout(5000)
+                        
+                        # Extrair HTML
+                        html_content = await page.content()
+                        print(f"[PLAYWRIGHT] ✅ HTML capturado: {len(html_content)} bytes", file=sys.stderr, flush=True)
+                        
+                        # Parse
+                        items = parse_prices(html_content, page.url)
+                        print(f"[PLAYWRIGHT] Parsed {len(items)} items antes conversão", file=sys.stderr, flush=True)
+                        
+                        # Converter GBP para EUR
+                        items = convert_items_gbp_to_eur(items)
+                        print(f"[PLAYWRIGHT] {len(items)} items após GBP→EUR", file=sys.stderr, flush=True)
+                        
+                        # Aplicar ajustes
+                        items = apply_price_adjustments(items, page.url)
+                        print(f"[PLAYWRIGHT] {len(items)} items após ajustes", file=sys.stderr, flush=True)
+                        
+                        if items:
+                            print(f"[PLAYWRIGHT] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                            if items:
+                                print(f"[PLAYWRIGHT] Primeiro: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                            return _no_store_json({
+                                "ok": True,
+                                "items": items,
+                                "location": location,
+                                "start_date": start_dt.date().isoformat(),
+                                "start_time": start_dt.strftime("%H:%M"),
+                                "end_date": end_dt.date().isoformat(),
+                                "end_time": end_dt.strftime("%H:%M"),
+                                "days": days,
+                            })
+                        else:
+                            print(f"[PLAYWRIGHT] ⚠️ Parse retornou 0 items", file=sys.stderr, flush=True)
+                    
+                    finally:
+                        await browser.close()
+            
+            except Exception as e:
+                import sys
+                print(f"[PLAYWRIGHT ERROR] {e}", file=sys.stderr, flush=True)
                 import traceback
                 traceback.print_exc(file=sys.stderr)
         
