@@ -1060,17 +1060,22 @@ async def login_action(request: Request, username: str = Form(...), password: st
             ok = True
             is_admin_flag = True
         if ok:
-            request.session["auth"] = True
-            request.session["username"] = u
-            request.session["is_admin"] = bool(is_admin_flag)
-            request.session["last_active_ts"] = int(datetime.now(timezone.utc).timestamp())
-            log_activity(request, "login_success", details="", username=u)
             try:
-                with (DEBUG_DIR / "login_trace.txt").open("a", encoding="utf-8") as f:
-                    f.write(f"success {datetime.now(timezone.utc).isoformat()} user={u}\n")
-            except Exception:
-                pass
-            return RedirectResponse(url="/", status_code=HTTP_303_SEE_OTHER)
+                request.session["auth"] = True
+                request.session["username"] = u
+                request.session["is_admin"] = bool(is_admin_flag)
+                request.session["last_active_ts"] = int(datetime.now(timezone.utc).timestamp())
+                log_activity(request, "login_success", details="", username=u)
+                try:
+                    with (DEBUG_DIR / "login_trace.txt").open("a", encoding="utf-8") as f:
+                        f.write(f"success {datetime.now(timezone.utc).isoformat()} user={u}\n")
+                except Exception:
+                    pass
+                return RedirectResponse(url="/", status_code=HTTP_303_SEE_OTHER)
+            except Exception as e:
+                import sys
+                print(f"[LOGIN ERROR] Session error: {e}", file=sys.stderr, flush=True)
+                return templates.TemplateResponse("login.html", {"request": request, "error": f"Login session error: {str(e)}"})
         try:
             with (DEBUG_DIR / "login_trace.txt").open("a", encoding="utf-8") as f:
                 f.write(f"invalid {datetime.now(timezone.utc).isoformat()} user={u}\n")
