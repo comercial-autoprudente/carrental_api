@@ -3703,7 +3703,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
 
     # Pass 2: try to parse explicit car cards/rows from the HTML (preferred over regex)
     try:
-        cards = soup.select("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row")
+        cards = soup.select("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row, [class*='offer']")
         print(f"[PARSE] Found {len(cards)} cards to parse")
         idx = 0
         cards_with_price = 0
