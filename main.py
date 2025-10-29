@@ -812,6 +812,31 @@ def _verify_password(pw: str, stored: str) -> bool:
     except Exception:
         return False
 
+def clean_car_name(car_name: str) -> str:
+    """
+    Limpa e normaliza nomes de carros
+    - Remove duplicações como "Autoautomático" → "Automático"
+    - Remove "ou similar"
+    - Normaliza espaços
+    """
+    if not car_name:
+        return ""
+    
+    name = str(car_name).strip()
+    
+    # Remover duplicações comuns
+    name = re.sub(r'[Aa]uto[Aa]utom[aá]tico', 'Automático', name)
+    name = re.sub(r'[Aa]uto[Aa]utomatic', 'Automatic', name)
+    
+    # Remover "ou similar" e variantes
+    name = re.sub(r'\s*ou\s+similar(es)?.*$', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s*or\s+similar.*$', '', name, flags=re.IGNORECASE)
+    
+    # Normalizar espaços múltiplos
+    name = re.sub(r'\s+', ' ', name).strip()
+    
+    return name
+
 def map_category_to_group(category: str, car_name: str = "") -> str:
     """
     Mapeia categorias descritivas para códigos de grupos definidos:
@@ -820,8 +845,13 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
     CASE-INSENSITIVE: Converte para lowercase para comparação
     
     B1 vs B2 LOGIC (baseado em LUGARES, não PORTAS):
-    - B1 = Mini 4 LUGARES (Fiat 500, Peugeot 108, C1, etc)
-    - B2 = Mini 5 LUGARES (Fiat Panda, Toyota Aygo, VW Up, etc)
+    - B1 = Mini 4 LUGARES (Fiat 500, Peugeot 108, C1, VW Up, Kia Picanto, Toyota Aygo)
+    - B2 = Mini 5 LUGARES (Fiat Panda, Hyundai i10, etc)
+    
+    REGRAS ESPECIAIS:
+    - Cabrio/Cabriolet → G (Premium)
+    - Toyota Aygo X → F (SUV)
+    - Mini 4 lugares Automático → E1
     """
     if not category:
         return "Others"
@@ -834,12 +864,19 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
     if any(word in car_lower for word in ['cabrio', 'cabriolet', 'convertible', 'conversível']):
         return "G"
     
-    # IMPORTANTE: Carros específicos de 4 LUGARES devem ser B1
-    # mesmo que o CarJet os categorize como "MINI 5 Portas"
+    # PRIORIDADE 2: Toyota Aygo X → F (SUV), não confundir com Aygo normal (B1)
+    if 'aygo x' in car_lower or 'aygo-x' in car_lower:
+        return "F"
+    
+    # PRIORIDADE 3: Modelos de 4 LUGARES → B1
+    # (Fiat 500, Peugeot 108, C1, VW Up, Kia Picanto, Toyota Aygo)
     b1_4_lugares_models = [
         'fiat 500', 'fiat500',
         'peugeot 108', 'peugeot108',
         'citroen c1', 'citroën c1', 'c1',
+        'volkswagen up', 'vw up', 'vwup',
+        'kia picanto', 'kiapicanto',
+        'toyota aygo', 'toyotaaygo',
     ]
     
     # Se categoria é "mini" OU contém "mini", verificar modelo específico
@@ -847,9 +884,13 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
         # Verificar se é um modelo de 4 lugares (B1)
         for model in b1_4_lugares_models:
             if model in car_lower:
+                # Se é automático de 4 lugares → E1 (Mini Automatic)
+                if any(word in car_lower for word in ['auto', 'automatic', 'automático', 'automatico']):
+                    return "E1"
+                # Se é manual de 4 lugares → B1
                 return "B1"
         # Se não é B1 específico, é B2 (5 lugares)
-        # Modelos B2: Fiat Panda, Toyota Aygo, VW Up, Hyundai i10, Kia Picanto, etc
+        # Modelos B2: Fiat Panda, Hyundai i10, etc
         return "B2"
     
     # Mapeamento direto (TUDO EM LOWERCASE)
@@ -5825,19 +5866,23 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
                 price_curr = "EUR"
             except Exception:
                 pass
+        # Limpar nome do carro PRIMEIRO (remover "Autoautomático", "ou similar", etc)
+        car_name_clean = clean_car_name(it.get("car", ""))
+        
         # Se não tiver grupo definido, mapear a partir da categoria
+        # IMPORTANTE: usar nome LIMPO para mapeamento correto
         group_code = it.get("group", "")
         if not group_code:
-            group_code = map_category_to_group(it.get("category", ""), it.get("car", ""))
+            group_code = map_category_to_group(it.get("category", ""), car_name_clean)
         
         # DEBUG: Log primeiro item
         if len(detailed) == 0 and len(summary) == 0:
             import sys
-            print(f"[DEBUG] Primeiro item: cat={it.get('category')}, group_from_it={it.get('group')}, group_mapped={group_code}", file=sys.stderr, flush=True)
+            print(f"[DEBUG] Primeiro item: cat={it.get('category')}, car_clean={car_name_clean}, group={group_code}", file=sys.stderr, flush=True)
         
         row = {
             "supplier": it.get("supplier", ""),
-            "car": it.get("car", ""),
+            "car": car_name_clean,
             "price": price_text_in,
             "price_num": price_num,
             "currency": price_curr or it.get("currency", ""),
