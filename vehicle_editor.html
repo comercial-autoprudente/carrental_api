@@ -865,7 +865,24 @@
                     group: group
                 });
                 
-                alert('✅ Vehicle added! Copy the code below and add it to carjet_direct.py');
+                // Gerar código
+                const code = `    '${cleanName}': '${category}',  # Group ${group} | ${brand} ${model}`;
+                
+                // Copiar código automaticamente para clipboard
+                navigator.clipboard.writeText(code).then(() => {
+                    // Mostrar mensagem de sucesso
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    successMsg.innerHTML = `✅ Vehicle added!<br><span class="text-sm">Code copied to clipboard</span>`;
+                    document.body.appendChild(successMsg);
+                    setTimeout(() => successMsg.remove(), 3000);
+                });
+                
+                // Fechar modal
+                closeModal();
+                
+                // Recarregar dados do servidor
+                loadVehicles();
             } else {
                 // Atualizar veículo existente
                 vehiclesData[editingIndex].clean = cleanName;
@@ -873,15 +890,15 @@
                 vehiclesData[editingIndex].model = model;
                 vehiclesData[editingIndex].category = category;
                 vehiclesData[editingIndex].group = group;
+                
+                // Gerar código
+                const code = `    '${cleanName}': '${category}',  # Group ${group} | ${brand} ${model}`;
+                document.getElementById('generatedCode').textContent = code;
+                document.getElementById('codePreview').classList.remove('hidden');
+                
+                // Re-renderizar
+                renderTable();
             }
-            
-            // Gerar código
-            const code = `    '${cleanName}': '${category}',  # Group ${group} | ${brand} ${model}`;
-            document.getElementById('generatedCode').textContent = code;
-            document.getElementById('codePreview').classList.remove('hidden');
-            
-            // Re-renderizar
-            renderTable();
         }
         
         function saveAllChanges() {
