@@ -6496,7 +6496,7 @@ async def search_vehicles(request: Request, q: str = ""):
 
 @app.post("/api/vehicles/save")
 async def save_vehicle(request: Request):
-    """Salva ou atualiza um veículo no sistema"""
+    """Salva ou atualiza um veículo no sistema e atualiza carjet_direct.py automaticamente"""
     require_auth(request)
     try:
         body = await request.json()
@@ -6535,12 +6535,50 @@ async def save_vehicle(request: Request):
             finally:
                 con.close()
         
-        # Gerar código Python para adicionar ao carjet_direct.py
+        # Atualizar carjet_direct.py automaticamente
+        try:
+            import carjet_direct
+            import importlib
+            
+            # Ler o arquivo atual
+            carjet_path = os.path.join(os.path.dirname(__file__), 'carjet_direct.py')
+            with open(carjet_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Verificar se o veículo já existe no VEHICLES
+            vehicle_line = f"    '{clean_name}':"
+            
+            if vehicle_line in content:
+                # Atualizar entrada existente
+                import re
+                pattern = rf"    '{re.escape(clean_name)}':\s*'[^']*',"
+                replacement = f"    '{clean_name}': '{category}',"
+                content = re.sub(pattern, replacement, content)
+            else:
+                # Adicionar nova entrada (antes do último })
+                new_entry = f"    '{clean_name}': '{category}',\n"
+                # Encontrar a última linha do dicionário VEHICLES
+                vehicles_end = content.rfind('}')
+                if vehicles_end > 0:
+                    content = content[:vehicles_end] + new_entry + content[vehicles_end:]
+            
+            # Escrever de volta
+            with open(carjet_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            
+            # Recarregar o módulo
+            importlib.reload(carjet_direct)
+            
+            message = "Vehicle saved and carjet_direct.py updated automatically!"
+        except Exception as e:
+            message = f"Vehicle saved but failed to update carjet_direct.py: {str(e)}"
+        
+        # Gerar código Python
         code = f"    '{clean_name}': '{category}',"
         
         return _no_store_json({
             "ok": True,
-            "message": "Vehicle saved successfully",
+            "message": message,
             "clean_name": clean_name,
             "category": category,
             "code": code
