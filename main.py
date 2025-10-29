@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:47
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:55
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-00:47-AUTO-CREATE-TABLES", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-00:55-INIT-ALL-TABLES", flush=True)
 print("📦 FEATURES: Vehicles + Setup Users + 60+ Cars", flush=True)
-print("🔧 FIX: Auto-create users table if missing", flush=True)
+print("🔧 FIX: Initialize ALL tables on startup!", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -352,10 +352,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-00:47-AUTO-CREATE-TABLES"
+APP_VERSION = "2025-01-29-00:55-INIT-ALL-TABLES-ON-STARTUP"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: /setup-users and /setup-admin now AUTO-CREATE tables if missing
+# FIX: ALL tables created automatically on startup (settings, users, car_groups, activity_log)
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -387,8 +387,23 @@ async def startup_event():
     print(f"========================================", flush=True)
     print(f"🚀 APP STARTUP - VERSION: {APP_VERSION}", flush=True)
     print(f"📦 Features: Vehicles, Setup Users, Car Groups, 60+ Cars", flush=True)
-    print(f"🔧 FIX: Auto-create users table on first setup", flush=True)
-    print(f"✅ /setup-users will CREATE table automatically!", flush=True)
+    print(f"🔧 FIX: Auto-create ALL tables on startup", flush=True)
+    
+    # Initialize ALL database tables
+    try:
+        print(f"📊 Initializing database tables...", flush=True)
+        _ensure_settings_table()
+        print(f"   ✅ app_settings table ready", flush=True)
+        _ensure_users_table()
+        print(f"   ✅ users table ready", flush=True)
+        _ensure_car_groups_table()
+        print(f"   ✅ car_groups table ready", flush=True)
+        _ensure_activity_table()
+        print(f"   ✅ activity_log table ready", flush=True)
+        print(f"✅ All database tables initialized!", flush=True)
+    except Exception as e:
+        print(f"⚠️  Database initialization error: {e}", flush=True)
+    
     print(f"========================================", flush=True)
 
 @app.exception_handler(HTTPException)
