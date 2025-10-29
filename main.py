@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:55
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:12
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-00:55-INIT-ALL-TABLES", flush=True)
-print("📦 FEATURES: Vehicles + Setup Users + 60+ Cars", flush=True)
-print("🔧 FIX: Initialize ALL tables on startup!", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-01:12-AUTO-USERS", flush=True)
+print("📦 FEATURES: Vehicles + Auto-Create Users + 60+ Cars", flush=True)
+print("🔧 FIX: Users auto-created from ENV vars!", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -352,10 +352,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-00:55-INIT-ALL-TABLES-ON-STARTUP"
+APP_VERSION = "2025-01-29-01:12-AUTO-CREATE-USERS-ON-STARTUP"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: ALL tables created automatically on startup (settings, users, car_groups, activity_log)
+# FIX: Users auto-created on startup from ENV vars (no persistent disk needed!)
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -403,6 +403,14 @@ async def startup_event():
         print(f"✅ All database tables initialized!", flush=True)
     except Exception as e:
         print(f"⚠️  Database initialization error: {e}", flush=True)
+    
+    # Auto-create default users if they don't exist
+    try:
+        print(f"👥 Checking default users...", flush=True)
+        _ensure_default_users()
+        print(f"✅ Default users ready (admin, carlpac82, dprudente)", flush=True)
+    except Exception as e:
+        print(f"⚠️  Default users error: {e}", flush=True)
     
     print(f"========================================", flush=True)
 
@@ -981,11 +989,16 @@ _URL_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}  # key normalized URL -
 try:
     # === Ensure default admin users exist ===
     def _ensure_default_users():
-        """Create default users if they don't exist"""
+        """Create default users if they don't exist - passwords from ENV vars"""
+        # Get passwords from environment variables (or use defaults)
+        admin_password = os.getenv("ADMIN_PASSWORD", APP_PASSWORD)
+        carlpac82_password = os.getenv("CARLPAC82_PASSWORD", "Frederico.2025")
+        dprudente_password = os.getenv("DPRUDENTE_PASSWORD", "dprudente")
+        
         default_users = [
             {
                 "username": "admin",
-                "password": APP_PASSWORD,
+                "password": admin_password,
                 "first_name": "Filipe",
                 "last_name": "Pacheco",
                 "email": "carlpac82@hotmail.com",
@@ -995,7 +1008,7 @@ try:
             },
             {
                 "username": "carlpac82",
-                "password": "Frederico.2025",
+                "password": carlpac82_password,
                 "first_name": "Filipe",
                 "last_name": "Pacheco",
                 "email": "carlpac82@hotmail.com",
@@ -1005,7 +1018,7 @@ try:
             },
             {
                 "username": "dprudente",
-                "password": "dprudente",
+                "password": dprudente_password,
                 "first_name": "Daniell",
                 "last_name": "Prudente",
                 "email": "comercial.autoprudente@gmail.com",

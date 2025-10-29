@@ -5,14 +5,15 @@ services:
     plan: free
     autoDeploy: true
     healthCheckPath: /healthz
-    # Persistent disk to keep SQLite database across deploys
-    disk:
-      name: rental-tracker-data
-      mountPath: /app/data
-      sizeGB: 1
+    # NOTE: Persistent disks require paid plans ($7/month+)
+    # Using auto-create users on startup instead (FREE!)
     envVars:
-      - key: DATA_DIR
-        value: "/app/data"  # Use persistent disk for database
+      - key: ADMIN_PASSWORD
+        sync: false  # Set in Dashboard - password for 'admin' user
+      - key: CARLPAC82_PASSWORD
+        sync: false  # Set in Dashboard - password for 'carlpac82' user
+      - key: DPRUDENTE_PASSWORD
+        sync: false  # Set in Dashboard - password for 'dprudente' user
       - key: APP_USERNAME
         sync: false
       - key: APP_PASSWORD
