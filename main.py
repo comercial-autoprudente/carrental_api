@@ -6293,8 +6293,8 @@ async def get_vehicles_with_originals(request: Request):
             try:
                 # Pegar exemplos recentes de cada carro
                 query = """
-                    SELECT DISTINCT car, category 
-                    FROM snapshots 
+                    SELECT DISTINCT car 
+                    FROM price_snapshots 
                     WHERE ts >= datetime('now', '-7 days')
                     ORDER BY car
                 """
@@ -6521,7 +6521,7 @@ async def get_uncategorized_vehicles(request: Request):
             try:
                 query = """
                     SELECT DISTINCT car 
-                    FROM snapshots 
+                    FROM price_snapshots 
                     WHERE ts >= datetime('now', '-30 days')
                     ORDER BY car
                 """
@@ -6580,3 +6580,111 @@ def detect_category_suggestion(car_name: str) -> str:
         return detect_category_from_car(car_name, '')
     except:
         return 'ECONOMY'
+
+# ============================================================
+# EXPORT/IMPORT CONFIGURATION
+# ============================================================
+
+@app.get("/api/export/config")
+async def export_configuration(request: Request):
+    """Exporta configurações completas: VEHICLES, users, suppliers"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES, SUPPLIER_MAP
+        
+        # Exportar users
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                users_rows = conn.execute("SELECT username, password FROM users").fetchall()
+            finally:
+                conn.close()
+        
+        users_data = [{"username": r[0], "password": r[1]} for r in users_rows]
+        
+        config = {
+            "version": "1.0",
+            "exported_at": datetime.utcnow().isoformat(),
+            "vehicles": dict(VEHICLES),
+            "suppliers": dict(SUPPLIER_MAP),
+            "users": users_data
+        }
+        
+        # Retornar como JSON para download
+        from fastapi.responses import Response
+        import json
+        
+        json_content = json.dumps(config, indent=2, ensure_ascii=False)
+        
+        return Response(
+            content=json_content,
+            media_type="application/json",
+            headers={
+                "Content-Disposition": f"attachment; filename=carrental_config_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+            }
+        )
+        
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.post("/api/import/config")
+async def import_configuration(request: Request, file: UploadFile = File(...)):
+    """Importa configurações de ficheiro JSON"""
+    require_auth(request)
+    try:
+        import json
+        
+        # Ler ficheiro
+        content = await file.read()
+        config = json.loads(content)
+        
+        # Validar estrutura
+        if "vehicles" not in config:
+            return _no_store_json({"ok": False, "error": "Ficheiro inválido: falta 'vehicles'"}, 400)
+        
+        # Gerar código Python para VEHICLES
+        vehicles_code = "VEHICLES = {\n"
+        for car, category in sorted(config["vehicles"].items()):
+            vehicles_code += f"    '{car}': '{category}',\n"
+        vehicles_code += "}\n"
+        
+        # Gerar código Python para SUPPLIER_MAP se existir
+        suppliers_code = ""
+        if "suppliers" in config:
+            suppliers_code = "\nSUPPLIER_MAP = {\n"
+            for code, name in sorted(config["suppliers"].items()):
+                suppliers_code += f"    '{code}': '{name}',\n"
+            suppliers_code += "}\n"
+        
+        # Importar users se existirem
+        imported_users = 0
+        if "users" in config and config["users"]:
+            with _db_lock:
+                conn = _db_connect()
+                try:
+                    for user in config["users"]:
+                        # Inserir ou atualizar user
+                        conn.execute(
+                            "INSERT OR REPLACE INTO users (username, password) VALUES (?, ?)",
+                            (user["username"], user["password"])
+                        )
+                        imported_users += 1
+                    conn.commit()
+                finally:
+                    conn.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": "Configuração importada com sucesso!",
+            "vehicles_count": len(config["vehicles"]),
+            "suppliers_count": len(config.get("suppliers", {})),
+            "users_imported": imported_users,
+            "vehicles_code": vehicles_code,
+            "suppliers_code": suppliers_code,
+            "instructions": "Copie o código gerado e cole em carjet_direct.py"
+        })
+        
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)

@@ -15,8 +15,15 @@
             </div>
             <div class="flex items-center gap-4 text-white text-sm">
                 <span id="totalVehicles">0</span> veículos
+                <button onclick="exportConfiguration()" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">
+                    📤 Exportar Config
+                </button>
+                <button onclick="document.getElementById('importFile').click()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold">
+                    📥 Importar Config
+                </button>
+                <input type="file" id="importFile" accept=".json" class="hidden" onchange="importConfiguration(event)">
                 <button onclick="saveAllChanges()" class="px-4 py-2 bg-[#f4ad0f] hover:bg-[#e39e0e] rounded-lg font-semibold">
-                    💾 Exportar Tudo
+                    💾 Exportar VEHICLES
                 </button>
             </div>
         </div>
@@ -670,6 +677,103 @@
             const group = categoryToGroup[category] || 'D';
             document.getElementById('editGroup').value = group;
         });
+        
+        // Exportar configuração completa
+        async function exportConfiguration() {
+            try {
+                const response = await fetch('/api/export/config');
+                
+                if (!response.ok) {
+                    throw new Error('Erro ao exportar');
+                }
+                
+                // Download do ficheiro
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.headers.get('Content-Disposition')?.split('filename=')[1] || 'config.json';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                alert('✅ Configuração exportada com sucesso!\nGuarde este ficheiro para fazer backup.');
+            } catch (error) {
+                alert('❌ Erro ao exportar: ' + error.message);
+            }
+        }
+        
+        // Importar configuração
+        async function importConfiguration(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/import/config', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert(`✅ Importação concluída!\n\n` +
+                          `Veículos: ${data.vehicles_count}\n` +
+                          `Suppliers: ${data.suppliers_count}\n` +
+                          `Users: ${data.users_imported}\n\n` +
+                          `${data.instructions}`);
+                    
+                    // Mostrar código para copiar
+                    if (data.vehicles_code) {
+                        console.log('=== CÓDIGO PARA VEHICLES ===');
+                        console.log(data.vehicles_code);
+                        
+                        if (data.suppliers_code) {
+                            console.log('\n=== CÓDIGO PARA SUPPLIER_MAP ===');
+                            console.log(data.suppliers_code);
+                        }
+                        
+                        // Criar modal com código
+                        const modal = document.createElement('div');
+                        modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
+                        modal.innerHTML = `
+                            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                                <div class="p-6">
+                                    <h2 class="text-xl font-bold mb-4">Código Importado</h2>
+                                    <p class="text-sm mb-4">Copie este código e cole em <code>carjet_direct.py</code>:</p>
+                                    <pre class="bg-gray-900 text-green-400 p-4 rounded text-xs overflow-x-auto mb-4">${data.vehicles_code}${data.suppliers_code || ''}</pre>
+                                    <div class="flex gap-3">
+                                        <button onclick="navigator.clipboard.writeText(\`${data.vehicles_code}${data.suppliers_code || ''}\`).then(() => alert('Copiado!')); this.parentElement.parentElement.parentElement.remove()" 
+                                                class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                            📋 Copiar Código
+                                        </button>
+                                        <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                                                class="px-4 py-2 border rounded hover:bg-gray-50">
+                                            Fechar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                    }
+                    
+                    // Recarregar dados
+                    await loadVehicles();
+                } else {
+                    alert('❌ Erro: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Erro ao importar: ' + error.message);
+            }
+            
+            // Limpar input
+            event.target.value = '';
+        }
         
         // Carregar ao iniciar
         loadVehicles();
