@@ -847,7 +847,9 @@ def map_category_to_group(category: str) -> str:
         
         # E2 - Economy Automatic
         "economy automatic": "E2",
+        "economy auto": "E2",
         "económico automatic": "E2",
+        "económico auto": "E2",
         
         # F - SUV
         "suv": "F",
@@ -872,8 +874,11 @@ def map_category_to_group(category: str) -> str:
         
         # L2 - Station Wagon Automatic
         "station wagon automatic": "L2",
+        "station wagon auto": "L2",
         "estate automatic": "L2",
+        "estate auto": "L2",
         "carrinha automatic": "L2",
+        "carrinha auto": "L2",
         
         # M1 - 7 Seater
         "7 seater": "M1",
@@ -882,12 +887,19 @@ def map_category_to_group(category: str) -> str:
         
         # M2 - 7 Seater Automatic
         "7 seater automatic": "M2",
+        "7 seater auto": "M2",
         "7 lugares automatic": "M2",
+        "7 lugares auto": "M2",
         "7 lugares automático": "M2",
         
         # N - 9 Seater
         "9 seater": "N",
+        "9 seater automatic": "N",
+        "9 seater auto": "N",
         "9 lugares": "N",
+        "9 lugares automatic": "N",
+        "9 lugares auto": "N",
+        "9 lugares automático": "N",
         "minivan": "N",
     }
     
