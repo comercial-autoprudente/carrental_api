@@ -2062,7 +2062,7 @@ async def track_by_params(request: Request):
                     try:
                         # Ir para página inicial do CarJet PT
                         print(f"[PLAYWRIGHT] Acessando CarJet homepage PT...", file=sys.stderr, flush=True)
-                        await page.goto("https://www.carjet.com/aluguel-carros/index.htm", wait_until="domcontentloaded", timeout=45000)
+                        await page.goto("https://www.carjet.com/aluguer-carros/index.htm", wait_until="domcontentloaded", timeout=45000)
                         
                         # Aguardar página carregar
                         await page.wait_for_timeout(2000)
@@ -2087,30 +2087,79 @@ async def track_by_params(request: Request):
                         start_str = start_dt.strftime("%d/%m/%Y")
                         end_str = end_dt.strftime("%d/%m/%Y")
                         
-                        await page.evaluate("""(args) => {
-                            function fill(sel, val) {
-                                const el = document.querySelector(sel);
-                                if (el) {
-                                    el.value = val;
-                                    el.dispatchEvent(new Event('input', {bubbles: true}));
-                                    el.dispatchEvent(new Event('change', {bubbles: true}));
-                                    return true;
+                        await page.evaluate("""
+                            ({loc, start, end, startTime, endTime}) => {
+                                function fill(sel, val) {
+                                    const el = document.querySelector(sel);
+                                    if (el) { 
+                                        el.value = val; 
+                                        el.dispatchEvent(new Event('change', {bubbles: true}));
+                                        return true;
+                                    }
+                                    return false;
                                 }
-                                return false;
+                                const r1 = fill('input[name="pickup"]', loc);
+                                const r2 = fill('input[name="dropoff"]', loc);
+                                const r3 = fill('input[name="fechaRecogida"]', start);
+                                const r4 = fill('input[name="fechaEntrega"]', end);
+                                const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
+                                const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
+                                if (h1) h1.value = startTime || '16:00';
+                                if (h2) h2.value = endTime || '10:00';
+                                return {r1, r2, r3, r4};
                             }
-                            
-                            const ok1 = fill('input[name="pickup"]', args.loc);
-                            const ok2 = fill('input[name="dropoff"]', args.loc);
-                            const ok3 = fill('input[name="fechaRecogida"]', args.start);
-                            const ok4 = fill('input[name="fechaEntrega"]', args.end);
-                            
-                            const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
-                            const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
-                            if (h1) h1.value = '10:00';
-                            if (h2) h2.value = '10:00';
-                            
-                            return {ok1, ok2, ok3, ok4};
-                        }""", {"loc": carjet_loc, "start": start_str, "end": end_str})
+                        """, {"loc": carjet_loc, "start": start_str, "end": end_str, "startTime": start_dt.strftime("%H:%M"), "endTime": end_dt.strftime("%H:%M")})
+
+                        # Click the primary search/submit button and wait for results
+                        try:
+                            btn = None
+                            try:
+                                btn = page.get_by_role("button", name=re.compile(r"(Pesquisar|Buscar|Search)", re.I))
+                            except Exception:
+                                btn = None
+                            if btn and await btn.is_visible():
+                                await btn.click(timeout=3000)
+                            else:
+                                cand = page.locator("button:has-text('Pesquisar'), button:has-text('Buscar'), button:has-text('Search'), input[type=submit], button[type=submit]")
+                                if await cand.count() > 0:
+                                    try:
+                                        await cand.first.click(timeout=3000)
+                                    except Exception:
+                                        pass
+                            try:
+                                await page.wait_for_load_state("networkidle", timeout=10000)
+                            except Exception:
+                                pass
+                        except Exception:
+                            pass
+
+                        # If we landed on a 'war=' URL without the secure params, try a direct POST fallback
+                        try:
+                            current_url = page.url or ""
+                            if ("war=" in current_url) and ("s=" not in current_url) and ("b=" not in current_url):
+                                from urllib.parse import urlparse as _urlparse
+                                print(f"[PLAYWRIGHT] war URL detected, attempting direct POST fallback...", file=sys.stderr, flush=True)
+                                payload_dp = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                                rdp = await page.request.post(f"https://www.carjet.com/do/list/{lang}", data=payload_dp)
+                                if rdp and rdp.ok:
+                                    html_dp = await rdp.text()
+                                    its_dp = parse_prices(html_dp, f"https://www.carjet.com/do/list/{lang}")
+                                    its_dp = convert_items_gbp_to_eur(its_dp)
+                                    its_dp = apply_price_adjustments(its_dp, f"https://www.carjet.com/do/list/{lang}")
+                                    if its_dp:
+                                        print(f"[PLAYWRIGHT] ✅ Fallback POST retornou {len(its_dp)} carros", file=sys.stderr, flush=True)
+                                        return _no_store_json({
+                                            "ok": True,
+                                            "items": its_dp,
+                                            "location": location,
+                                            "start_date": start_dt.date().isoformat(),
+                                            "start_time": start_dt.strftime("%H:%M"),
+                                            "end_date": end_dt.date().isoformat(),
+                                            "end_time": end_dt.strftime("%H:%M"),
+                                            "days": days,
+                                        })
+                        except Exception:
+                            pass
                         
                         await page.wait_for_timeout(1000)
                         
@@ -2268,7 +2317,7 @@ async def track_by_params(request: Request):
                 print(f"[SELENIUM] Configurando Chrome headless...", file=sys.stderr, flush=True)
                 driver.set_page_load_timeout(20)
                 print(f"[SELENIUM] Acessando CarJet homepage...", file=sys.stderr, flush=True)
-                driver.get("https://www.carjet.com/aluguel-carros/index.htm")
+                driver.get("https://www.carjet.com/aluguer-carros/index.htm")
                 
                 # Fechar cookies via JS
                 print(f"[SELENIUM] Removendo cookies...", file=sys.stderr, flush=True)
@@ -2294,11 +2343,11 @@ async def track_by_params(request: Request):
                     
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
-                    if (h1) h1.value = '10:00';
-                    if (h2) h2.value = '10:00';
+                    if (h1) h1.value = arguments[3] || '16:00';
+                    if (h2) h2.value = arguments[4] || '10:00';
                     
                     return {r1, r2, r3, r4};
-                """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
+                """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"), start_dt.strftime("%H:%M"), end_dt.strftime("%H:%M"))
                 
                 time.sleep(0.5)
                 
@@ -2357,7 +2406,38 @@ async def track_by_params(request: Request):
                         })
                 else:
                     print(f"[SELENIUM] ⚠️ URL s/b NÃO obtida! URL: {final_url}", file=sys.stderr, flush=True)
-                    # RETORNAR IMEDIATAMENTE vazio para user poder clicar novamente
+                    # Fallback: tentar POST direto para /do/list/{lang}
+                    try:
+                        import requests
+                        payload = build_carjet_form(location, start_dt, end_dt, lang=lang, currency=currency)
+                        headers_dp = {
+                            "Origin": "https://www.carjet.com",
+                            "Referer": f"https://www.carjet.com/do/list/{lang}",
+                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                            "Accept-Language": "pt-PT,pt;q=0.9,en;q=0.6",
+                            "Cookie": "monedaForzada=EUR; moneda=EUR; currency=EUR; country=PT; idioma=PT; lang=pt",
+                        }
+                        rdp = requests.post(f"https://www.carjet.com/do/list/{lang}", data=payload, headers=headers_dp, timeout=20)
+                        if rdp.status_code == 200 and (rdp.text or '').strip():
+                            html_dp = rdp.text
+                            its_dp = parse_prices(html_dp, f"https://www.carjet.com/do/list/{lang}")
+                            its_dp = convert_items_gbp_to_eur(its_dp)
+                            its_dp = apply_price_adjustments(its_dp, f"https://www.carjet.com/do/list/{lang}")
+                            if its_dp:
+                                print(f"[SELENIUM] ✅ Fallback POST retornou {len(its_dp)} carros", file=sys.stderr, flush=True)
+                                return _no_store_json({
+                                    "ok": True,
+                                    "items": its_dp,
+                                    "location": location,
+                                    "start_date": start_dt.date().isoformat(),
+                                    "start_time": start_dt.strftime("%H:%M"),
+                                    "end_date": end_dt.date().isoformat(),
+                                    "end_time": end_dt.strftime("%H:%M"),
+                                    "days": days,
+                                })
+                    except Exception as _e:
+                        print(f"[SELENIUM] Fallback POST erro: {_e}", file=sys.stderr, flush=True)
+                    # Se ainda sem resultados, retornar vazio rapidamente para permitir nova tentativa
                     return _no_store_json({
                         "ok": True,
                         "items": [],

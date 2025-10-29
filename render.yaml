@@ -30,6 +30,8 @@ services:
         sync: false
       - key: SCRAPER_COUNTRY
         value: "pt"
+      - key: FORCE_PROXY_FOR_CARJET
+        value: "1"
       - key: TEST_FARO_URL
         sync: false
       - key: TEST_ALBUFEIRA_URL
