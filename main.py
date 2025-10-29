@@ -7574,10 +7574,26 @@ async def get_vehicle_photo(vehicle_name: str):
         with _db_lock:
             con = _db_connect()
             try:
+                # Tentar buscar foto exata
                 row = con.execute(
                     "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key = ?",
                     (vehicle_key,)
                 ).fetchone()
+                
+                # Se não encontrar, tentar buscar variações do mesmo modelo
+                if not row:
+                    # Extrair modelo base (ex: "citroen c1" de "citroen c1 auto")
+                    # Remove sufixos comuns: auto, automatic, hybrid, electric, diesel, etc
+                    base_model = vehicle_key
+                    for suffix in [' auto', ' automatic', ' hybrid', ' electric', ' diesel', ' 4x4', ', hybrid', ', electric', ', diesel']:
+                        base_model = base_model.replace(suffix, '')
+                    base_model = base_model.strip()
+                    
+                    # Buscar qualquer foto que comece com o modelo base
+                    row = con.execute(
+                        "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key LIKE ? LIMIT 1",
+                        (base_model + '%',)
+                    ).fetchone()
                 
                 if row:
                     image_data = row[0]

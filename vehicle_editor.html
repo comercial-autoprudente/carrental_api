@@ -1241,14 +1241,20 @@
                     document.body.appendChild(successMsg);
                     setTimeout(() => successMsg.remove(), 3000);
                     
-                    // Atualizar preview da foto
-                    await loadVehiclePhoto(currentVehicleName);
+                    // Atualizar preview da foto com timestamp para forçar reload
+                    const preview = document.getElementById("photoPreview");
+                    const previewImage = document.getElementById("photoPreviewImage");
+                    const photoUrl = `/api/vehicles/${encodeURIComponent(currentVehicleName)}/photo`;
+                    previewImage.src = photoUrl + "?t=" + Date.now();
+                    preview.classList.remove("hidden");
                     
                     // Limpar campo URL (foto foi feita upload manual)
                     document.getElementById("photoUrl").value = '';
                     
-                    // Re-renderizar tabela para mostrar foto atualizada
-                    renderTable();
+                    // Re-renderizar tabela para mostrar foto atualizada com novo timestamp
+                    setTimeout(() => {
+                        renderTable();
+                    }, 100);
                 } else {
                     alert("❌ Error: " + data.error);
                 }
