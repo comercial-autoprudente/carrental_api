@@ -6598,6 +6598,9 @@ async def save_vehicle(request: Request):
             import traceback
             message = f"Vehicle saved but failed to update carjet_direct.py: {str(e)}\n{traceback.format_exc()}"
         
+        # Calcular grupo baseado na categoria
+        group = map_category_to_group(category, clean_name)
+        
         # Gerar código Python
         code = f"    '{clean_name}': '{category}',"
         
@@ -6606,6 +6609,7 @@ async def save_vehicle(request: Request):
             "message": message,
             "clean_name": clean_name,
             "category": category,
+            "group": group,
             "code": code
         })
     except Exception as e:
