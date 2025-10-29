@@ -849,9 +849,10 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
     - B2 = Mini 5 LUGARES (Fiat Panda, Hyundai i10, etc)
     
     REGRAS ESPECIAIS:
-    - Cabrio/Cabriolet → G (Premium)
+    - Cabrio/Cabriolet → G (Cabrio)
     - Toyota Aygo X → F (SUV)
     - Mini 4 lugares Automático → E1
+    - Premium/Luxury → X
     """
     if not category:
         return "Others"
@@ -922,10 +923,14 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
         # F - SUV
         "suv": "F",
         
-        # G - Premium
-        "premium": "G",
+        # G - Cabrio
+        "cabrio": "G",
+        "cabriolet": "G",
+        "convertible": "G",
+        "conversível": "G",
         
-        # X - Luxury
+        # X - Luxury/Premium
+        "premium": "X",
         "luxury": "X",
         "luxo": "X",
         
