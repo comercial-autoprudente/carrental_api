@@ -1240,16 +1240,20 @@ async def setup_admin_page(request: Request):
     with _db_lock:
         con = _db_connect()
         try:
-            cur = con.execute("SELECT COUNT(*) FROM users")
-            count = cur.fetchone()[0]
-            if count > 0:
-                return HTMLResponse("""
-                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                        <h1>❌ Setup Already Complete</h1>
-                        <p>Admin user already exists.</p>
-                        <a href="/login" style="color: #007bff;">Go to Login</a>
-                    </body></html>
-                """)
+            try:
+                cur = con.execute("SELECT COUNT(*) FROM users")
+                count = cur.fetchone()[0]
+                if count > 0:
+                    return HTMLResponse("""
+                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                            <h1>❌ Setup Already Complete</h1>
+                            <p>Admin user already exists.</p>
+                            <a href="/login" style="color: #007bff;">Go to Login</a>
+                        </body></html>
+                    """)
+            except Exception:
+                # Table might not exist yet, that's OK - continue to show form
+                pass
         finally:
             con.close()
     
@@ -1333,16 +1337,20 @@ async def setup_users_page(request: Request):
     with _db_lock:
         con = _db_connect()
         try:
-            cur = con.execute("SELECT COUNT(*) FROM users")
-            count = cur.fetchone()[0]
-            if count > 0:
-                return HTMLResponse("""
-                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                        <h1>❌ Setup Already Complete</h1>
-                        <p>Users already exist.</p>
-                        <a href="/login" style="color: #007bff;">Go to Login</a>
-                    </body></html>
-                """)
+            try:
+                cur = con.execute("SELECT COUNT(*) FROM users")
+                count = cur.fetchone()[0]
+                if count > 0:
+                    return HTMLResponse("""
+                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                            <h1>❌ Setup Already Complete</h1>
+                            <p>Users already exist.</p>
+                            <a href="/login" style="color: #007bff;">Go to Login</a>
+                        </body></html>
+                    """)
+            except Exception:
+                # Table might not exist yet, that's OK - continue to show form
+                pass
         finally:
             con.close()
     
