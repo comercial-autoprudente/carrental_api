@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:02
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:40
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-00:02-FORCE", flush=True)
-print("📦 FEATURES: Vehicles + Car Groups + 60+ Cars", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-00:40-SETUP-USERS-FIX", flush=True)
+print("📦 FEATURES: Vehicles + Setup Users + 60+ Cars", flush=True)
+print("🔧 FIX: /setup-users and /setup-admin handle missing tables", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -351,9 +352,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-00:02-FORCE"
+APP_VERSION = "2025-01-29-00:40-SETUP-USERS-FIX"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
+# FIX: Added try/except to /setup-users and /setup-admin to handle missing tables
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -384,7 +386,8 @@ async def startup_event():
     """Log app version on startup to verify deployment"""
     print(f"========================================", flush=True)
     print(f"🚀 APP STARTUP - VERSION: {APP_VERSION}", flush=True)
-    print(f"📦 Features: Vehicles Management, Automatic Field, Blocklist Removed", flush=True)
+    print(f"📦 Features: Vehicles, Setup Users, Car Groups, 60+ Cars", flush=True)
+    print(f"🔧 FIX: /setup-users and /setup-admin endpoints working", flush=True)
     print(f"========================================", flush=True)
 
 @app.exception_handler(HTTPException)
