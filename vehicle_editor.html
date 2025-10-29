@@ -463,11 +463,14 @@
                 
                 const brandHeader = document.createElement('div');
                 brandHeader.className = 'bg-[#009cb6] px-6 py-4 border-b-4 border-[#f4ad0f] cursor-pointer hover:bg-[#007a8e] transition-colors';
-                brandHeader.innerHTML = `<h3 class="text-xl font-bold capitalize text-white flex items-center gap-3">${brand} <span class="text-sm font-normal bg-[#f4ad0f] text-gray-900 px-3 py-1 rounded-full">${vehicles.length} vehicles</span></h3>`;
+                brandHeader.innerHTML = `<h3 class="text-xl font-bold capitalize text-white flex items-center justify-between">
+                    <span class="flex items-center gap-3">${brand} <span class="text-sm font-normal bg-[#f4ad0f] text-gray-900 px-3 py-1 rounded-full">${vehicles.length} vehicles</span></span>
+                    <span class="toggle-icon text-2xl">▼</span>
+                </h3>`;
                 brandSection.appendChild(brandHeader);
                 
                 const table = document.createElement('table');
-                table.className = 'min-w-full divide-y divide-gray-200';
+                table.className = 'min-w-full divide-y divide-gray-200 brand-table';
                 table.innerHTML = `
                     <thead class="bg-gray-50">
                         <tr>
@@ -508,23 +511,64 @@
                 });
                 brandSection.appendChild(table);
                 container.appendChild(brandSection);
+                
+                // Add toggle click handler
+                brandHeader.onclick = function(e) {
+                    e.stopPropagation();
+                    const icon = this.querySelector('.toggle-icon');
+                    if (table.style.display === 'none') {
+                        table.style.display = '';
+                        icon.textContent = '▼';
+                    } else {
+                        table.style.display = 'none';
+                        icon.textContent = '▶';
+                    }
+                };
+            });
+            
+            // Collapse all except first
+            const allSections = container.querySelectorAll('[id^="brand-"]');
+            allSections.forEach((section, idx) => {
+                if (idx > 0) {
+                    const tbl = section.querySelector('.brand-table');
+                    const icn = section.querySelector('.toggle-icon');
+                    if (tbl) {
+                        tbl.style.display = 'none';
+                        icn.textContent = '▶';
+                    }
+                }
             });
         }
         
         function scrollToBrand(brand) {
             const el = document.getElementById(`brand-${brand}`);
-            if (el) {
-                // Scroll with offset for header
-                const yOffset = -20;
-                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                window.scrollTo({top: y, behavior: 'smooth'});
-                
-                // Highlight with UI colors
-                el.classList.add('ring-4','ring-[#f4ad0f]');
-                setTimeout(() => {
-                    el.classList.remove('ring-4','ring-[#f4ad0f]');
-                }, 2000);
+            if (!el) return;
+            
+            // Expand the table if collapsed
+            const table = el.querySelector('.brand-table');
+            const icon = el.querySelector('.toggle-icon');
+            if (table && table.style.display === 'none') {
+                table.style.display = '';
+                icon.textContent = '▼';
             }
+            
+            // Scroll to brand with offset
+            setTimeout(() => {
+                const headerOffset = 100;
+                const elementPosition = el.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+                
+                // Highlight with yellow ring
+                el.classList.add('ring-4','ring-[#f4ad0f]','shadow-2xl');
+                setTimeout(() => {
+                    el.classList.remove('ring-4','ring-[#f4ad0f]','shadow-2xl');
+                }, 2500);
+            }, 100);
         }
         
         function showNewCategoryInput() {
