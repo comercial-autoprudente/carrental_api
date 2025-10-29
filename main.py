@@ -6587,10 +6587,11 @@ def detect_category_suggestion(car_name: str) -> str:
 
 @app.get("/api/export/config")
 async def export_configuration(request: Request):
-    """Exporta configurações completas: VEHICLES, users, suppliers"""
+    """Exporta configurações completas: VEHICLES, users, suppliers, FOTOS"""
     require_auth(request)
     try:
         from carjet_direct import VEHICLES, SUPPLIER_MAP
+        import base64
         
         # Exportar users
         with _db_lock:
@@ -6602,12 +6603,41 @@ async def export_configuration(request: Request):
         
         users_data = [{"username": r[0], "password": r[1]} for r in users_rows]
         
+        # Exportar fotos (em base64 para incluir no JSON)
+        _ensure_vehicle_photos_table()
+        photos_data = {}
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                photos_rows = conn.execute("""
+                    SELECT vehicle_name, photo_data, content_type, photo_url
+                    FROM vehicle_photos
+                """).fetchall()
+                
+                for row in photos_rows:
+                    vehicle_name = row[0]
+                    photo_data = row[1]
+                    content_type = row[2]
+                    photo_url = row[3]
+                    
+                    if photo_data:
+                        # Converter BLOB para base64
+                        photo_base64 = base64.b64encode(photo_data).decode('utf-8')
+                        photos_data[vehicle_name] = {
+                            "data": photo_base64,
+                            "content_type": content_type,
+                            "url": photo_url
+                        }
+            finally:
+                conn.close()
+        
         config = {
-            "version": "1.0",
+            "version": "1.1",  # Incrementar versão
             "exported_at": datetime.utcnow().isoformat(),
             "vehicles": dict(VEHICLES),
             "suppliers": dict(SUPPLIER_MAP),
-            "users": users_data
+            "users": users_data,
+            "photos": photos_data  # NOVO: fotos em base64
         }
         
         # Retornar como JSON para download
@@ -6674,12 +6704,38 @@ async def import_configuration(request: Request, file: UploadFile = File(...)):
                 finally:
                     conn.close()
         
+        # Importar fotos se existirem
+        imported_photos = 0
+        if "photos" in config and config["photos"]:
+            import base64
+            _ensure_vehicle_photos_table()
+            
+            with _db_lock:
+                conn = _db_connect()
+                try:
+                    for vehicle_name, photo_info in config["photos"].items():
+                        # Converter base64 de volta para BLOB
+                        photo_data = base64.b64decode(photo_info["data"])
+                        content_type = photo_info.get("content_type", "image/jpeg")
+                        photo_url = photo_info.get("url", None)
+                        
+                        conn.execute("""
+                            INSERT OR REPLACE INTO vehicle_photos 
+                            (vehicle_name, photo_data, content_type, photo_url)
+                            VALUES (?, ?, ?, ?)
+                        """, (vehicle_name, photo_data, content_type, photo_url))
+                        imported_photos += 1
+                    conn.commit()
+                finally:
+                    conn.close()
+        
         return _no_store_json({
             "ok": True,
             "message": "Configuração importada com sucesso!",
             "vehicles_count": len(config["vehicles"]),
             "suppliers_count": len(config.get("suppliers", {})),
             "users_imported": imported_users,
+            "photos_imported": imported_photos,
             "vehicles_code": vehicles_code,
             "suppliers_code": suppliers_code,
             "instructions": "Copie o código gerado e cole em carjet_direct.py"
@@ -6688,3 +6744,31 @@ async def import_configuration(request: Request, file: UploadFile = File(...)):
     except Exception as e:
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+# ============================================================
+# REAL-TIME UPDATE SYSTEM
+# ============================================================
+
+# Timestamp de última atualização de VEHICLES
+_vehicles_last_update = datetime.utcnow().isoformat()
+
+@app.post("/api/vehicles/notify-update")
+async def notify_vehicles_update(request: Request):
+    """Notifica que VEHICLES foi atualizado (para invalidar cache do frontend)"""
+    require_auth(request)
+    global _vehicles_last_update
+    _vehicles_last_update = datetime.utcnow().isoformat()
+    
+    return _no_store_json({
+        "ok": True,
+        "updated_at": _vehicles_last_update,
+        "message": "Cache invalidado. Frontend será atualizado."
+    })
+
+@app.get("/api/vehicles/last-update")
+async def get_vehicles_last_update():
+    """Retorna timestamp da última atualização de VEHICLES"""
+    return _no_store_json({
+        "ok": True,
+        "last_update": _vehicles_last_update
+    })

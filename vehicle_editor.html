@@ -724,7 +724,8 @@
                     alert(`✅ Importação concluída!\n\n` +
                           `Veículos: ${data.vehicles_count}\n` +
                           `Suppliers: ${data.suppliers_count}\n` +
-                          `Users: ${data.users_imported}\n\n` +
+                          `Users: ${data.users_imported}\n` +
+                          `Fotos: ${data.photos_imported || 0}\n\n` +
                           `${data.instructions}`);
                     
                     // Mostrar código para copiar
