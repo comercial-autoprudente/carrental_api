@@ -840,7 +840,7 @@ def clean_car_name(car_name: str) -> str:
 def map_category_to_group(category: str, car_name: str = "") -> str:
     """
     Mapeia categorias descritivas para códigos de grupos definidos:
-    B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others
+    B1, B2, D, E1, E2, F, G, X, J1, J2, L1, L2, M1, M2, N, Others
     
     CASE-INSENSITIVE: Converte para lowercase para comparação
     
@@ -924,8 +924,10 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
         
         # G - Premium
         "premium": "G",
-        "luxury": "G",
-        "luxo": "G",
+        
+        # X - Luxury
+        "luxury": "X",
+        "luxo": "X",
         
         # J1 - Crossover
         "crossover": "J1",
