@@ -2331,18 +2331,51 @@ async def track_by_params(request: Request):
                         })
                 else:
                     print(f"[SELENIUM] ⚠️ URL s/b NÃO obtida! URL: {final_url}", file=sys.stderr, flush=True)
+                    # RETORNAR IMEDIATAMENTE vazio para user poder clicar novamente
+                    return _no_store_json({
+                        "ok": True,
+                        "items": [],
+                        "location": location,
+                        "start_date": start_dt.date().isoformat(),
+                        "start_time": start_dt.strftime("%H:%M"),
+                        "end_date": end_dt.date().isoformat(),
+                        "end_time": end_dt.strftime("%H:%M"),
+                        "days": days,
+                    })
             except Exception as e:
                 print(f"[SELENIUM ERROR interno] {e}", file=sys.stderr, flush=True)
                 try:
                     driver.quit()
                 except:
                     pass
+                # RETORNAR vazio em caso de erro também
+                return _no_store_json({
+                    "ok": True,
+                    "items": [],
+                    "location": location,
+                    "start_date": start_dt.date().isoformat(),
+                    "start_time": start_dt.strftime("%H:%M"),
+                    "end_date": end_dt.date().isoformat(),
+                    "end_time": end_dt.strftime("%H:%M"),
+                    "days": days,
+                })
         except Exception as e:
             print(f"[SELENIUM ERROR] {e}", file=sys.stderr, flush=True)
             import traceback
             traceback.print_exc(file=sys.stderr)
+            # RETORNAR vazio para não travar
+            return _no_store_json({
+                "ok": True,
+                "items": [],
+                "location": location,
+                "start_date": start_dt.date().isoformat(),
+                "start_time": start_dt.strftime("%H:%M"),
+                "end_date": end_dt.date().isoformat(),
+                "end_time": end_dt.strftime("%H:%M"),
+                "days": days,
+            })
         
-        # Fallback se Playwright falhou
+        # Fallback se Playwright falhou (NÃO DEVE CHEGAR AQUI SE SELENIUM FALHOU!)
         if USE_PLAYWRIGHT and _HAS_PLAYWRIGHT:
             try:
                 from playwright.async_api import async_playwright
