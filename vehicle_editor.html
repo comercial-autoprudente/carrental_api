@@ -83,6 +83,87 @@
         </div>
     </main>
     
+    <!-- Modal para Nova Categoria -->
+    <div id="newCategoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 class="text-xl font-bold mb-4 text-[#009cb6]">➕ Create New Category</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Category Name</label>
+                    <input type="text" id="newCategoryName" placeholder="Ex: Compact Premium" 
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#009cb6]">
+                    <p class="text-xs text-gray-500 mt-1">Use descriptive names like "SUV Auto", "Luxury", etc.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Assign to Group</label>
+                    <select id="newCategoryGroup" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="">Select existing group...</option>
+                        <option value="B1">B1 - Mini 4 Doors</option>
+                        <option value="B2">B2 - Mini 5 Doors</option>
+                        <option value="D">D - Economy</option>
+                        <option value="E1">E1 - Mini Automatic</option>
+                        <option value="E2">E2 - Economy Automatic</option>
+                        <option value="F">F - SUV</option>
+                        <option value="G">G - Premium</option>
+                        <option value="J1">J1 - Crossover</option>
+                        <option value="J2">J2 - Station Wagon</option>
+                        <option value="L1">L1 - SUV Automatic</option>
+                        <option value="L2">L2 - Station Wagon Automatic</option>
+                        <option value="M1">M1 - 7 Seater</option>
+                        <option value="M2">M2 - 7 Seater Automatic</option>
+                        <option value="N">N - 9 Seater</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Or create a new group first if needed</p>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="confirmNewCategory()" class="flex-1 px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] font-semibold">
+                        ✓ Create Category
+                    </button>
+                    <button onclick="closeNewCategoryModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para Novo Grupo -->
+    <div id="newGroupModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-md w-full p-6">
+            <h2 class="text-xl font-bold mb-4 text-[#009cb6]">➕ Create New Group</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Group Code</label>
+                    <input type="text" id="newGroupCode" placeholder="Ex: P3" maxlength="3"
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#009cb6] uppercase font-mono">
+                    <p class="text-xs text-gray-500 mt-1">2-3 characters code (B1, D, P3, etc.)</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Group Name</label>
+                    <input type="text" id="newGroupName" placeholder="Ex: Premium Plus" 
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#009cb6]">
+                    <p class="text-xs text-gray-500 mt-1">Descriptive name for the group</p>
+                </div>
+                <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                    <p class="text-xs text-gray-700">
+                        <strong>Examples:</strong><br>
+                        • B1 - Mini 4 Doors<br>
+                        • D - Economy<br>
+                        • P3 - Premium Plus
+                    </p>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button onclick="confirmNewGroup()" class="flex-1 px-4 py-2 bg-[#f4ad0f] text-gray-900 rounded-lg hover:bg-[#e39e0e] font-semibold">
+                        ✓ Create Group
+                    </button>
+                    <button onclick="closeNewGroupModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal de Edição -->
     <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -149,8 +230,6 @@
                                 <option value="7 Lugares Auto">7 Lugares Auto</option>
                                 <option value="9 Lugares">9 Lugares</option>
                             </select>
-                            <input type="text" id="newCategoryInput" placeholder="Nome da nova categoria" 
-                                   class="hidden w-full mt-2 px-3 py-2 border rounded-lg" />
                         </div>
                         
                         <div>
@@ -177,8 +256,6 @@
                                 <option value="M2">M2 - 7 Seater Automatic</option>
                                 <option value="N">N - 9 Seater</option>
                             </select>
-                            <input type="text" id="newGroupInput" placeholder="Código do novo grupo (ex: P1)" 
-                                   class="hidden w-full mt-2 px-3 py-2 border rounded-lg" />
                         </div>
                     </div>
                     
@@ -582,72 +659,102 @@
         }
         
         function showNewCategoryInput() {
-            const select = document.getElementById('editCategory');
-            const input = document.getElementById('newCategoryInput');
+            document.getElementById('newCategoryModal').classList.remove('hidden');
+            document.getElementById('newCategoryName').value = '';
+            document.getElementById('newCategoryGroup').value = '';
+            setTimeout(() => document.getElementById('newCategoryName').focus(), 100);
+        }
+        
+        function closeNewCategoryModal() {
+            document.getElementById('newCategoryModal').classList.add('hidden');
+        }
+        
+        function confirmNewCategory() {
+            const name = document.getElementById('newCategoryName').value.trim();
+            const group = document.getElementById('newCategoryGroup').value;
             
-            if (input.classList.contains('hidden')) {
-                input.classList.remove('hidden');
-                input.focus();
-                select.disabled = true;
-                select.classList.add('opacity-50');
-            } else {
-                input.classList.add('hidden');
-                select.disabled = false;
-                select.classList.remove('opacity-50');
-                
-                // Se preencheu, usar o valor
-                if (input.value.trim()) {
-                    // Adicionar ao select
-                    const option = document.createElement('option');
-                    option.value = input.value.trim();
-                    option.textContent = input.value.trim();
-                    option.selected = true;
-                    select.appendChild(option);
-                    
-                    // Adicionar ao mapeamento se não existir
-                    if (!categoryToGroup[input.value.trim()]) {
-                        const newGroup = prompt('Digite o código do grupo para esta categoria (ex: P1):');
-                        if (newGroup) {
-                            categoryToGroup[input.value.trim()] = newGroup.toUpperCase();
-                        }
-                    }
-                    
-                    input.value = '';
-                }
+            if (!name) {
+                alert('❌ Please enter a category name');
+                return;
             }
+            
+            if (!group) {
+                alert('❌ Please select a group for this category');
+                return;
+            }
+            
+            // Add to category select
+            const select = document.getElementById('editCategory');
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            option.selected = true;
+            select.appendChild(option);
+            
+            // Add to mapping
+            categoryToGroup[name] = group;
+            
+            // Update group select to match
+            document.getElementById('editGroup').value = group;
+            
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+            successMsg.textContent = `✓ Category "${name}" created in group ${group}`;
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+            
+            closeNewCategoryModal();
         }
         
         function showNewGroupInput() {
-            const select = document.getElementById('editGroup');
-            const input = document.getElementById('newGroupInput');
+            document.getElementById('newGroupModal').classList.remove('hidden');
+            document.getElementById('newGroupCode').value = '';
+            document.getElementById('newGroupName').value = '';
+            setTimeout(() => document.getElementById('newGroupCode').focus(), 100);
+        }
+        
+        function closeNewGroupModal() {
+            document.getElementById('newGroupModal').classList.add('hidden');
+        }
+        
+        function confirmNewGroup() {
+            const code = document.getElementById('newGroupCode').value.trim().toUpperCase();
+            const name = document.getElementById('newGroupName').value.trim();
             
-            if (input.classList.contains('hidden')) {
-                input.classList.remove('hidden');
-                input.focus();
-                select.disabled = true;
-                select.classList.add('opacity-50');
-            } else {
-                input.classList.add('hidden');
-                select.disabled = false;
-                select.classList.remove('opacity-50');
-                
-                // Se preencheu, usar o valor
-                if (input.value.trim()) {
-                    const groupCode = input.value.trim().toUpperCase();
-                    const groupName = prompt(`Digite o nome descritivo para o grupo ${groupCode}:`);
-                    
-                    if (groupName) {
-                        // Adicionar ao select
-                        const option = document.createElement('option');
-                        option.value = groupCode;
-                        option.textContent = `${groupCode} - ${groupName}`;
-                        option.selected = true;
-                        select.appendChild(option);
-                    }
-                    
-                    input.value = '';
-                }
+            if (!code) {
+                alert('❌ Please enter a group code (ex: P3)');
+                return;
             }
+            
+            if (!name) {
+                alert('❌ Please enter a group name');
+                return;
+            }
+            
+            // Add to group select
+            const groupSelect = document.getElementById('editGroup');
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `${code} - ${name}`;
+            option.selected = true;
+            groupSelect.appendChild(option);
+            
+            // Add to newCategoryGroup select too
+            const catGroupSelect = document.getElementById('newCategoryGroup');
+            const option2 = document.createElement('option');
+            option2.value = code;
+            option2.textContent = `${code} - ${name}`;
+            catGroupSelect.appendChild(option2);
+            
+            // Show success message
+            const successMsg = document.createElement('div');
+            successMsg.className = 'fixed top-4 right-4 bg-[#f4ad0f] text-gray-900 px-6 py-3 rounded-lg shadow-lg z-50 font-semibold';
+            successMsg.textContent = `✓ Group "${code} - ${name}" created`;
+            document.body.appendChild(successMsg);
+            setTimeout(() => successMsg.remove(), 3000);
+            
+            closeNewGroupModal();
         }
         
         function addToVehicles(cleanName, category, brand, model) {
