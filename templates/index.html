@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta http-equiv="Expires" content="0"/>
-    <meta name="cache-bust" content="v3-RESTORE-COMPLEX"/>
+    <meta name="cache-bust" content="v4-GROUP-FIX-20250129"/>
     <title>Rental Prices v3 FULL</title>
     <link rel="icon" type="image/png" href="/static/autoprudente-favicon.png?v=2" />
     <link rel="shortcut icon" href="/static/autoprudente-favicon.png?v=2" />
@@ -551,7 +551,17 @@
           return s; // fallback to raw
         };
         const map = new Map();
-        (items || []).forEach(it => {
+        (items || []).forEach((it, idx) => {
+          // DEBUG: Log primeiros 3 items
+          if (idx < 3) {
+            console.log('[GROUP DEBUG]', idx, {
+              car: it.car,
+              category: it.category,
+              group: it.group,
+              hasGroup: !!it.group
+            });
+          }
+          
           // USAR CAMPO 'group' DIRETO DA API (B1, B2, D, etc)
           let key = '';
           if (it.group && it.group.trim()) {
