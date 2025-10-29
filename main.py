@@ -7582,18 +7582,30 @@ async def get_vehicle_photo(vehicle_name: str):
                 
                 # Se não encontrar, tentar buscar variações do mesmo modelo
                 if not row:
+                    # Detectar se é Station Wagon (SW) - são modelos diferentes!
+                    is_sw = ' sw' in vehicle_key or 'station wagon' in vehicle_key or 'estate' in vehicle_key
+                    
                     # Extrair modelo base (ex: "citroen c1" de "citroen c1 auto")
                     # Remove sufixos comuns: auto, automatic, hybrid, electric, diesel, etc
                     base_model = vehicle_key
-                    for suffix in [' auto', ' automatic', ' hybrid', ' electric', ' diesel', ' 4x4', ', hybrid', ', electric', ', diesel']:
+                    for suffix in [' auto', ' automatic', ' hybrid', ' electric', ' diesel', ' 4x4', ', hybrid', ', electric', ', diesel', ', automatic']:
                         base_model = base_model.replace(suffix, '')
                     base_model = base_model.strip()
                     
-                    # Buscar qualquer foto que comece com o modelo base
-                    row = con.execute(
-                        "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key LIKE ? LIMIT 1",
-                        (base_model + '%',)
-                    ).fetchone()
+                    if is_sw:
+                        # Se for SW, buscar APENAS outras variações SW
+                        # Ex: "renault megane sw auto" busca "renault megane sw"
+                        row = con.execute(
+                            "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key LIKE ? AND (vehicle_key LIKE '%sw%' OR vehicle_key LIKE '%station wagon%' OR vehicle_key LIKE '%estate%') LIMIT 1",
+                            (base_model + '%',)
+                        ).fetchone()
+                    else:
+                        # Se NÃO for SW, buscar variações NÃO-SW
+                        # Ex: "renault megane auto" busca "renault megane" mas NÃO "renault megane sw"
+                        row = con.execute(
+                            "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key LIKE ? AND vehicle_key NOT LIKE '%sw%' AND vehicle_key NOT LIKE '%station wagon%' AND vehicle_key NOT LIKE '%estate%' LIMIT 1",
+                            (base_model + '%',)
+                        ).fetchone()
                 
                 if row:
                     image_data = row[0]
