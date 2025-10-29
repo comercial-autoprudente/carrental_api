@@ -250,6 +250,8 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                     pass
                 # Only add if we have a price
                 if price_text:
+                    # Mapear categoria para código de grupo
+                    group_code = map_category_to_group(category)
                     items.append({
                         "id": idx,
                         "car": car,
@@ -257,6 +259,7 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                         "price": price_text,
                         "currency": "",
                         "category": category,
+                        "group": group_code,
                         "transmission": "",
                         "photo": "",
                         "link": link or url,
@@ -808,6 +811,84 @@ def _verify_password(pw: str, stored: str) -> bool:
         return secrets.compare_digest(test, digest)
     except Exception:
         return False
+
+def map_category_to_group(category: str) -> str:
+    """
+    Mapeia categorias descritivas para códigos de grupos definidos:
+    B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others
+    """
+    if not category:
+        return "Others"
+    
+    cat = category.strip()
+    
+    # Mapeamento direto
+    category_map = {
+        # B1 - Mini 4 Portas
+        "Mini 4 Doors": "B1",
+        "Mini 4 Portas": "B1",
+        
+        # B2 - Mini 5 Portas
+        "Mini": "B2",
+        "Mini 5 Doors": "B2",
+        "Mini 5 Portas": "B2",
+        
+        # D - Economy
+        "Economy": "D",
+        "Económico": "D",
+        "Compact": "D",
+        
+        # E1 - Mini Automatic
+        "Mini Automatic": "E1",
+        "Mini Auto": "E1",
+        
+        # E2 - Economy Automatic
+        "Economy Automatic": "E2",
+        "Económico Automatic": "E2",
+        
+        # F - SUV
+        "SUV": "F",
+        
+        # G - Premium
+        "Premium": "G",
+        "Luxury": "G",
+        "Luxo": "G",
+        
+        # J1 - Crossover
+        "Crossover": "J1",
+        
+        # J2 - Estate/Station Wagon
+        "Estate/Station Wagon": "J2",
+        "Station Wagon": "J2",
+        "Estate": "J2",
+        "Carrinha": "J2",
+        
+        # L1 - SUV Automatic
+        "SUV Automatic": "L1",
+        "SUV Auto": "L1",
+        
+        # L2 - Station Wagon Automatic
+        "Station Wagon Automatic": "L2",
+        "Estate Automatic": "L2",
+        "Carrinha Automatic": "L2",
+        
+        # M1 - 7 Seater
+        "7 Seater": "M1",
+        "7 lugares": "M1",
+        "People Carrier": "M1",
+        
+        # M2 - 7 Seater Automatic
+        "7 Seater Automatic": "M2",
+        "7 lugares Automatic": "M2",
+        "7 lugares automático": "M2",
+        
+        # N - 9 Seater
+        "9 Seater": "N",
+        "9 lugares": "N",
+        "Minivan": "N",
+    }
+    
+    return category_map.get(cat, "Others")
 
 def _send_creds_email(to_email: str, username: str, password: str):
     host = os.getenv("SMTP_HOST", "").strip()
@@ -1930,6 +2011,8 @@ async def track_by_params(request: Request):
                 # Varia fornecedor para Albufeira
                 if 'albufeira' in location.lower() and idx % 3 == 0:
                     sup = "Centauro" if sup != "Centauro" else "Goldcar"
+                # Extrair código do grupo da categoria (ex: "Group B1" -> "B1")
+                group_code = cat.replace("Group ", "").strip() if "Group " in cat else "Others"
                 items.append({
                     "id": idx,
                     "car": car,
@@ -1937,6 +2020,7 @@ async def track_by_params(request: Request):
                     "price": f"€{price * days:.2f}",
                     "currency": "EUR",
                     "category": cat,
+                    "group": group_code,
                     "transmission": "Automatic" if "Auto" in car else "Manual",
                     "photo": "",
                     "link": "",
@@ -3616,6 +3700,8 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                         photo_url = urljoin(base_url, f"/cdn/img/cars/S/car_{grupo}.jpg")
                 except Exception:
                     photo_url = ""
+                # Mapear categoria para código de grupo
+                group_code = map_category_to_group(display_category)
                 summary_items.append({
                     "id": idx,
                     "car": "",
@@ -3623,6 +3709,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                     "price": price_text,
                     "currency": "",
                     "category": display_category,
+                    "group": group_code,
                     "category_code": grupo,
                     "transmission": transmission_label,
                     "photo": photo_url,
@@ -3686,6 +3773,8 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                             display_category = "7 Seater Automatic"
                         else:
                             display_category = f"{display_category} Automatic"
+                # Mapear categoria para código de grupo
+                group_code = map_category_to_group(display_category)
                 summary_items.append({
                     "id": idx,
                     "car": "",
@@ -3693,6 +3782,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                     "price": price_text,
                     "currency": "",
                     "category": display_category,
+                    "group": group_code,
                     "category_code": grupo,
                     "transmission": transmission_label,
                     "link": base_url,
@@ -4526,6 +4616,8 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             if car_name and _is_blocked_model(car_name):
                 cards_blocked += 1
                 continue
+            # Mapear categoria para código de grupo
+            group_code = map_category_to_group(category)
             items.append({
                 "id": idx,
                 "car": car_name,
@@ -4533,6 +4625,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 "price": price_text,
                 "currency": "",
                 "category": category,
+                "group": group_code,
                 "transmission": transmission_label,
                 "photo": photo,
                 "link": link,
@@ -4615,6 +4708,8 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
 
         # detect currency symbol present in the text
         curr = "EUR" if re.search(r"EUR", price_text, re.I) else ("EUR" if "€" in price_text else "")
+        # Mapear categoria para código de grupo
+        group_code = map_category_to_group(category)
         items.append({
             "id": idx,
             "car": car_name,
@@ -4622,6 +4717,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             "price": price_text,
             "currency": curr,
             "category": category,
+            "group": group_code,
             "transmission": transmission_label,
             "link": link,
         })
@@ -5661,6 +5757,11 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
                 price_curr = "EUR"
             except Exception:
                 pass
+        # Se não tiver grupo definido, mapear a partir da categoria
+        group_code = it.get("group", "")
+        if not group_code:
+            group_code = map_category_to_group(it.get("category", ""))
+        
         row = {
             "supplier": it.get("supplier", ""),
             "car": it.get("car", ""),
@@ -5668,6 +5769,7 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
             "price_num": price_num,
             "currency": price_curr or it.get("currency", ""),
             "category": it.get("category", ""),
+            "group": group_code,
             "category_code": it.get("category_code", ""),
             "transmission": it.get("transmission", ""),
             "photo": it.get("photo", ""),
