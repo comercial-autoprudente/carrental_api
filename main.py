@@ -7453,9 +7453,9 @@ async def download_vehicle_images(request: Request):
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
 
 @app.get("/api/vehicles/{vehicle_name}/photo")
-async def get_vehicle_photo(vehicle_name: str, request: Request):
+async def get_vehicle_photo(vehicle_name: str):
     """Retorna a foto de um veículo específico"""
-    require_auth(request)
+    # Não requer autenticação para permitir que as tags <img> funcionem
     try:
         # Normalizar nome do veículo
         vehicle_key = vehicle_name.lower().strip()
