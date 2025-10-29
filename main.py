@@ -6506,3 +6506,77 @@ async def get_all_vehicle_photos(request: Request):
     except Exception as e:
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.get("/api/vehicles/uncategorized")
+async def get_uncategorized_vehicles(request: Request):
+    """Retorna veículos que não estão no dicionário VEHICLES"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES
+        import re
+        
+        # Buscar carros únicos do histórico recente
+        with _db_lock:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                query = """
+                    SELECT DISTINCT car 
+                    FROM snapshots 
+                    WHERE ts >= datetime('now', '-30 days')
+                    ORDER BY car
+                """
+                rows = conn.execute(query).fetchall()
+            finally:
+                conn.close()
+        
+        uncategorized = []
+        for row in rows:
+            original_name = row[0]
+            
+            # Limpar nome para verificar se está no VEHICLES
+            clean = original_name.lower().strip()
+            clean = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s*\|\s*.*$', '', clean)
+            clean = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico|familiar|luxo|premium|standard)\s*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s+', ' ', clean).strip()
+            
+            # Se não está no VEHICLES, adicionar à lista
+            if clean and clean not in VEHICLES:
+                # Extrair marca
+                parts = clean.split(' ')
+                brand = parts[0] if parts else ''
+                model = ' '.join(parts[1:]) if len(parts) > 1 else ''
+                
+                uncategorized.append({
+                    'original': original_name,
+                    'clean': clean,
+                    'brand': brand,
+                    'model': model,
+                    'suggested_category': detect_category_suggestion(clean)
+                })
+        
+        # Remover duplicados
+        seen = set()
+        unique = []
+        for item in uncategorized:
+            if item['clean'] not in seen:
+                seen.add(item['clean'])
+                unique.append(item)
+        
+        return _no_store_json({
+            "ok": True,
+            "uncategorized": unique,
+            "total": len(unique)
+        })
+        
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+def detect_category_suggestion(car_name: str) -> str:
+    """Sugere categoria baseado no nome do carro"""
+    from carjet_direct import detect_category_from_car
+    try:
+        return detect_category_from_car(car_name, '')
+    except:
+        return 'ECONOMY'

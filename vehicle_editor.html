@@ -23,8 +23,24 @@
     </header>
     
     <main class="mx-auto max-w-7xl px-4 py-6 space-y-6">
+        <!-- Abas -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="border-b">
+                <nav class="flex space-x-4 px-4" aria-label="Tabs">
+                    <button onclick="switchTab('all')" id="tabAll" 
+                            class="tab-button border-b-2 border-[#009cb6] text-[#009cb6] py-3 px-4 font-semibold">
+                        Todos os Veículos
+                    </button>
+                    <button onclick="switchTab('uncategorized')" id="tabUncategorized" 
+                            class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4">
+                        Não Categorizados <span id="uncategorizedCount" class="ml-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs"></span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
         <!-- Filtros -->
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-4" id="filtersSection">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <input type="text" id="searchInput" placeholder="🔍 Buscar..." 
                        class="px-4 py-2 border rounded-lg">
@@ -242,7 +258,27 @@
     
     <script>
         let vehiclesData = [];
+        let uncategorizedData = [];
         let editingIndex = -1;
+        let currentTab = 'all';
+        
+        // Mapeamento entre categoria e grupo
+        const categoryToGroup = {
+            'MINI 4 Portas': 'B1',
+            'MINI 5 Portas': 'B2',
+            'MINI Auto': 'E1',
+            'ECONOMY': 'D',
+            'ECONOMY Auto': 'E2',
+            'SUV': 'F',
+            'SUV Auto': 'L1',
+            'Crossover': 'J1',
+            'Premium': 'G',
+            'Station Wagon': 'J2',
+            'Station Wagon Auto': 'L2',
+            '7 Lugares': 'M1',
+            '7 Lugares Auto': 'M2',
+            '9 Lugares': 'N'
+        };
         
         async function loadVehicles() {
             try {
@@ -273,12 +309,48 @@
                 // Popular dropdowns
                 populateFilters();
                 
+                // Carregar não categorizados
+                await loadUncategorized();
+                
                 // Renderizar tabela
                 renderTable();
                 
             } catch (error) {
                 alert('Erro ao carregar: ' + error.message);
             }
+        }
+        
+        async function loadUncategorized() {
+            try {
+                const response = await fetch('/api/vehicles/uncategorized');
+                const data = await response.json();
+                
+                if (data.ok) {
+                    uncategorizedData = data.uncategorized;
+                    document.getElementById('uncategorizedCount').textContent = uncategorizedData.length || '';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar não categorizados:', error);
+            }
+        }
+        
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Atualizar visual das abas
+            document.getElementById('tabAll').className = tab === 'all' 
+                ? 'tab-button border-b-2 border-[#009cb6] text-[#009cb6] py-3 px-4 font-semibold'
+                : 'tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4';
+            
+            document.getElementById('tabUncategorized').className = tab === 'uncategorized' 
+                ? 'tab-button border-b-2 border-[#009cb6] text-[#009cb6] py-3 px-4 font-semibold'
+                : 'tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4';
+            
+            // Mostrar/ocultar filtros (não categorizados não precisa de filtros complexos)
+            document.getElementById('filtersSection').style.display = tab === 'all' ? 'block' : 'none';
+            
+            // Renderizar
+            renderTable();
         }
         
         function populateFilters() {
@@ -300,16 +372,35 @@
         }
         
         function renderTable() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const brandFilter = document.getElementById('filterBrand').value;
-            const catFilter = document.getElementById('filterCategory').value;
+            let filtered = [];
             
-            let filtered = vehiclesData.filter(v => {
-                if (search && !v.original.toLowerCase().includes(search) && !v.clean.includes(search)) return false;
-                if (brandFilter && v.brand !== brandFilter) return false;
-                if (catFilter && v.category !== catFilter) return false;
-                return true;
-            });
+            if (currentTab === 'uncategorized') {
+                // Mostrar não categorizados
+                const search = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+                filtered = uncategorizedData.filter(v => {
+                    if (search && !v.original.toLowerCase().includes(search) && !v.clean.includes(search)) return false;
+                    return true;
+                }).map(v => ({
+                    original: v.original,
+                    clean: v.clean,
+                    brand: v.brand,
+                    model: v.model,
+                    category: v.suggested_category + ' (sugestão)',
+                    isUncategorized: true
+                }));
+            } else {
+                // Mostrar todos (categorizados)
+                const search = document.getElementById('searchInput').value.toLowerCase();
+                const brandFilter = document.getElementById('filterBrand').value;
+                const catFilter = document.getElementById('filterCategory').value;
+                
+                filtered = vehiclesData.filter(v => {
+                    if (search && !v.original.toLowerCase().includes(search) && !v.clean.includes(search)) return false;
+                    if (brandFilter && v.brand !== brandFilter) return false;
+                    if (catFilter && v.category !== catFilter) return false;
+                    return true;
+                });
+            }
             
             // Ordenar por marca, depois modelo
             filtered.sort((a, b) => {
@@ -321,10 +412,25 @@
             tbody.innerHTML = '';
             
             filtered.forEach((vehicle, idx) => {
-                const actualIndex = vehiclesData.indexOf(vehicle);
                 const photoUrl = `/api/vehicles/${encodeURIComponent(vehicle.clean)}/photo`;
+                const isUncategorized = vehicle.isUncategorized || false;
+                const bgClass = isUncategorized ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50';
+                const categoryBadge = isUncategorized 
+                    ? `<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">${vehicle.category}</span>`
+                    : `<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">${vehicle.category}</span>`;
+                
+                const editButton = isUncategorized
+                    ? `<button onclick="addToVehicles('${vehicle.clean.replace(/'/g, "\\'")}', '${vehicle.category.replace(' (sugestão)', '')}', '${vehicle.brand}', '${vehicle.model}')" 
+                              class="text-green-600 hover:text-green-800 font-semibold">
+                          ➕ Adicionar
+                       </button>`
+                    : `<button onclick="editVehicle(${vehiclesData.indexOf(vehicle)})" 
+                              class="text-[#009cb6] hover:text-[#007a8e] font-semibold">
+                          ✏️ Editar
+                       </button>`;
+                
                 const row = `
-                    <tr class="hover:bg-gray-50">
+                    <tr class="${bgClass}">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <img src="${photoUrl}" 
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2740%27%3E%3Crect width=%2760%27 height=%2740%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2712%27%3E🚗%3C/text%3E%3C/svg%3E'"
@@ -338,16 +444,13 @@
                             <div class="text-sm text-gray-500">${vehicle.original}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <div class="text-sm font-mono text-blue-600">${vehicle.clean}</div>
+                            <div class="text-sm font-mono ${isUncategorized ? 'text-yellow-600' : 'text-blue-600'}">${vehicle.clean}</div>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">${vehicle.category}</span>
+                            ${categoryBadge}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <button onclick="editVehicle(${actualIndex})" 
-                                    class="text-[#009cb6] hover:text-[#007a8e] font-semibold">
-                                ✏️ Editar
-                            </button>
+                            ${editButton}
                         </td>
                     </tr>
                 `;
@@ -355,23 +458,25 @@
             });
         }
         
-        // Mapeamento entre categoria e grupo
-        const categoryToGroup = {
-            'MINI 4 Portas': 'B1',
-            'MINI 5 Portas': 'B2',
-            'MINI Auto': 'E1',
-            'ECONOMY': 'D',
-            'ECONOMY Auto': 'E2',
-            'SUV': 'F',
-            'SUV Auto': 'L1',
-            'Crossover': 'J1',
-            'Premium': 'G',
-            'Station Wagon': 'J2',
-            'Station Wagon Auto': 'L2',
-            '7 Lugares': 'M1',
-            '7 Lugares Auto': 'M2',
-            '9 Lugares': 'N'
-        };
+        function addToVehicles(cleanName, category, brand, model) {
+            // Abrir modal de edição pré-preenchido para adicionar ao VEHICLES
+            editingIndex = -1; // Novo veículo
+            
+            document.getElementById('editOriginalName').value = cleanName + ' (do scraping)';
+            document.getElementById('editCleanName').value = cleanName;
+            document.getElementById('editBrand').value = brand;
+            document.getElementById('editModel').value = model;
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editGroup').value = categoryToGroup[category] || 'D';
+            document.getElementById('photoUrl').value = '';
+            document.getElementById('photoFile').value = '';
+            document.getElementById('codePreview').classList.add('hidden');
+            document.getElementById('photoPreview').classList.add('hidden');
+            
+            currentVehicleName = cleanName;
+            
+            document.getElementById('editModal').classList.remove('hidden');
+        }
         
         function editVehicle(index) {
             editingIndex = index;
