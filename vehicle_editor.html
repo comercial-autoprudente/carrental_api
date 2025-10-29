@@ -1157,32 +1157,49 @@
             const previewImage = document.getElementById("photoPreviewImage");
             const urlInput = document.getElementById("photoUrl");
             
+            console.log('[LOAD PHOTO] Loading photo for:', vehicleName);
+            
             try {
-                const response = await fetch(photoUrl);
+                // Adicionar timestamp para forçar reload
+                const timestamp = Date.now();
+                const response = await fetch(photoUrl + '?t=' + timestamp);
+                
+                console.log('[LOAD PHOTO] Response status:', response.status);
+                
                 if (response.ok) {
-                    previewImage.src = photoUrl + "?t=" + Date.now();
+                    // Atualizar preview com timestamp
+                    previewImage.src = photoUrl + "?t=" + timestamp;
                     preview.classList.remove("hidden");
+                    console.log('[LOAD PHOTO] Preview updated');
                     
                     // Tentar obter a URL original da foto
                     try {
                         const metaResponse = await fetch(`/api/vehicles/${encodeURIComponent(vehicleName)}/photo/metadata`);
                         if (metaResponse.ok) {
                             const metadata = await metaResponse.json();
+                            console.log('[LOAD PHOTO] Metadata:', metadata);
+                            
                             if (metadata.ok && metadata.source_url) {
                                 // Preencher campo URL se a foto veio de um site (CarJet)
-                                if (metadata.source_url.includes('carjet.com')) {
-                                    urlInput.value = metadata.source_url;
-                                }
+                                urlInput.value = metadata.source_url;
+                                console.log('[LOAD PHOTO] URL field filled:', metadata.source_url);
+                            } else {
+                                // Limpar campo se não houver source_url (upload manual)
+                                urlInput.value = '';
+                                console.log('[LOAD PHOTO] No source_url (manual upload)');
                             }
                         }
-                    } catch (_) {
-                        // Ignorar erro de metadata
+                    } catch (err) {
+                        console.log('[LOAD PHOTO] Metadata error:', err);
+                        urlInput.value = '';
                     }
                 } else {
                     preview.classList.add("hidden");
                     urlInput.value = '';
+                    console.log('[LOAD PHOTO] No photo found');
                 }
             } catch (error) {
+                console.error('[LOAD PHOTO] Error:', error);
                 preview.classList.add("hidden");
                 urlInput.value = '';
             }
@@ -1234,6 +1251,8 @@
                 const data = await response.json();
                 
                 if (data.ok) {
+                    console.log('[UPLOAD] Photo uploaded successfully');
+                    
                     // Mostrar notificação de sucesso
                     const successMsg = document.createElement('div');
                     successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
@@ -1241,20 +1260,16 @@
                     document.body.appendChild(successMsg);
                     setTimeout(() => successMsg.remove(), 3000);
                     
-                    // Atualizar preview da foto com timestamp para forçar reload
-                    const preview = document.getElementById("photoPreview");
-                    const previewImage = document.getElementById("photoPreviewImage");
-                    const photoUrl = `/api/vehicles/${encodeURIComponent(currentVehicleName)}/photo`;
-                    previewImage.src = photoUrl + "?t=" + Date.now();
-                    preview.classList.remove("hidden");
+                    // Aguardar um pouco para garantir que a foto foi salva
+                    await new Promise(resolve => setTimeout(resolve, 200));
                     
-                    // Limpar campo URL (foto foi feita upload manual)
-                    document.getElementById("photoUrl").value = '';
+                    // Recarregar foto usando a função loadVehiclePhoto
+                    await loadVehiclePhoto(currentVehicleName);
                     
-                    // Re-renderizar tabela para mostrar foto atualizada com novo timestamp
-                    setTimeout(() => {
-                        renderTable();
-                    }, 100);
+                    // Re-renderizar tabela para mostrar foto atualizada
+                    renderTable();
+                    
+                    console.log('[UPLOAD] Preview and table updated');
                 } else {
                     alert("❌ Error: " + data.error);
                 }
