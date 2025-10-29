@@ -6267,3 +6267,75 @@ async def admin_car_groups(request: Request):
         return HTMLResponse(content=html_content)
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Erro: Ficheiro admin_vehicles_page.html não encontrado</h1>", status_code=500)
+
+@app.get("/admin/vehicles-editor", response_class=HTMLResponse)
+async def admin_vehicles_editor(request: Request):
+    """Editor avançado de veículos com nome original vs editado"""
+    require_auth(request)
+    
+    html_path = os.path.join(os.path.dirname(__file__), "vehicle_editor.html")
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Erro: vehicle_editor.html não encontrado</h1>", status_code=500)
+
+@app.get("/api/vehicles/with-originals")
+async def get_vehicles_with_originals(request: Request):
+    """Retorna veículos com nomes originais do scraping"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES
+        
+        # Buscar nomes originais do histórico
+        with _db_lock:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                # Pegar exemplos recentes de cada carro
+                query = """
+                    SELECT DISTINCT car, category 
+                    FROM snapshots 
+                    WHERE ts >= datetime('now', '-7 days')
+                    ORDER BY car
+                """
+                rows = conn.execute(query).fetchall()
+            finally:
+                conn.close()
+        
+        # Criar mapeamento de originais
+        originals_map = {}
+        for row in rows:
+            original_name = row[0]  # Nome como veio do scraping
+            # Limpar para encontrar no VEHICLES
+            import re
+            clean = original_name.lower().strip()
+            clean = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s*\|\s*.*$', '', clean)
+            clean = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico).*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s+', ' ', clean).strip()
+            
+            if clean in VEHICLES:
+                originals_map[clean] = {
+                    'original': original_name,
+                    'clean': clean,
+                    'category': VEHICLES[clean]
+                }
+        
+        # Adicionar veículos que não têm dados de scraping
+        for clean_name, category in VEHICLES.items():
+            if clean_name not in originals_map:
+                originals_map[clean_name] = {
+                    'original': f'{clean_name} (sem dados recentes)',
+                    'clean': clean_name,
+                    'category': category
+                }
+        
+        return _no_store_json({
+            "ok": True,
+            "vehicles": originals_map,
+            "total": len(originals_map)
+        })
+        
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)

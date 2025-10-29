@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editor de Veículos</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-[#009cb6] border-b sticky top-0 z-50">
+        <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-white font-semibold hover:underline">← Voltar</a>
+                <h1 class="text-white text-xl font-bold">Editor de Nomes de Veículos</h1>
+            </div>
+            <div class="flex items-center gap-4 text-white text-sm">
+                <span id="totalVehicles">0</span> veículos
+                <button onclick="saveAllChanges()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">
+                    💾 Exportar Tudo
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <main class="mx-auto max-w-7xl px-4 py-6 space-y-6">
+        <!-- Filtros -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <input type="text" id="searchInput" placeholder="🔍 Buscar..." 
+                       class="px-4 py-2 border rounded-lg">
+                
+                <select id="filterBrand" class="px-4 py-2 border rounded-lg">
+                    <option value="">Todas as marcas</option>
+                </select>
+                
+                <select id="filterCategory" class="px-4 py-2 border rounded-lg">
+                    <option value="">Todas as categorias</option>
+                </select>
+                
+                <button onclick="loadVehicles()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    🔄 Recarregar
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tabela de Veículos -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome Original (Scraping)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome Editado (Limpo)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiclesTable" class="bg-white divide-y divide-gray-200">
+                        <!-- Linhas serão inseridas aqui -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Modal de Edição -->
+    <div id="editModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Editar Veículo</h2>
+                    <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
+                </div>
+                
+                <form class="space-y-4">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <label class="block text-sm font-medium mb-1">Nome Original (do scraping)</label>
+                        <input type="text" id="editOriginalName" readonly 
+                               class="w-full px-3 py-2 border rounded-lg bg-gray-100 text-gray-600" />
+                        <p class="text-xs text-gray-500 mt-1">Este é o nome que vem do CarJet (não editável)</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome Editado (limpo) *</label>
+                        <input type="text" id="editCleanName" 
+                               class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
+                               placeholder="Ex: peugeot 3008" />
+                        <p class="text-xs text-gray-500 mt-1">Este é o nome que será usado no sistema (sempre em lowercase)</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Marca</label>
+                            <input type="text" id="editBrand" 
+                                   class="w-full px-3 py-2 border rounded-lg" 
+                                   placeholder="Ex: peugeot" />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Modelo</label>
+                            <input type="text" id="editModel" 
+                                   class="w-full px-3 py-2 border rounded-lg" 
+                                   placeholder="Ex: 3008" />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Categoria</label>
+                        <select id="editCategory" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="MINI 4 Portas">MINI 4 Portas</option>
+                            <option value="MINI 5 Portas">MINI 5 Portas</option>
+                            <option value="MINI Auto">MINI Auto</option>
+                            <option value="ECONOMY">ECONOMY</option>
+                            <option value="ECONOMY Auto">ECONOMY Auto</option>
+                            <option value="SUV">SUV</option>
+                            <option value="SUV Auto">SUV Auto</option>
+                            <option value="Crossover">Crossover</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Station Wagon">Station Wagon</option>
+                            <option value="Station Wagon Auto">Station Wagon Auto</option>
+                            <option value="7 Lugares">7 Lugares</option>
+                            <option value="7 Lugares Auto">7 Lugares Auto</option>
+                            <option value="9 Lugares">9 Lugares</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                        <p class="text-sm text-blue-800">
+                            💡 <strong>Dica:</strong> O nome editado será usado como chave no dicionário VEHICLES. 
+                            Use sempre lowercase e mantenha consistência.
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button type="button" onclick="saveEdit()" 
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            💾 Salvar Alterações
+                        </button>
+                        <button type="button" onclick="closeModal()" 
+                                class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="codePreview" class="hidden mt-4 border-t pt-4">
+                    <label class="block text-sm font-medium mb-2">Código gerado:</label>
+                    <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto"><code id="generatedCode"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Exportação -->
+    <div id="exportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Exportar VEHICLES</h2>
+                    <button onclick="closeExportModal()" class="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-4">
+                    Copie este código e substitua o dicionário VEHICLES em <code class="bg-gray-100 px-2 py-1 rounded">carjet_direct.py</code>
+                </p>
+                
+                <pre class="bg-gray-900 text-green-400 p-4 rounded text-xs overflow-x-auto max-h-96"><code id="fullExportCode"></code></pre>
+                
+                <div class="flex gap-3 mt-4">
+                    <button onclick="copyExportCode()" 
+                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                        📋 Copiar Tudo
+                    </button>
+                    <button onclick="closeExportModal()" 
+                            class="px-4 py-2 border rounded-lg hover:bg-gray-50">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let vehiclesData = [];
+        let editingIndex = -1;
+        
+        async function loadVehicles() {
+            try {
+                const response = await fetch('/api/vehicles/with-originals');
+                const data = await response.json();
+                
+                if (!data.ok) throw new Error(data.error);
+                
+                // Processar veículos
+                vehiclesData = Object.entries(data.vehicles).map(([cleanName, vehicleData]) => {
+                    // Extrair marca e modelo do nome limpo
+                    const parts = cleanName.split(' ');
+                    const brand = parts[0] || '';
+                    const model = parts.slice(1).join(' ') || '';
+                    
+                    return {
+                        original: vehicleData.original,
+                        clean: cleanName,
+                        brand: brand,
+                        model: model,
+                        category: vehicleData.category
+                    };
+                });
+                
+                // Atualizar contador
+                document.getElementById('totalVehicles').textContent = vehiclesData.length;
+                
+                // Popular dropdowns
+                populateFilters();
+                
+                // Renderizar tabela
+                renderTable();
+                
+            } catch (error) {
+                alert('Erro ao carregar: ' + error.message);
+            }
+        }
+        
+        function populateFilters() {
+            // Marcas únicas
+            const brands = [...new Set(vehiclesData.map(v => v.brand))].sort();
+            const brandSelect = document.getElementById('filterBrand');
+            brandSelect.innerHTML = '<option value="">Todas as marcas</option>';
+            brands.forEach(brand => {
+                brandSelect.innerHTML += `<option value="${brand}">${brand.charAt(0).toUpperCase() + brand.slice(1)}</option>`;
+            });
+            
+            // Categorias únicas
+            const categories = [...new Set(vehiclesData.map(v => v.category))].sort();
+            const catSelect = document.getElementById('filterCategory');
+            catSelect.innerHTML = '<option value="">Todas as categorias</option>';
+            categories.forEach(cat => {
+                catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        }
+        
+        function renderTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const brandFilter = document.getElementById('filterBrand').value;
+            const catFilter = document.getElementById('filterCategory').value;
+            
+            let filtered = vehiclesData.filter(v => {
+                if (search && !v.original.toLowerCase().includes(search) && !v.clean.includes(search)) return false;
+                if (brandFilter && v.brand !== brandFilter) return false;
+                if (catFilter && v.category !== catFilter) return false;
+                return true;
+            });
+            
+            // Ordenar por marca, depois modelo
+            filtered.sort((a, b) => {
+                if (a.brand !== b.brand) return a.brand.localeCompare(b.brand);
+                return a.model.localeCompare(b.model);
+            });
+            
+            const tbody = document.getElementById('vehiclesTable');
+            tbody.innerHTML = '';
+            
+            filtered.forEach((vehicle, idx) => {
+                const actualIndex = vehiclesData.indexOf(vehicle);
+                const row = `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-semibold capitalize">${vehicle.brand}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-500">${vehicle.original}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-mono text-blue-600">${vehicle.clean}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">${vehicle.category}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button onclick="editVehicle(${actualIndex})" 
+                                    class="text-blue-600 hover:text-blue-800 font-semibold">
+                                ✏️ Editar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        function editVehicle(index) {
+            editingIndex = index;
+            const vehicle = vehiclesData[index];
+            
+            document.getElementById('editOriginalName').value = vehicle.original;
+            document.getElementById('editCleanName').value = vehicle.clean;
+            document.getElementById('editBrand').value = vehicle.brand;
+            document.getElementById('editModel').value = vehicle.model;
+            document.getElementById('editCategory').value = vehicle.category;
+            document.getElementById('codePreview').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+        
+        function saveEdit() {
+            const cleanName = document.getElementById('editCleanName').value.toLowerCase().trim();
+            const brand = document.getElementById('editBrand').value.toLowerCase().trim();
+            const model = document.getElementById('editModel').value.toLowerCase().trim();
+            const category = document.getElementById('editCategory').value;
+            
+            if (!cleanName || !category) {
+                alert('Preencha o nome editado e categoria!');
+                return;
+            }
+            
+            // Atualizar dados
+            vehiclesData[editingIndex].clean = cleanName;
+            vehiclesData[editingIndex].brand = brand;
+            vehiclesData[editingIndex].model = model;
+            vehiclesData[editingIndex].category = category;
+            
+            // Gerar código
+            const code = `    '${cleanName}': '${category}',  # ${brand} ${model}`;
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codePreview').classList.remove('hidden');
+            
+            // Re-renderizar
+            renderTable();
+        }
+        
+        function saveAllChanges() {
+            let code = 'VEHICLES = {\n';
+            
+            // Agrupar por categoria
+            const byCategory = {};
+            vehiclesData.forEach(v => {
+                if (!byCategory[v.category]) byCategory[v.category] = [];
+                byCategory[v.category].push(v);
+            });
+            
+            // Gerar código organizado
+            Object.keys(byCategory).sort().forEach(category => {
+                code += `    # ${category}\n`;
+                byCategory[category].forEach(v => {
+                    code += `    '${v.clean}': '${category}',\n`;
+                });
+                code += '\n';
+            });
+            
+            code += '}';
+            
+            document.getElementById('fullExportCode').textContent = code;
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+        
+        function copyExportCode() {
+            const code = document.getElementById('fullExportCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('✅ Código copiado! Cole em carjet_direct.py');
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('editModal').classList.add('hidden');
+        }
+        
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+        
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', renderTable);
+        document.getElementById('filterBrand').addEventListener('change', renderTable);
+        document.getElementById('filterCategory').addEventListener('change', renderTable);
+        
+        // Auto-preencher brand e model quando clean name muda
+        document.getElementById('editCleanName').addEventListener('input', (e) => {
+            const name = e.target.value.toLowerCase().trim();
+            const parts = name.split(' ');
+            document.getElementById('editBrand').value = parts[0] || '';
+            document.getElementById('editModel').value = parts.slice(1).join(' ') || '';
+        });
+        
+        // Carregar ao iniciar
+        loadVehicles();
+    </script>
+</body>
+</html>
