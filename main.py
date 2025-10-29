@@ -6244,3 +6244,214 @@ async def search_vehicles(request: Request, q: str = ""):
     except Exception as e:
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+# ============================================================
+# ADMIN - CAR GROUPS MANAGEMENT
+# ============================================================
+
+@app.get("/admin/car-groups", response_class=HTMLResponse)
+async def admin_car_groups(request: Request):
+    """Página de administração dos grupos de carros (VEHICLES)"""
+    require_auth(request)
+    
+    try:
+        from carjet_direct import VEHICLES
+        
+        # Organizar por categoria
+        by_category = {}
+        for car, category in VEHICLES.items():
+            if category not in by_category:
+                by_category[category] = []
+            by_category[category].append(car)
+        
+        # Ordenar
+        for cat in by_category:
+            by_category[cat] = sorted(by_category[cat])
+        by_category = dict(sorted(by_category.items()))
+        
+        categories = sorted(set(VEHICLES.values()))
+        
+    except Exception as e:
+        import traceback
+        by_category = {}
+        categories = []
+        
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Gestão de Grupos de Carros</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50">
+        <header class="bg-[#009cb6] border-b">
+            <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <a href="/" class="text-white font-semibold">← Voltar</a>
+                    <h1 class="text-white text-xl font-bold">Gestão de Grupos de Carros</h1>
+                </div>
+            </div>
+        </header>
+        
+        <main class="mx-auto max-w-7xl px-4 py-6 space-y-6">
+            <!-- Estatísticas -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Estatísticas</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 rounded p-4">
+                        <div class="text-2xl font-bold text-blue-600">{len(VEHICLES)}</div>
+                        <div class="text-sm text-gray-600">Total de Veículos</div>
+                    </div>
+                    <div class="bg-green-50 rounded p-4">
+                        <div class="text-2xl font-bold text-green-600">{len(categories)}</div>
+                        <div class="text-sm text-gray-600">Categorias</div>
+                    </div>
+                    <div class="bg-yellow-50 rounded p-4">
+                        <div class="text-2xl font-bold text-yellow-600">{len(by_category)}</div>
+                        <div class="text-sm text-gray-600">Grupos</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Busca -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Buscar Veículo</h2>
+                <div class="flex gap-3">
+                    <input type="text" id="searchInput" placeholder="Digite o nome do carro..." 
+                           class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <button onclick="searchVehicle()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Buscar
+                    </button>
+                </div>
+                <div id="searchResult" class="mt-4"></div>
+            </div>
+            
+            <!-- Lista por Categoria -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-lg font-semibold mb-4">Veículos por Categoria</h2>
+                <div class="space-y-4">
+                    {"".join(f'''
+                    <div class="border rounded-lg">
+                        <div class="bg-gray-50 px-4 py-3 font-semibold cursor-pointer hover:bg-gray-100"
+                             onclick="toggleCategory('{cat.replace(" ", "_")}')">
+                            <div class="flex justify-between items-center">
+                                <span>{cat}</span>
+                                <span class="bg-blue-600 text-white px-2 py-1 rounded text-sm">{len(cars)}</span>
+                            </div>
+                        </div>
+                        <div id="cat_{cat.replace(" ", "_")}" class="hidden px-4 py-3">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                                {"".join(f'<div class="text-sm px-3 py-2 bg-gray-50 rounded">{car}</div>' for car in cars)}
+                            </div>
+                        </div>
+                    </div>
+                    ''' for cat, cars in by_category.items())}
+                </div>
+            </div>
+            
+            <!-- Instruções -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h3 class="font-semibold text-blue-900 mb-2">📝 Como Adicionar/Editar Veículos</h3>
+                <p class="text-sm text-blue-800 mb-3">
+                    Para adicionar ou modificar veículos, edite o ficheiro <code class="bg-blue-100 px-2 py-1 rounded">carjet_direct.py</code>:
+                </p>
+                <pre class="bg-blue-900 text-green-300 p-4 rounded text-xs overflow-x-auto"><code>VEHICLES = {{
+    # Adicionar novo veículo (sempre em lowercase):
+    'toyota yaris': 'ECONOMY',
+    'honda civic': 'ECONOMY',
+    'bmw x3': 'SUV',
+    # ...
+}}</code></pre>
+                <p class="text-sm text-blue-800 mt-3">
+                    Após a alteração, reinicie o servidor para aplicar as mudanças.
+                </p>
+            </div>
+            
+            <!-- API Endpoints -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="font-semibold mb-3">🔌 API Endpoints</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-mono text-xs">GET</span>
+                        <code class="text-blue-600">/api/vehicles</code>
+                        <span class="text-gray-600">- Lista todos os veículos</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded font-mono text-xs">GET</span>
+                        <code class="text-blue-600">/api/vehicles/search?q=&lt;nome&gt;</code>
+                        <span class="text-gray-600">- Busca veículo</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <script>
+            function toggleCategory(catId) {{
+                const elem = document.getElementById('cat_' + catId);
+                if (elem.classList.contains('hidden')) {{
+                    elem.classList.remove('hidden');
+                }} else {{
+                    elem.classList.add('hidden');
+                }}
+            }}
+            
+            async function searchVehicle() {{
+                const query = document.getElementById('searchInput').value;
+                const resultDiv = document.getElementById('searchResult');
+                
+                if (!query.trim()) {{
+                    resultDiv.innerHTML = '<div class="text-red-600">Digite um nome para buscar</div>';
+                    return;
+                }}
+                
+                try {{
+                    const response = await fetch(`/api/vehicles/search?q=${{encodeURIComponent(query)}}`);
+                    const data = await response.json();
+                    
+                    if (!data.ok) {{
+                        resultDiv.innerHTML = `<div class="text-red-600">Erro: ${{data.error}}</div>`;
+                        return;
+                    }}
+                    
+                    let html = '<div class="border rounded-lg p-4">';
+                    html += `<div class="font-semibold mb-2">Resultados para "${{query}}":</div>`;
+                    
+                    if (Object.keys(data.matches).length === 0) {{
+                        html += '<div class="text-gray-600">Nenhum veículo encontrado no dicionário.</div>';
+                    }} else {{
+                        html += '<div class="space-y-1">';
+                        for (const [car, category] of Object.entries(data.matches)) {{
+                            html += `<div class="flex justify-between items-center bg-gray-50 px-3 py-2 rounded">`;
+                            html += `<span class="font-mono text-sm">${{car}}</span>`;
+                            html += `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">${{category}}</span>`;
+                            html += `</div>`;
+                        }}
+                        html += '</div>';
+                    }}
+                    
+                    html += `<div class="mt-3 pt-3 border-t">`;
+                    html += `<div class="text-sm text-gray-600">Categoria detectada automaticamente: `;
+                    html += `<span class="font-semibold text-blue-600">${{data.detected_category}}</span></div>`;
+                    html += `</div>`;
+                    html += '</div>';
+                    
+                    resultDiv.innerHTML = html;
+                }} catch (error) {{
+                    resultDiv.innerHTML = `<div class="text-red-600">Erro: ${{error.message}}</div>`;
+                }}
+            }}
+            
+            // Enter key para buscar
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {{
+                if (e.key === 'Enter') {{
+                    searchVehicle();
+                }}
+            }});
+        </script>
+    </body>
+    </html>
+    """
+    
+    return HTMLResponse(content=html)
