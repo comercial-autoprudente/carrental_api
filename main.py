@@ -1953,12 +1953,10 @@ async def track_by_params(request: Request):
                 "days": days,
             })
         
-        # MODO REAL: Usar ScraperAPI para scraping dinâmico
-        if TEST_MODE_LOCAL == 0 and SCRAPER_API_KEY:
-            try:
         # PRIORIDADE 1: Tentar método direto (sem browser) - NOVO!
         try:
             from carjet_direct import scrape_carjet_direct
+            import sys
             print(f"[DIRECT] Tentando método direto (sem browser)...", file=sys.stderr, flush=True)
             
             direct_items = scrape_carjet_direct(location, start_dt, end_dt, quick)
@@ -1986,6 +1984,9 @@ async def track_by_params(request: Request):
             print(f"[DIRECT] ❌ Erro no método direto: {e}", file=sys.stderr, flush=True)
             print(f"[DIRECT] Continuando para métodos alternativos...", file=sys.stderr, flush=True)
         
+        # MODO REAL: Usar ScraperAPI para scraping dinâmico
+        if TEST_MODE_LOCAL == 0 and SCRAPER_API_KEY:
+            try:
                 import httpx
                 import sys
                 from urllib.parse import urlencode

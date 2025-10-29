@@ -1,6 +1,5 @@
 """
-CarJet Direct API - Método direto sem browser/scraping
-Baseado no server.py do auto-prudente-checkin
+CarJet Direct API - Parse completo com suppliers e categorias
 """
 import urllib.request
 import urllib.parse
@@ -9,35 +8,137 @@ import uuid
 import re
 import time
 from typing import List, Dict, Any, Optional
+from bs4 import BeautifulSoup
 
 
 def to_carjet_format(dt: datetime) -> str:
-    """Converte datetime para formato CarJet DD/MM/YYYY HH:MM"""
     return dt.strftime('%d/%m/%Y %H:%M')
 
 
 def extract_redirect_url(html: str) -> Optional[str]:
-    """Extrai URL de redirect do JavaScript"""
     pattern = r"window\.location\.replace\('([^']+)'\)"
     match = re.search(pattern, html)
     return match.group(1) if match else None
 
 
-def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, quick: int = 0) -> List[Dict[str, Any]]:
-    """
-    Faz request direto para API do CarJet sem usar browser
+# Mapa de códigos para nomes de suppliers
+SUPPLIER_MAP = {
+    'AUP': 'Auto Prudente Rent a Car',
+    'AUTOPRUDENTE': 'Auto Prudente Rent a Car',
+    'THR': 'Thrifty',
+    'ECR': 'Europcar',
+    'HER': 'Hertz',
+    'CEN': 'Centauro',
+    'OKR': 'OK Mobility',
+    'SUR': 'Surprice',
+    'GREENMOTION': 'Greenmotion',
+    'GOLDCAR': 'Goldcar',
+    'SIXT': 'Sixt',
+    'ICT': 'Interrent',
+    'BGX': 'Budget',
+    'YNO': 'YesNo',
+}
+
+
+def normalize_supplier(name: str) -> str:
+    """Converte código/nome de supplier para nome completo"""
+    if not name:
+        return 'CarJet'
     
-    Args:
-        location: Nome da localização (ex: "Aeroporto de Faro", "Albufeira")
-        start_dt: Data/hora de levantamento
-        end_dt: Data/hora de devolução
-        quick: Se 1, espera menos tempo
-        
-    Returns:
-        Lista de dicionários com dados dos carros
+    name_upper = name.upper().strip()
+    
+    # Tentar match direto
+    if name_upper in SUPPLIER_MAP:
+        return SUPPLIER_MAP[name_upper]
+    
+    # Tentar extrair código de logo (ex: logo_AUP.png → AUP)
+    logo_match = re.search(r'logo[_-]([A-Z]+)', name_upper)
+    if logo_match and logo_match.group(1) in SUPPLIER_MAP:
+        return SUPPLIER_MAP[logo_match.group(1)]
+    
+    # Normalizar nomes comuns
+    for code, full_name in SUPPLIER_MAP.items():
+        if code in name_upper or full_name.upper() in name_upper:
+            return full_name
+    
+    return name.strip()
+
+
+def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     """
+    Detecta categoria (Group) baseado no nome do carro
+    Usa mesma lógica do frontend
+    """
+    car = car_name.lower()
+    trans = transmission.lower()
+    auto = 'auto' in car or 'auto' in trans or 'automatic' in trans
+    
+    # Casos específicos primeiro
+    if 'peugeot' in car and '308' in car and auto:
+        return 'Group E2'
+    if 'fiat' in car and '500l' in car:
+        return 'Group J1'
+    if 'kia' in car and 'ceed' in car:
+        return 'Group D'
+    if 'mini' in car and 'countryman' in car:
+        return 'Group G'
+    if 'caddy' in car and auto:
+        return 'Group M2'
+    if 'peugeot' in car and 'rifter' in car:
+        return 'Group M1'
+    if 'citroen' in car and 'c1' in car and auto:
+        return 'Group E1'
+    if 'citroen' in car and 'c3' in car and 'aircross' in car:
+        return 'Group L1' if auto else 'Group J1'
+    if 'peugeot' in car and '5008' in car:
+        return 'Group M1'
+    if 'fiat' in car and '500x' in car:
+        return 'Group L1' if auto else 'Group J1'
+    if 'cross' in car and ('vw' in car or 'volkswagen' in car):
+        return 'Group L1' if auto else 'Group J1'
+    if 'peugeot' in car and '308' in car and 'sw' in car and auto:
+        return 'Group L2'
+    
+    # Categorias por tipo de veículo
+    if any(x in car for x in ['fiat 500', 'citroen c1', 'toyota aygo', 'volkswagen up', 'peugeot 108', 'hyundai i10']):
+        if '4' in car and 'door' in car:
+            return 'Group B1'
+        return 'Group E1' if auto else 'Group B2'
+    
+    if any(x in car for x in ['renault clio', 'peugeot 208', 'ford fiesta', 'seat ibiza', 'hyundai i20', 'opel corsa']):
+        return 'Group E2' if auto else 'Group D'
+    
+    if any(x in car for x in ['juke', '2008', 'captur', 'stonic', 'kauai', 'kona']):
+        return 'Group F'
+    
+    if 'mini' in car and 'cooper' in car:
+        return 'Group G'
+    
+    if any(x in car for x in ['crossover', 'aircross', '500x', 't-cross', 'taigo', 'arona']):
+        return 'Group L1' if auto else 'Group J1'
+    
+    if ('sw' in car or 'estate' in car or 'wagon' in car) and not '7' in car:
+        return 'Group L2' if auto else 'Group J2'
+    
+    if any(x in car for x in ['3008', 'qashqai', 'c-hr', 'tiguan', 'karoq', 'tucson']):
+        return 'Group L1' if auto else 'Group F'
+    
+    if any(x in car for x in ['lodgy', 'scenic', 'rifter', '7 seater']) or '7' in car:
+        return 'Group M2' if auto else 'Group M1'
+    
+    if '9' in car or 'tourneo' in car or 'vito' in car or 'transporter' in car:
+        return 'Group N'
+    
+    # Fallback baseado em tamanho
+    if auto:
+        return 'Group E2'
+    return 'Group D'
+
+
+def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, quick: int = 0) -> List[Dict[str, Any]]:
     try:
-        # Mapear localização para código CarJet
+        print(f"[DIRECT] Location: {location}, Start: {start_dt}, End: {end_dt}")
+        
         location_codes = {
             'faro': 'FAO02',
             'aeroporto de faro': 'FAO02',
@@ -49,26 +150,21 @@ def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, qu
         }
         
         loc_lower = location.lower()
-        pickup_code = None
+        pickup_code = 'FAO02'
         for key, code in location_codes.items():
             if key in loc_lower:
                 pickup_code = code
                 break
         
-        if not pickup_code:
-            pickup_code = 'FAO02'  # Default para Faro
+        print(f"[DIRECT] Código: {pickup_code}")
         
-        # Converter datas para formato CarJet
         pickup_date = to_carjet_format(start_dt)
         return_date = to_carjet_format(end_dt)
-        
-        # Gerar session ID
         session_id = str(uuid.uuid4())
         
-        # Preparar dados para CarJet
         form_data = {
             'frmDestino': pickup_code,
-            'frmDestinoFinal': '',  # Mesmo local
+            'frmDestinoFinal': '',
             'frmFechaRecogida': pickup_date,
             'frmFechaDevolucion': return_date,
             'frmHasAge': 'False',
@@ -83,109 +179,156 @@ def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, qu
             'frmDetailCode': ''
         }
         
-        # Fazer request para CarJet
         encoded_data = urllib.parse.urlencode(form_data).encode('utf-8')
         url = 'https://www.carjet.com/do/list/pt'
         
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept': 'text/html',
             'Accept-Language': 'pt-PT,pt;q=0.9',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
             'Referer': 'https://www.carjet.com/',
             'Origin': 'https://www.carjet.com'
         }
         
+        print(f"[DIRECT] POST → {url}")
         req = urllib.request.Request(url, data=encoded_data, headers=headers, method='POST')
         
         with urllib.request.urlopen(req, timeout=30) as response:
             html = response.read().decode('utf-8')
         
-        # Verificar se é página de loading
+        print(f"[DIRECT] HTML: {len(html)} bytes")
+        
+        # Seguir redirect se necessário
         if 'Waiting Prices' in html or 'window.location.replace' in html:
             redirect_url = extract_redirect_url(html)
-            
             if redirect_url:
-                # Aguardar processamento (menos tempo se quick=1)
                 wait_time = 2 if quick else 4
+                print(f"[DIRECT] Aguardando {wait_time}s...")
                 time.sleep(wait_time)
                 
-                # Seguir redirect
                 full_url = f'https://www.carjet.com{redirect_url}'
+                print(f"[DIRECT] Redirect → {full_url[:80]}...")
                 req2 = urllib.request.Request(full_url, headers=headers, method='GET')
                 
                 with urllib.request.urlopen(req2, timeout=30) as response2:
                     html = response2.read().decode('utf-8')
+                
+                print(f"[DIRECT] HTML final: {len(html)} bytes")
         
-        # Parse HTML para extrair dados
-        items = parse_carjet_html(html)
-        
-        print(f"[DIRECT API] ✅ Encontrados {len(items)} carros via método direto")
+        items = parse_carjet_html_complete(html)
+        print(f"[DIRECT API] ✅ {len(items)} carros extraídos")
         return items
         
     except Exception as e:
         print(f"[DIRECT API] ❌ Erro: {e}")
+        import traceback
+        traceback.print_exc()
         return []
 
 
-def parse_carjet_html(html: str) -> List[Dict[str, Any]]:
-    """
-    Parse simples do HTML do CarJet
-    Retorna lista de carros com preços
-    """
+def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
+    """Parse completo com BeautifulSoup - extrai supplier, category, photos"""
     items = []
     
     try:
-        # Contar artigos/ofertas
-        total_cars = html.count('class="auto-box"') or html.count('<article')
+        soup = BeautifulSoup(html, 'lxml')
         
-        # Extrair preços com regex
-        price_pattern = r'€\s*(\d+(?:[.,]\d{2})?)'
-        price_matches = re.findall(price_pattern, html)
+        # Procurar blocos de carros
+        car_blocks = (
+            soup.find_all('article') or
+            soup.find_all('div', class_=lambda x: x and ('car' in x or 'auto' in x or 'result' in x) if x else False)
+        )
         
-        prices = []
-        for match in price_matches:
+        print(f"[PARSE] {len(car_blocks)} blocos encontrados")
+        
+        for idx, block in enumerate(car_blocks):
             try:
-                price = float(match.replace(',', '.'))
-                if 10 < price < 10000:
-                    prices.append(price)
-            except:
-                pass
-        
-        # Extrair nomes de carros (simplificado)
-        car_pattern = r'class="name[^"]*"[^>]*>([^<]+)</[^>]+>'
-        car_matches = re.findall(car_pattern, html, re.IGNORECASE)
-        
-        # Combinar dados
-        for i in range(min(len(car_matches), len(prices))):
-            items.append({
-                'id': i,
-                'car': car_matches[i].strip(),
-                'price': f'€{prices[i]:.2f}',
-                'supplier': 'CarJet',  # Simplificado
-                'currency': 'EUR',
-                'category': '',
-                'transmission': '',
-                'photo': '',
-                'link': '',
-            })
-        
-        # Se não conseguiu parse detalhado, criar entrada genérica
-        if not items and total_cars > 0:
-            for i in range(min(total_cars, len(prices))):
+                # Nome do carro
+                car_name = ''
+                for tag in block.find_all(['h3', 'h4', 'span', 'div']):
+                    text = tag.get_text(strip=True)
+                    # Verificar se parece nome de carro (tem marca conhecida)
+                    if any(brand in text.lower() for brand in ['fiat', 'renault', 'peugeot', 'citroen', 'toyota', 'ford', 'vw', 'volkswagen', 'opel', 'seat', 'hyundai', 'kia', 'nissan', 'mercedes', 'bmw', 'audi', 'mini', 'jeep', 'dacia', 'skoda', 'mazda']):
+                        car_name = text
+                        break
+                
+                if not car_name:
+                    continue
+                
+                # Supplier - procurar por logo ou texto
+                supplier = 'CarJet'
+                img_tags = block.find_all('img')
+                for img in img_tags:
+                    src = img.get('src', '')
+                    alt = img.get('alt', '')
+                    # Logos normalmente têm /logos/ no path
+                    if '/logo' in src.lower():
+                        supplier = normalize_supplier(src)
+                        break
+                    elif alt and len(alt) <= 30:  # Alt text curto pode ser nome do supplier
+                        supplier = normalize_supplier(alt)
+                        if supplier != 'CarJet':
+                            break
+                
+                # Preço
+                price = '€0.00'
+                for tag in block.find_all(['span', 'div', 'p']):
+                    text = tag.get_text(strip=True)
+                    match = re.search(r'€?\s*(\d+(?:[.,]\d{2})?)\s*€?', text)
+                    if match:
+                        try:
+                            price_val = float(match.group(1).replace(',', '.'))
+                            if 10 < price_val < 10000:
+                                price = f'€{price_val:.2f}'
+                                break
+                        except:
+                            pass
+                
+                if price == '€0.00':
+                    continue
+                
+                # Foto
+                photo = ''
+                for img in img_tags:
+                    src = img.get('src', '')
+                    # Fotos de carros normalmente têm /cars/ ou /vehicles/ no path
+                    if '/car' in src.lower() or '/vehicle' in src.lower() or '/img' in src:
+                        photo = src if src.startswith('http') else f'https://www.carjet.com{src}'
+                        break
+                
+                # Transmissão
+                transmission = ''
+                for tag in block.find_all(['span', 'div']):
+                    text = tag.get_text(strip=True).lower()
+                    if 'automatic' in text or 'manual' in text:
+                        transmission = 'Automatic' if 'automatic' in text else 'Manual'
+                        break
+                
+                # Detectar categoria
+                category = detect_category_from_car(car_name, transmission)
+                
                 items.append({
-                    'id': i,
-                    'car': f'Car {i+1}',
-                    'price': f'€{prices[i]:.2f}' if i < len(prices) else '€0.00',
-                    'supplier': 'CarJet',
+                    'id': idx,
+                    'car': car_name,
+                    'supplier': supplier,
+                    'price': price,
+                    'category': category,
+                    'transmission': transmission,
+                    'photo': photo,
                     'currency': 'EUR',
-                    'category': '',
-                    'transmission': '',
-                    'photo': '',
                     'link': '',
                 })
+                
+            except Exception as e:
+                print(f"[PARSE] Erro bloco {idx}: {e}")
+                continue
+        
+        print(f"[PARSE] {len(items)} items válidos")
         
     except Exception as e:
         print(f"[PARSE ERROR] {e}")
+        import traceback
+        traceback.print_exc()
     
     return items
