@@ -37,6 +37,11 @@ SUPPLIER_MAP = {
     'ICT': 'Interrent',
     'BGX': 'Budget',
     'YNO': 'YesNo',
+    'KED': 'Keddy',
+    'FIR': 'Firefly',
+    'ALM': 'Alamo',
+    'NAT': 'National',
+    'ENT': 'Enterprise',
 }
 
 
@@ -47,19 +52,25 @@ def normalize_supplier(name: str) -> str:
     
     name_upper = name.upper().strip()
     
+    # Tentar extrair código de logo primeiro (ex: logo_AUP.png → AUP)
+    logo_match = re.search(r'logo[_-]([A-Z0-9]+)', name_upper)
+    if logo_match:
+        code = logo_match.group(1)
+        if code in SUPPLIER_MAP:
+            return SUPPLIER_MAP[code]
+    
     # Tentar match direto
     if name_upper in SUPPLIER_MAP:
         return SUPPLIER_MAP[name_upper]
-    
-    # Tentar extrair código de logo (ex: logo_AUP.png → AUP)
-    logo_match = re.search(r'logo[_-]([A-Z]+)', name_upper)
-    if logo_match and logo_match.group(1) in SUPPLIER_MAP:
-        return SUPPLIER_MAP[logo_match.group(1)]
     
     # Normalizar nomes comuns
     for code, full_name in SUPPLIER_MAP.items():
         if code in name_upper or full_name.upper() in name_upper:
             return full_name
+    
+    # Se ainda não encontrou e tem logo_, retornar o código
+    if logo_match:
+        return logo_match.group(1).title()
     
     return name.strip()
 
@@ -249,8 +260,12 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                 for tag in block.find_all(['h3', 'h4', 'span', 'div']):
                     text = tag.get_text(strip=True)
                     # Verificar se parece nome de carro (tem marca conhecida)
-                    if any(brand in text.lower() for brand in ['fiat', 'renault', 'peugeot', 'citroen', 'toyota', 'ford', 'vw', 'volkswagen', 'opel', 'seat', 'hyundai', 'kia', 'nissan', 'mercedes', 'bmw', 'audi', 'mini', 'jeep', 'dacia', 'skoda', 'mazda']):
+                    if any(brand in text.lower() for brand in ['fiat', 'renault', 'peugeot', 'citroen', 'toyota', 'ford', 'vw', 'volkswagen', 'opel', 'seat', 'hyundai', 'kia', 'nissan', 'mercedes', 'bmw', 'audi', 'mini', 'jeep', 'dacia', 'skoda', 'mazda', 'mitsubishi', 'honda', 'suzuki']):
                         car_name = text
+                        # Limpar texto extra ("ou similar", categorias, etc)
+                        car_name = re.sub(r'\s+(ou similar|or similar).*$', '', car_name, flags=re.IGNORECASE)
+                        car_name = re.sub(r'\s*\|\s*.*$', '', car_name)  # Remove "| Pequeno", "| Médio", etc
+                        car_name = car_name.strip()
                         break
                 
                 if not car_name:
@@ -262,15 +277,28 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                 for img in img_tags:
                     src = img.get('src', '')
                     alt = img.get('alt', '')
-                    # Logos normalmente têm /logos/ no path
-                    if '/logo' in src.lower():
+                    title = img.get('title', '')
+
+                    # Logos normalmente têm /logo no path
+                    if '/logo' in src.lower() or 'logo_' in src.lower():
                         supplier = normalize_supplier(src)
-                        break
-                    elif alt and len(alt) <= 30:  # Alt text curto pode ser nome do supplier
-                        supplier = normalize_supplier(alt)
                         if supplier != 'CarJet':
                             break
-                
+
+                    # Verificar alt text
+                    if alt and len(alt) <= 50 and alt.lower() not in ['car', 'vehicle', 'auto']:
+                        normalized = normalize_supplier(alt)
+                        if normalized != 'CarJet' and normalized != alt:
+                            supplier = normalized
+                            break
+
+                    # Verificar title
+                    if title and len(title) <= 50:
+                        normalized = normalize_supplier(title)
+                        if normalized != 'CarJet' and normalized != title:
+                            supplier = normalized
+                            break
+
                 # Preço
                 price = '€0.00'
                 for tag in block.find_all(['span', 'div', 'p']):
