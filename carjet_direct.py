@@ -34,6 +34,7 @@ SUPPLIER_MAP = {
     'GREENMOTION': 'Greenmotion',
     'GOLDCAR': 'Goldcar',
     'SIXT': 'Sixt',
+    'SIX': 'Sixt',
     'ICT': 'Interrent',
     'BGX': 'Budget',
     'YNO': 'YesNo',
@@ -42,6 +43,14 @@ SUPPLIER_MAP = {
     'ALM': 'Alamo',
     'NAT': 'National',
     'ENT': 'Enterprise',
+    'ABB1': 'Abby Car',
+    'ABB': 'Abby Car',
+    'GDS': 'Goldcar',
+    'REC': 'Record Go',
+    'FLZ': 'Flizzr',
+    'ROD': 'Rhodium',
+    'CAL': 'Caleche',
+    'JUS': 'Justrent',
 }
 
 
@@ -77,8 +86,8 @@ def normalize_supplier(name: str) -> str:
 
 def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     """
-    Detecta categoria (código apenas, sem 'Group') baseado no nome do carro
-    Retorna apenas o código (B1, D, E2, etc) - o frontend faz o mapeamento
+    Detecta categoria baseado no nome do carro
+    Retorna nome descritivo da categoria para exibição na UI
     """
     car = car_name.lower()
     trans = transmission.lower()
@@ -86,64 +95,64 @@ def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     
     # Casos específicos primeiro
     if 'peugeot' in car and '308' in car and auto:
-        return 'E2'
+        return 'ECONOMY Auto'
     if 'fiat' in car and '500l' in car:
-        return 'J1'
+        return 'Crossover'
     if 'kia' in car and 'ceed' in car:
-        return 'D'
+        return 'ECONOMY'
     if 'mini' in car and 'countryman' in car:
-        return 'G'
+        return 'Premium'
     if 'caddy' in car and auto:
-        return 'M2'
+        return '7 Lugares Auto'
     if 'peugeot' in car and 'rifter' in car:
-        return 'M1'
+        return '7 Lugares'
     if 'citroen' in car and 'c1' in car and auto:
-        return 'E1'
+        return 'MINI Auto'
     if 'citroen' in car and 'c3' in car and 'aircross' in car:
-        return 'L1' if auto else 'J1'
+        return 'SUV Auto' if auto else 'Crossover'
     if 'peugeot' in car and '5008' in car:
-        return 'M1'
+        return '7 Lugares'
     if 'fiat' in car and '500x' in car:
-        return 'L1' if auto else 'J1'
+        return 'SUV Auto' if auto else 'Crossover'
     if 'cross' in car and ('vw' in car or 'volkswagen' in car):
-        return 'L1' if auto else 'J1'
+        return 'SUV Auto' if auto else 'Crossover'
     if 'peugeot' in car and '308' in car and 'sw' in car and auto:
-        return 'L2'
+        return 'Station Wagon Auto'
     
     # Categorias por tipo de veículo
     if any(x in car for x in ['fiat 500', 'citroen c1', 'toyota aygo', 'volkswagen up', 'peugeot 108', 'hyundai i10']):
         if '4' in car and 'door' in car:
-            return 'B1'
-        return 'E1' if auto else 'B2'
+            return 'MINI 4 Portas'
+        return 'MINI Auto' if auto else 'MINI 5 Portas'
     
     if any(x in car for x in ['renault clio', 'peugeot 208', 'ford fiesta', 'seat ibiza', 'hyundai i20', 'opel corsa']):
-        return 'E2' if auto else 'D'
+        return 'ECONOMY Auto' if auto else 'ECONOMY'
     
     if any(x in car for x in ['juke', '2008', 'captur', 'stonic', 'kauai', 'kona']):
-        return 'F'
+        return 'SUV'
     
     if 'mini' in car and 'cooper' in car:
-        return 'G'
+        return 'Premium'
     
     if any(x in car for x in ['crossover', 'aircross', '500x', 't-cross', 'taigo', 'arona']):
-        return 'L1' if auto else 'J1'
+        return 'SUV Auto' if auto else 'Crossover'
     
     if ('sw' in car or 'estate' in car or 'wagon' in car) and not '7' in car:
-        return 'L2' if auto else 'J2'
+        return 'Station Wagon Auto' if auto else 'Station Wagon'
     
     if any(x in car for x in ['3008', 'qashqai', 'c-hr', 'tiguan', 'karoq', 'tucson']):
-        return 'L1' if auto else 'F'
+        return 'SUV Auto' if auto else 'SUV'
     
     if any(x in car for x in ['lodgy', 'scenic', 'rifter', '7 seater']) or '7' in car:
-        return 'M2' if auto else 'M1'
+        return '7 Lugares Auto' if auto else '7 Lugares'
     
     if '9' in car or 'tourneo' in car or 'vito' in car or 'transporter' in car:
-        return 'N'
+        return '9 Lugares'
     
     # Fallback baseado em tamanho
     if auto:
-        return 'E2'
-    return 'D'
+        return 'ECONOMY Auto'
+    return 'ECONOMY'
 
 
 def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, quick: int = 0) -> List[Dict[str, Any]]:
@@ -262,10 +271,25 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                     # Verificar se parece nome de carro (tem marca conhecida)
                     if any(brand in text.lower() for brand in ['fiat', 'renault', 'peugeot', 'citroen', 'toyota', 'ford', 'vw', 'volkswagen', 'opel', 'seat', 'hyundai', 'kia', 'nissan', 'mercedes', 'bmw', 'audi', 'mini', 'jeep', 'dacia', 'skoda', 'mazda', 'mitsubishi', 'honda', 'suzuki']):
                         car_name = text
-                        # Limpar texto extra ("ou similar", categorias, etc)
-                        car_name = re.sub(r'\s+(ou similar|or similar).*$', '', car_name, flags=re.IGNORECASE)
-                        car_name = re.sub(r'\s*\|\s*.*$', '', car_name)  # Remove "| Pequeno", "| Médio", etc
-                        car_name = car_name.strip()
+                        
+                        # LIMPEZA COMPLETA do nome do carro
+                        # 1. Remover "ou similar" / "or similar" e tudo depois
+                        car_name = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', car_name, flags=re.IGNORECASE)
+                        
+                        # 2. Remover categorias após pipe | (Pequeno, Médio, Grande, etc)
+                        car_name = re.sub(r'\s*\|\s*.*$', '', car_name)
+                        
+                        # 3. Remover categorias de tamanho em qualquer lugar
+                        car_name = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico|familiar|luxo|premium|standard)\s*$', '', car_name, flags=re.IGNORECASE)
+                        
+                        # 4. Manter apenas Auto/Automatic e SW/Station Wagon
+                        # Preservar "Auto" ou "Automatic" no final
+                        has_auto = re.search(r'\b(auto|automatic)\b', car_name, re.IGNORECASE)
+                        # Preservar "SW" ou "Station Wagon"
+                        has_sw = re.search(r'\b(sw|station\s*wagon)\b', car_name, re.IGNORECASE)
+                        
+                        # Normalizar espaços
+                        car_name = re.sub(r'\s+', ' ', car_name).strip()
                         break
                 
                 if not car_name:
