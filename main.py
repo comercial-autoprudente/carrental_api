@@ -353,10 +353,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-01:20-FIX-SYS-IMPORT"
+APP_VERSION = "2025-01-29-01:35-FIX-SELENIUM-HOURS"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: Added missing 'import sys' for default users logging
+# FIX: Selenium pickup time 15:00 (was 10:00), added detailed logs
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -2844,7 +2844,11 @@ async def track_by_params(request: Request):
                 time.sleep(0.5)
                 
                 # Preencher formulário
+                start_date_str = start_dt.strftime("%d/%m/%Y")
+                end_date_str = end_dt.strftime("%d/%m/%Y")
                 print(f"[SELENIUM] Preenchendo formulário: {carjet_location}", file=sys.stderr, flush=True)
+                print(f"[SELENIUM] Datas: {start_date_str} → {end_date_str} ({days} dias)", file=sys.stderr, flush=True)
+                print(f"[SELENIUM] Horário recolha: 15:00, Horário entrega: 10:00", file=sys.stderr, flush=True)
                 driver.execute_script("""
                     function fill(sel, val) {
                         const el = document.querySelector(sel);
@@ -2862,11 +2866,11 @@ async def track_by_params(request: Request):
                     
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
-                    if (h1) h1.value = '10:00';
-                    if (h2) h2.value = '10:00';
+                    if (h1) h1.value = '15:00';  // Pickup às 15:00 (CarJet aceita)
+                    if (h2) h2.value = '10:00';  // Dropoff às 10:00 (OK)
                     
-                    return {r1, r2, r3, r4};
-                """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
+                    return {r1, r2, r3, r4, h1: h1?.value, h2: h2?.value};
+                """, carjet_location, start_date_str, end_date_str)
                 
                 time.sleep(0.5)
                 
