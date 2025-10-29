@@ -6737,67 +6737,6 @@ async def download_vehicle_photo_from_url(vehicle_name: str, request: Request):
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
 
-@app.get("/api/vehicles/{vehicle_name}/photo")
-async def get_vehicle_photo(vehicle_name: str):
-    """Obter foto de um veículo"""
-    try:
-        _ensure_vehicle_photos_table()
-        with _db_lock:
-            conn = _db_connect()
-            try:
-                row = conn.execute("""
-                    SELECT photo_data, content_type FROM vehicle_photos WHERE vehicle_name = ?
-                """, (vehicle_name,)).fetchone()
-            finally:
-                conn.close()
-        
-        if not row or not row[0]:
-            # Retornar imagem padrão ou 404
-            return JSONResponse({"ok": False, "error": "Foto não encontrada"}, 404)
-        
-        from fastapi.responses import Response
-        return Response(content=row[0], media_type=row[1])
-        
-    except Exception as e:
-        return JSONResponse({"ok": False, "error": str(e)}, 500)
-
-@app.get("/api/vehicles/photos/all")
-async def get_all_vehicle_photos(request: Request):
-    """Listar todos os veículos com fotos"""
-    require_auth(request)
-    try:
-        _ensure_vehicle_photos_table()
-        with _db_lock:
-            conn = _db_connect()
-            try:
-                rows = conn.execute("""
-                    SELECT vehicle_name, photo_url, uploaded_at, 
-                           LENGTH(photo_data) as size
-                    FROM vehicle_photos
-                    ORDER BY vehicle_name
-                """).fetchall()
-            finally:
-                conn.close()
-        
-        photos = [
-            {
-                "vehicle": row[0],
-                "url": row[1],
-                "uploaded_at": row[2],
-                "size": row[3]
-            }
-            for row in rows
-        ]
-        
-        return _no_store_json({
-            "ok": True,
-            "photos": photos,
-            "total": len(photos)
-        })
-    except Exception as e:
-        import traceback
-        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
-
 @app.get("/api/vehicles/uncategorized")
 async def get_uncategorized_vehicles(request: Request):
     """Retorna veículos que não estão no dicionário VEHICLES"""
@@ -7508,6 +7447,144 @@ async def download_vehicle_images(request: Request):
             "downloaded": downloaded,
             "skipped": skipped,
             "errors": errors[:10]
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.get("/api/vehicles/{vehicle_name}/photo")
+async def get_vehicle_photo(vehicle_name: str, request: Request):
+    """Retorna a foto de um veículo específico"""
+    require_auth(request)
+    try:
+        # Normalizar nome do veículo
+        vehicle_key = vehicle_name.lower().strip()
+        
+        with _db_lock:
+            con = _db_connect()
+            try:
+                row = con.execute(
+                    "SELECT image_data, content_type FROM vehicle_images WHERE vehicle_key = ?",
+                    (vehicle_key,)
+                ).fetchone()
+                
+                if row:
+                    image_data = row[0]
+                    content_type = row[1] or 'image/jpeg'
+                    
+                    from fastapi.responses import Response
+                    return Response(
+                        content=image_data,
+                        media_type=content_type,
+                        headers={
+                            "Cache-Control": "public, max-age=86400",
+                            "Content-Disposition": f"inline; filename={vehicle_key}.jpg"
+                        }
+                    )
+                else:
+                    # Retornar imagem placeholder SVG
+                    svg_placeholder = '''<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40">
+                        <rect width="60" height="40" fill="#e5e7eb"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#999" font-size="12">🚗</text>
+                    </svg>'''
+                    return Response(
+                        content=svg_placeholder,
+                        media_type="image/svg+xml"
+                    )
+            finally:
+                con.close()
+    except Exception as e:
+        import traceback
+        print(f"Erro ao buscar foto: {traceback.format_exc()}")
+        # Retornar placeholder em caso de erro
+        svg_placeholder = '''<svg xmlns="http://www.w3.org/2000/svg" width="60" height="40">
+            <rect width="60" height="40" fill="#e5e7eb"/>
+            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#999" font-size="12">🚗</text>
+        </svg>'''
+        return Response(
+            content=svg_placeholder,
+            media_type="image/svg+xml"
+        )
+
+@app.post("/api/vehicles/{vehicle_name}/photo/from-url")
+async def download_vehicle_photo_from_url(vehicle_name: str, request: Request):
+    """Baixa e salva a foto de um veículo a partir de uma URL"""
+    require_auth(request)
+    try:
+        import httpx
+        
+        body = await request.json()
+        url = body.get('url', '').strip()
+        
+        if not url:
+            return _no_store_json({"ok": False, "error": "URL é obrigatória"}, 400)
+        
+        # Normalizar nome do veículo
+        vehicle_key = vehicle_name.lower().strip()
+        
+        # Baixar imagem
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            
+            image_data = response.content
+            content_type = response.headers.get('content-type', 'image/jpeg')
+            
+            # Salvar na base de dados
+            with _db_lock:
+                con = _db_connect()
+                try:
+                    con.execute(
+                        """INSERT OR REPLACE INTO vehicle_images 
+                           (vehicle_key, image_data, content_type, source_url, downloaded_at)
+                           VALUES (?, ?, ?, ?, datetime('now'))""",
+                        (vehicle_key, image_data, content_type, url)
+                    )
+                    con.commit()
+                finally:
+                    con.close()
+            
+            return _no_store_json({
+                "ok": True,
+                "message": f"Foto baixada e salva para {vehicle_name}",
+                "size": len(image_data),
+                "content_type": content_type
+            })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.post("/api/vehicles/{vehicle_name}/photo/upload")
+async def upload_vehicle_photo(vehicle_name: str, request: Request, file: UploadFile = File(...)):
+    """Upload de foto de um veículo"""
+    require_auth(request)
+    try:
+        # Normalizar nome do veículo
+        vehicle_key = vehicle_name.lower().strip()
+        
+        # Ler conteúdo do ficheiro
+        image_data = await file.read()
+        content_type = file.content_type or 'image/jpeg'
+        
+        # Salvar na base de dados
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute(
+                    """INSERT OR REPLACE INTO vehicle_images 
+                       (vehicle_key, image_data, content_type, source_url, downloaded_at)
+                       VALUES (?, ?, ?, ?, datetime('now'))""",
+                    (vehicle_key, image_data, content_type, 'uploaded')
+                )
+                con.commit()
+            finally:
+                con.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": f"Foto enviada com sucesso para {vehicle_name}",
+            "size": len(image_data),
+            "content_type": content_type
         })
     except Exception as e:
         import traceback
