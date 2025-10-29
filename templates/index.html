@@ -140,11 +140,11 @@
       
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Pesquisar por parâmetros</h2>
+          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Search by Parameters</h2>
         </div>
         <form id="paramForm" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end" onsubmit="return false">
           <div class="md:col-span-3 seg">
-            <label class="sr-only">Local de entrega</label>
+            <label class="sr-only">Pickup Location</label>
             <select id="location" style="flex:1; min-width:0;">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
               <option value="Albufeira">Albufeira</option>
@@ -153,20 +153,20 @@
           <!-- Data de início (segundo campo) -->
           <div class="md:col-span-2 seg">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
-            <label class="sr-only">Início (data)</label>
+            <label class="sr-only">Start Date</label>
             <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;"/>
           </div>
           <!-- Dias (terceiro campo na mesma linha) -->
           <div class="md:col-span-7 seg" style="flex-wrap: nowrap; overflow-x: auto;">
-            <label class="sr-only">Dias</label>
+            <label class="sr-only">Days</label>
             <input id="days" type="hidden" value="7" />
             <div id="daysChips" class="flex flex-nowrap gap-1"></div>
           </div>
           <!-- Botões -->
           <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
-            <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
-            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); history.replaceState({}, '', window.location.pathname); alert('Sessão renovada!');">
-              🔄 Renovar Sessão
+            <button id="fetchAllBtn" type="button" class="btn-search">Search</button>
+            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); history.replaceState({}, '', window.location.pathname); alert('Session renewed!');">
+              🔄 Renew Session
             </button>
             <!-- Fetch All temporariamente removido -->
             <button id="fetchAllDaysBtn" type="button" class="hidden px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
@@ -175,23 +175,23 @@
             <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
           <div class="md:col-span-1 seg hidden">
-            <label class="sr-only">Início (hora)</label>
+            <label class="sr-only">Start Time</label>
             <input id="startTime" type="time" value="15:00" placeholder="15:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-2 seg hidden">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
             <span class="bar bar-yellow"></span>
-            <label class="sr-only">Fim (data)</label>
+            <label class="sr-only">End Date</label>
             <input id="endDate" type="date" placeholder="Fim" class="date-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-1 seg hidden">
-            <label class="sr-only">Fim (hora)</label>
+            <label class="sr-only">End Time</label>
             <input id="endTime" type="time" value="10:00" placeholder="10:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-3 flex items-center gap-3 md:justify-end hidden">
             <label class="hidden flex items-center gap-2 nowrap" style="padding:0;">
               <input id="samePlace" type="checkbox" class="rounded border-gray-300" checked />
-              <span class="text-sm text-gray-700">Devolver no mesmo local</span>
+              <span class="text-sm text-gray-700">Return to same location</span>
             </label>
             <select id="locationDrop" class="w-full rounded-md border-gray-300 hidden">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
@@ -215,7 +215,7 @@
           </div>
         </div>
         <div class="px-5 md:px-8">
-          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Pesquisando em mais de 1000 locadoras<span class="dots"></span></div>
+          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Searching over 1000 rental companies<span class="dots"></span></div>
           <div class="mx-auto" style="max-width: 520px;">
             <div id="movingScene" class="scene" style="margin-bottom: 0px;">
             <!-- Inline SVG landscape (mountains, clouds, trees) with transparent background -->
@@ -269,15 +269,15 @@
             <ul class="list-none space-y-1 text-sm text-gray-800 m-0 p-0">
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>O melhor preço garantido</span>
+                <span>Best price guaranteed</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Rápido e fácil</span>
+                <span>Fast and easy</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Mais de <strong>7,9 milhões</strong> de clientes</span>
+                <span>More than <strong>7.9 million</strong> customers</span>
               </li>
             </ul>
           </div>
