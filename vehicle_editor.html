@@ -477,6 +477,7 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Photo</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Original Name</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Clean Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
@@ -489,6 +490,14 @@
                     const photoUrl = `/api/vehicles/${encodeURIComponent(vehicle.clean)}/photo?t=${Date.now()}`;
                     const isUncat = vehicle.isUncategorized || false;
                     const bgClass = isUncat ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50';
+                    
+                    // Get group from category
+                    const categoryClean = vehicle.category.replace(' (sugestão)', '');
+                    const group = categoryToGroup[categoryClean] || '—';
+                    const groupBadge = group !== '—' 
+                        ? `<span class="px-2 py-1 text-xs font-mono rounded bg-[#f4ad0f] text-gray-900 font-bold">${group}</span>`
+                        : `<span class="text-gray-400">—</span>`;
+                    
                     const badge = isUncat 
                         ? `<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">${vehicle.category}</span>`
                         : `<span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">${vehicle.category}</span>`;
@@ -504,6 +513,7 @@
                         </td>
                         <td class="px-6 py-4"><div class="text-sm text-gray-500">${vehicle.original}</div></td>
                         <td class="px-6 py-4"><div class="text-sm font-mono ${isUncat?'text-yellow-600':'text-blue-600'} font-semibold">${vehicle.clean}</div></td>
+                        <td class="px-6 py-4 whitespace-nowrap">${groupBadge}</td>
                         <td class="px-6 py-4">${badge}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${editBtn}</td>
                     `;
