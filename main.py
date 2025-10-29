@@ -3911,9 +3911,31 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
         cards_with_name = 0
         cards_blocked = 0
         for card in cards:
-            # price (broaden selectors and do not require explicit currency symbol)
-            let_price = card.select_one(".price, .amount, [class*='price'], .nfoPriceDest, .nfoPrice, [data-price]")
-            price_text = (let_price.get_text(strip=True) if let_price else "") or (card.get("data-price") or "")
+            # price - PRIORIZAR .price.pr-euros (preço total em euros, NÃO libras nem por dia)
+            price_text = ""
+            
+            # 1ª PRIORIDADE: Buscar .price.pr-euros (preço total em euros)
+            # Excluir .price-day-euros e .old-price
+            for span_tag in card.find_all('span'):
+                classes = span_tag.get('class', [])
+                if not classes:
+                    continue
+                
+                # Verificar se tem 'price' E 'pr-euros' MAS NÃO tem 'day' nem 'old'
+                has_price = 'price' in classes
+                has_pr_euros = 'pr-euros' in classes
+                has_day = any('day' in c for c in classes)
+                has_old = any('old' in c for c in classes)
+                
+                if has_price and has_pr_euros and not has_day and not has_old:
+                    price_text = span_tag.get_text(strip=True)
+                    break  # Encontrou o preço correto em euros!
+            
+            # 2ª PRIORIDADE: Se não encontrou .pr-euros, usar seletor genérico (fallback)
+            if not price_text:
+                let_price = card.select_one(".price, .amount, [class*='price'], .nfoPriceDest, .nfoPrice, [data-price]")
+                price_text = (let_price.get_text(strip=True) if let_price else "") or (card.get("data-price") or "")
+            
             if not price_text:
                 continue
             cards_with_price += 1
