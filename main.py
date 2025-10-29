@@ -1234,6 +1234,99 @@ async def login_action(request: Request, username: str = Form(...), password: st
         log_activity(request, "login_exception", details="see login_error.txt")
         return templates.TemplateResponse("login.html", {"request": request, "error": "Login failed. Please try again."})
 
+@app.get("/setup-admin", response_class=HTMLResponse)
+async def setup_admin_page(request: Request):
+    """Create first admin user if database is empty"""
+    with _db_lock:
+        con = _db_connect()
+        try:
+            cur = con.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+            if count > 0:
+                return HTMLResponse("""
+                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                        <h1>❌ Setup Already Complete</h1>
+                        <p>Admin user already exists.</p>
+                        <a href="/login" style="color: #007bff;">Go to Login</a>
+                    </body></html>
+                """)
+        finally:
+            con.close()
+    
+    return HTMLResponse("""
+        <html>
+        <head><title>Setup Admin</title></head>
+        <body style="font-family: Arial; padding: 40px; max-width: 500px; margin: 0 auto;">
+            <h1>🔧 Setup First Admin User</h1>
+            <form method="post" action="/setup-admin">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Username:</label>
+                    <input type="text" name="username" value="admin" required 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Password:</label>
+                    <input type="password" name="password" required 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px;">Email:</label>
+                    <input type="email" name="email" value="admin@example.com" 
+                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <button type="submit" 
+                        style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+                    Create Admin User
+                </button>
+            </form>
+        </body>
+        </html>
+    """)
+
+@app.post("/setup-admin")
+async def setup_admin_action(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...),
+    email: str = Form("admin@example.com")
+):
+    """Create first admin user"""
+    with _db_lock:
+        con = _db_connect()
+        try:
+            # Check if any users exist
+            cur = con.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+            if count > 0:
+                return HTMLResponse("""
+                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                        <h1>❌ Setup Already Complete</h1>
+                        <p>Admin user already exists.</p>
+                        <a href="/login" style="color: #007bff;">Go to Login</a>
+                    </body></html>
+                """)
+            
+            # Create first admin user
+            pwd_hash = _hash_password(password.strip())
+            con.execute(
+                "INSERT INTO users (username, password_hash, email, first_name, is_admin, enabled) VALUES (?, ?, ?, ?, ?, ?)",
+                (username.strip(), pwd_hash, email.strip(), "Admin", 1, 1)
+            )
+            con.commit()
+            
+            return HTMLResponse("""
+                <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                    <h1>✅ Admin User Created!</h1>
+                    <p>Username: <strong>{}</strong></p>
+                    <p>You can now login.</p>
+                    <a href="/login" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+                        Go to Login
+                    </a>
+                </body></html>
+            """.format(username.strip()))
+        finally:
+            con.close()
+
 @app.post("/logout")
 async def logout_action(request: Request):
     try:
