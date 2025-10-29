@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:12
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:20
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-01:12-AUTO-USERS", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-01:20-FIX-SYS", flush=True)
 print("📦 FEATURES: Vehicles + Auto-Create Users + 60+ Cars", flush=True)
-print("🔧 FIX: Users auto-created from ENV vars!", flush=True)
+print("🔧 FIX: Added missing sys import", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -296,6 +296,7 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
     return items
 
 import os
+import sys
 import secrets
 import re
 from urllib.parse import urljoin
@@ -352,10 +353,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-01:12-AUTO-CREATE-USERS-ON-STARTUP"
+APP_VERSION = "2025-01-29-01:20-FIX-SYS-IMPORT"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: Users auto-created on startup from ENV vars (no persistent disk needed!)
+# FIX: Added missing 'import sys' for default users logging
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
