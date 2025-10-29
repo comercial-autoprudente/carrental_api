@@ -15,7 +15,7 @@
             </div>
             <div class="flex items-center gap-4 text-white text-sm">
                 <span id="totalVehicles">0</span> veículos
-                <button onclick="saveAllChanges()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">
+                <button onclick="saveAllChanges()" class="px-4 py-2 bg-[#f4ad0f] hover:bg-[#e39e0e] rounded-lg font-semibold">
                     💾 Exportar Tudo
                 </button>
             </div>
@@ -37,7 +37,7 @@
                     <option value="">Todas as categorias</option>
                 </select>
                 
-                <button onclick="loadVehicles()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                <button onclick="loadVehicles()" class="px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e]">
                     🔄 Recarregar
                 </button>
             </div>
@@ -105,24 +105,46 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Categoria</label>
-                        <select id="editCategory" class="w-full px-3 py-2 border rounded-lg">
-                            <option value="MINI 4 Portas">MINI 4 Portas</option>
-                            <option value="MINI 5 Portas">MINI 5 Portas</option>
-                            <option value="MINI Auto">MINI Auto</option>
-                            <option value="ECONOMY">ECONOMY</option>
-                            <option value="ECONOMY Auto">ECONOMY Auto</option>
-                            <option value="SUV">SUV</option>
-                            <option value="SUV Auto">SUV Auto</option>
-                            <option value="Crossover">Crossover</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Station Wagon">Station Wagon</option>
-                            <option value="Station Wagon Auto">Station Wagon Auto</option>
-                            <option value="7 Lugares">7 Lugares</option>
-                            <option value="7 Lugares Auto">7 Lugares Auto</option>
-                            <option value="9 Lugares">9 Lugares</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Categoria</label>
+                            <select id="editCategory" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="MINI 4 Portas">MINI 4 Portas</option>
+                                <option value="MINI 5 Portas">MINI 5 Portas</option>
+                                <option value="MINI Auto">MINI Auto</option>
+                                <option value="ECONOMY">ECONOMY</option>
+                                <option value="ECONOMY Auto">ECONOMY Auto</option>
+                                <option value="SUV">SUV</option>
+                                <option value="SUV Auto">SUV Auto</option>
+                                <option value="Crossover">Crossover</option>
+                                <option value="Premium">Premium</option>
+                                <option value="Station Wagon">Station Wagon</option>
+                                <option value="Station Wagon Auto">Station Wagon Auto</option>
+                                <option value="7 Lugares">7 Lugares</option>
+                                <option value="7 Lugares Auto">7 Lugares Auto</option>
+                                <option value="9 Lugares">9 Lugares</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Grupo</label>
+                            <select id="editGroup" class="w-full px-3 py-2 border rounded-lg">
+                                <option value="B1">B1 - Mini 4 Doors</option>
+                                <option value="B2">B2 - Mini 5 Doors</option>
+                                <option value="D">D - Economy</option>
+                                <option value="E1">E1 - Mini Automatic</option>
+                                <option value="E2">E2 - Economy Automatic</option>
+                                <option value="F">F - SUV</option>
+                                <option value="G">G - Premium</option>
+                                <option value="J1">J1 - Crossover</option>
+                                <option value="J2">J2 - Station Wagon</option>
+                                <option value="L1">L1 - SUV Automatic</option>
+                                <option value="L2">L2 - Station Wagon Automatic</option>
+                                <option value="M1">M1 - 7 Seater</option>
+                                <option value="M2">M2 - 7 Seater Automatic</option>
+                                <option value="N">N - 9 Seater</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <div class="bg-blue-50 border border-blue-200 rounded p-3">
@@ -134,7 +156,7 @@
                     
                     <div class="flex gap-3">
                         <button type="button" onclick="saveEdit()" 
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                class="flex-1 px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e]">
                             💾 Salvar Alterações
                         </button>
                         <button type="button" onclick="closeModal()" 
@@ -169,7 +191,7 @@
                 
                 <div class="flex gap-3 mt-4">
                     <button onclick="copyExportCode()" 
-                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            class="flex-1 px-4 py-2 bg-[#f4ad0f] text-white rounded-lg hover:bg-[#e39e0e]">
                         📋 Copiar Tudo
                     </button>
                     <button onclick="closeExportModal()" 
@@ -279,7 +301,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <button onclick="editVehicle(${actualIndex})" 
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    class="text-[#009cb6] hover:text-[#007a8e] font-semibold">
                                 ✏️ Editar
                             </button>
                         </td>
@@ -288,6 +310,24 @@
                 tbody.innerHTML += row;
             });
         }
+        
+        // Mapeamento entre categoria e grupo
+        const categoryToGroup = {
+            'MINI 4 Portas': 'B1',
+            'MINI 5 Portas': 'B2',
+            'MINI Auto': 'E1',
+            'ECONOMY': 'D',
+            'ECONOMY Auto': 'E2',
+            'SUV': 'F',
+            'SUV Auto': 'L1',
+            'Crossover': 'J1',
+            'Premium': 'G',
+            'Station Wagon': 'J2',
+            'Station Wagon Auto': 'L2',
+            '7 Lugares': 'M1',
+            '7 Lugares Auto': 'M2',
+            '9 Lugares': 'N'
+        };
         
         function editVehicle(index) {
             editingIndex = index;
@@ -298,6 +338,7 @@
             document.getElementById('editBrand').value = vehicle.brand;
             document.getElementById('editModel').value = vehicle.model;
             document.getElementById('editCategory').value = vehicle.category;
+            document.getElementById('editGroup').value = categoryToGroup[vehicle.category] || 'D';
             document.getElementById('codePreview').classList.add('hidden');
             document.getElementById('editModal').classList.remove('hidden');
         }
@@ -307,6 +348,7 @@
             const brand = document.getElementById('editBrand').value.toLowerCase().trim();
             const model = document.getElementById('editModel').value.toLowerCase().trim();
             const category = document.getElementById('editCategory').value;
+            const group = document.getElementById('editGroup').value;
             
             if (!cleanName || !category) {
                 alert('Preencha o nome editado e categoria!');
@@ -318,9 +360,10 @@
             vehiclesData[editingIndex].brand = brand;
             vehiclesData[editingIndex].model = model;
             vehiclesData[editingIndex].category = category;
+            vehiclesData[editingIndex].group = group;
             
             // Gerar código
-            const code = `    '${cleanName}': '${category}',  # ${brand} ${model}`;
+            const code = `    '${cleanName}': '${category}',  # Grupo ${group} | ${brand} ${model}`;
             document.getElementById('generatedCode').textContent = code;
             document.getElementById('codePreview').classList.remove('hidden');
             
@@ -379,6 +422,13 @@
             const parts = name.split(' ');
             document.getElementById('editBrand').value = parts[0] || '';
             document.getElementById('editModel').value = parts.slice(1).join(' ') || '';
+        });
+        
+        // Sincronizar grupo quando categoria muda
+        document.getElementById('editCategory').addEventListener('change', (e) => {
+            const category = e.target.value;
+            const group = categoryToGroup[category] || 'D';
+            document.getElementById('editGroup').value = group;
         });
         
         // Carregar ao iniciar
