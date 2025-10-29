@@ -7617,6 +7617,36 @@ async def get_vehicle_photo(vehicle_name: str):
             media_type="image/svg+xml"
         )
 
+@app.get("/api/vehicles/{vehicle_name}/photo/metadata")
+async def get_vehicle_photo_metadata(vehicle_name: str, request: Request):
+    """Retorna metadata da foto de um veículo (URL original, etc)"""
+    require_auth(request)
+    try:
+        vehicle_key = vehicle_name.lower().strip()
+        
+        with _db_lock:
+            con = _db_connect()
+            try:
+                row = con.execute(
+                    "SELECT source_url, downloaded_at, content_type FROM vehicle_images WHERE vehicle_key = ?",
+                    (vehicle_key,)
+                ).fetchone()
+                
+                if row:
+                    return _no_store_json({
+                        "ok": True,
+                        "source_url": row[0],
+                        "downloaded_at": row[1],
+                        "content_type": row[2]
+                    })
+                else:
+                    return _no_store_json({"ok": False, "error": "Photo not found"}, 404)
+            finally:
+                con.close()
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
 @app.post("/api/vehicles/{vehicle_name}/photo/from-url")
 async def download_vehicle_photo_from_url(vehicle_name: str, request: Request):
     """Baixa e salva a foto de um veículo a partir de uma URL"""

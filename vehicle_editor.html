@@ -1155,17 +1155,36 @@
             const photoUrl = `/api/vehicles/${encodeURIComponent(vehicleName)}/photo`;
             const preview = document.getElementById("photoPreview");
             const previewImage = document.getElementById("photoPreviewImage");
+            const urlInput = document.getElementById("photoUrl");
             
             try {
                 const response = await fetch(photoUrl);
                 if (response.ok) {
                     previewImage.src = photoUrl + "?t=" + Date.now();
                     preview.classList.remove("hidden");
+                    
+                    // Tentar obter a URL original da foto
+                    try {
+                        const metaResponse = await fetch(`/api/vehicles/${encodeURIComponent(vehicleName)}/photo/metadata`);
+                        if (metaResponse.ok) {
+                            const metadata = await metaResponse.json();
+                            if (metadata.ok && metadata.source_url) {
+                                // Preencher campo URL se a foto veio de um site (CarJet)
+                                if (metadata.source_url.includes('carjet.com')) {
+                                    urlInput.value = metadata.source_url;
+                                }
+                            }
+                        }
+                    } catch (_) {
+                        // Ignorar erro de metadata
+                    }
                 } else {
                     preview.classList.add("hidden");
+                    urlInput.value = '';
                 }
             } catch (error) {
                 preview.classList.add("hidden");
+                urlInput.value = '';
             }
         }
         
@@ -1215,8 +1234,20 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    alert("✅ Photo uploaded successfully!");
+                    // Mostrar notificação de sucesso
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    successMsg.innerHTML = `✅ Photo uploaded successfully!`;
+                    document.body.appendChild(successMsg);
+                    setTimeout(() => successMsg.remove(), 3000);
+                    
+                    // Atualizar preview da foto
                     await loadVehiclePhoto(currentVehicleName);
+                    
+                    // Limpar campo URL (foto foi feita upload manual)
+                    document.getElementById("photoUrl").value = '';
+                    
+                    // Re-renderizar tabela para mostrar foto atualizada
                     renderTable();
                 } else {
                     alert("❌ Error: " + data.error);
