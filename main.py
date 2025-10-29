@@ -1,14 +1,5 @@
 from __future__ import annotations
 
-# ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:36
-# ========================================
-print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-01:36-SELENIUM-16H", flush=True)
-print("📦 FEATURES: Vehicles + Auto-Create Users + 60+ Cars", flush=True)
-print("🔧 FIX: Selenium pickup 16:00 (NO fixed URLs!)", flush=True)
-print("="*60 + "\n", flush=True)
-
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
     try:
         return JSONResponse(
@@ -296,7 +287,6 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
     return items
 
 import os
-import sys
 import secrets
 import re
 from urllib.parse import urljoin
@@ -351,12 +341,6 @@ TEST_ALBUFEIRA_URL = os.getenv("TEST_ALBUFEIRA_URL", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "change_me")
 SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
-
-# App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-01:36-SELENIUM-16H"
-# ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
-# This version should appear TWICE in logs: on module load + on startup event
-# FIX: Selenium pickup time 16:00 (user requested, NO fixed URLs!)
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -381,39 +365,6 @@ DATAMAP_RX = re.compile(r"var\s+dataMap\s*=\s*(\[.*?\]);", re.S)
 app = FastAPI(title="Rental Price Tracker")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax")
 app.add_middleware(GZipMiddleware, minimum_size=500)
-
-@app.on_event("startup")
-async def startup_event():
-    """Log app version on startup to verify deployment"""
-    print(f"========================================", flush=True)
-    print(f"🚀 APP STARTUP - VERSION: {APP_VERSION}", flush=True)
-    print(f"📦 Features: Vehicles, Setup Users, Car Groups, 60+ Cars", flush=True)
-    print(f"🔧 FIX: Auto-create ALL tables on startup", flush=True)
-    
-    # Initialize ALL database tables
-    try:
-        print(f"📊 Initializing database tables...", flush=True)
-        _ensure_settings_table()
-        print(f"   ✅ app_settings table ready", flush=True)
-        _ensure_users_table()
-        print(f"   ✅ users table ready", flush=True)
-        _ensure_car_groups_table()
-        print(f"   ✅ car_groups table ready", flush=True)
-        _ensure_activity_table()
-        print(f"   ✅ activity_log table ready", flush=True)
-        print(f"✅ All database tables initialized!", flush=True)
-    except Exception as e:
-        print(f"⚠️  Database initialization error: {e}", flush=True)
-    
-    # Auto-create default users if they don't exist
-    try:
-        print(f"👥 Checking default users...", flush=True)
-        _ensure_default_users()
-        print(f"✅ Default users ready (admin, carlpac82, dprudente)", flush=True)
-    except Exception as e:
-        print(f"⚠️  Default users error: {e}", flush=True)
-    
-    print(f"========================================", flush=True)
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
@@ -724,75 +675,6 @@ def _ensure_users_table():
         finally:
             con.close()
 
-# --- Car Groups Table (Vehicles Management) ---
-def _ensure_car_groups_table():
-    with _db_lock:
-        con = _db_connect()
-        try:
-            con.execute(
-                """
-                CREATE TABLE IF NOT EXISTS car_groups (
-                  id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  code TEXT UNIQUE NOT NULL,
-                  name TEXT NOT NULL,
-                  brand TEXT,
-                  model TEXT,
-                  description TEXT,
-                  seats INTEGER,
-                  doors INTEGER,
-                  transmission TEXT,
-                  is_automatic INTEGER DEFAULT 0,
-                  category TEXT,
-                  photo_url TEXT,
-                  sort_order INTEGER DEFAULT 0,
-                  enabled INTEGER DEFAULT 1,
-                  created_at TEXT
-                );
-                """
-            )
-            # Add columns if they don't exist (for existing databases)
-            try:
-                con.execute("ALTER TABLE car_groups ADD COLUMN brand TEXT")
-            except:
-                pass
-            try:
-                con.execute("ALTER TABLE car_groups ADD COLUMN model TEXT")
-            except:
-                pass
-            try:
-                con.execute("ALTER TABLE car_groups ADD COLUMN photo_url TEXT")
-            except:
-                pass
-            try:
-                con.execute("ALTER TABLE car_groups ADD COLUMN is_automatic INTEGER DEFAULT 0")
-            except:
-                pass
-            con.commit()
-        finally:
-            con.close()
-
-try:
-    _ensure_car_groups_table()
-except Exception:
-    pass
-
-def _extract_brand_model(car_name: str) -> tuple:
-    """Extract brand (first word) and model (rest) from car name"""
-    parts = (car_name or "").strip().split()
-    if not parts:
-        return ("Unknown", car_name)
-    brand = parts[0]
-    model = " ".join(parts[1:]) if len(parts) > 1 else ""
-    return (brand, model)
-
-def _auto_populate_uncategorized_cars():
-    """Automatically add uncategorized cars from recent searches to car_groups"""
-    try:
-        # This will be called after scraping to auto-add new cars
-        pass
-    except Exception:
-        pass
-
 def _get_user_by_username(username: str) -> Optional[Dict[str, Any]]:
     try:
         with _db_lock:
@@ -990,16 +872,11 @@ _URL_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}  # key normalized URL -
 try:
     # === Ensure default admin users exist ===
     def _ensure_default_users():
-        """Create default users if they don't exist - passwords from ENV vars"""
-        # Get passwords from environment variables (or use defaults)
-        admin_password = os.getenv("ADMIN_PASSWORD", APP_PASSWORD)
-        carlpac82_password = os.getenv("CARLPAC82_PASSWORD", "Frederico.2025")
-        dprudente_password = os.getenv("DPRUDENTE_PASSWORD", "dprudente")
-        
+        """Create default users if they don't exist"""
         default_users = [
             {
                 "username": "admin",
-                "password": admin_password,
+                "password": APP_PASSWORD,
                 "first_name": "Filipe",
                 "last_name": "Pacheco",
                 "email": "carlpac82@hotmail.com",
@@ -1009,7 +886,7 @@ try:
             },
             {
                 "username": "carlpac82",
-                "password": carlpac82_password,
+                "password": "Frederico.2025",
                 "first_name": "Filipe",
                 "last_name": "Pacheco",
                 "email": "carlpac82@hotmail.com",
@@ -1019,7 +896,7 @@ try:
             },
             {
                 "username": "dprudente",
-                "password": dprudente_password,
+                "password": "dprudente",
                 "first_name": "Daniell",
                 "last_name": "Prudente",
                 "email": "comercial.autoprudente@gmail.com",
@@ -1266,301 +1143,6 @@ async def login_action(request: Request, username: str = Form(...), password: st
             pass
         log_activity(request, "login_exception", details="see login_error.txt")
         return templates.TemplateResponse("login.html", {"request": request, "error": "Login failed. Please try again."})
-
-@app.get("/setup-admin", response_class=HTMLResponse)
-async def setup_admin_page(request: Request):
-    """Create first admin user if database is empty"""
-    with _db_lock:
-        con = _db_connect()
-        try:
-            try:
-                cur = con.execute("SELECT COUNT(*) FROM users")
-                count = cur.fetchone()[0]
-                if count > 0:
-                    return HTMLResponse("""
-                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                            <h1>❌ Setup Already Complete</h1>
-                            <p>Admin user already exists.</p>
-                            <a href="/login" style="color: #007bff;">Go to Login</a>
-                        </body></html>
-                    """)
-            except Exception:
-                # Table might not exist yet, that's OK - continue to show form
-                pass
-        finally:
-            con.close()
-    
-    return HTMLResponse("""
-        <html>
-        <head><title>Setup Admin</title></head>
-        <body style="font-family: Arial; padding: 40px; max-width: 500px; margin: 0 auto;">
-            <h1>🔧 Setup First Admin User</h1>
-            <form method="post" action="/setup-admin">
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Username:</label>
-                    <input type="text" name="username" value="admin" required 
-                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Password:</label>
-                    <input type="password" name="password" required 
-                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px;">Email:</label>
-                    <input type="email" name="email" value="admin@example.com" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-                </div>
-                <button type="submit" 
-                        style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
-                    Create Admin User
-                </button>
-            </form>
-        </body>
-        </html>
-    """)
-
-@app.post("/setup-admin")
-async def setup_admin_action(
-    request: Request,
-    username: str = Form(...),
-    password: str = Form(...),
-    email: str = Form("admin@example.com")
-):
-    """Create first admin user"""
-    with _db_lock:
-        con = _db_connect()
-        try:
-            # Ensure users table exists (create if missing)
-            try:
-                cur = con.execute("SELECT COUNT(*) FROM users")
-                count = cur.fetchone()[0]
-                if count > 0:
-                    return HTMLResponse("""
-                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                            <h1>❌ Setup Already Complete</h1>
-                            <p>Admin user already exists.</p>
-                            <a href="/login" style="color: #007bff;">Go to Login</a>
-                        </body></html>
-                    """)
-            except Exception:
-                # Table doesn't exist - create it
-                con.execute("""
-                    CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT UNIQUE NOT NULL,
-                        password_hash TEXT NOT NULL,
-                        email TEXT,
-                        first_name TEXT,
-                        is_admin INTEGER DEFAULT 0,
-                        enabled INTEGER DEFAULT 1,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-                con.commit()
-            
-            # Create first admin user
-            pwd_hash = _hash_password(password.strip())
-            con.execute(
-                "INSERT INTO users (username, password_hash, email, first_name, is_admin, enabled) VALUES (?, ?, ?, ?, ?, ?)",
-                (username.strip(), pwd_hash, email.strip(), "Admin", 1, 1)
-            )
-            con.commit()
-            
-            return HTMLResponse("""
-                <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                    <h1>✅ Admin User Created!</h1>
-                    <p>Username: <strong>{}</strong></p>
-                    <p>You can now login.</p>
-                    <a href="/login" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
-                        Go to Login
-                    </a>
-                </body></html>
-            """.format(username.strip()))
-        finally:
-            con.close()
-
-@app.get("/setup-users", response_class=HTMLResponse)
-async def setup_users_page(request: Request):
-    """Create multiple users at once (only if DB is empty)"""
-    with _db_lock:
-        con = _db_connect()
-        try:
-            try:
-                cur = con.execute("SELECT COUNT(*) FROM users")
-                count = cur.fetchone()[0]
-                if count > 0:
-                    return HTMLResponse("""
-                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                            <h1>❌ Setup Already Complete</h1>
-                            <p>Users already exist.</p>
-                            <a href="/login" style="color: #007bff;">Go to Login</a>
-                        </body></html>
-                    """)
-            except Exception:
-                # Table might not exist yet, that's OK - continue to show form
-                pass
-        finally:
-            con.close()
-    
-    return HTMLResponse("""
-        <html>
-        <head>
-            <title>Setup Multiple Users</title>
-            <style>
-                body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
-                h1 { color: #333; }
-                .user-row { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-                label { display: block; margin-top: 10px; font-weight: bold; }
-                button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; }
-                button:hover { background: #0056b3; }
-                .note { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 20px 0; }
-            </style>
-        </head>
-        <body>
-            <h1>🔧 Setup Multiple Users</h1>
-            <div class="note">
-                <strong>⚠️ NOTA:</strong> Todos os users serão criados com a MESMA password inicial.
-                Depois podes alterar individualmente em /admin/users.
-            </div>
-            
-            <form method="post" action="/setup-users">
-                <label>Password Inicial (para todos os users):</label>
-                <input type="password" name="initial_password" required placeholder="Mínimo 8 caracteres">
-                
-                <h3>User 1: admin</h3>
-                <div class="user-row">
-                    <input type="hidden" name="username_1" value="admin">
-                    <label>Email:</label>
-                    <input type="email" name="email_1" value="admin@example.com">
-                    <label>First Name:</label>
-                    <input type="text" name="first_name_1" value="Admin">
-                    <label>Is Admin:</label>
-                    <select name="is_admin_1">
-                        <option value="1" selected>Yes</option>
-                        <option value="0">No</option>
-                    </select>
-                </div>
-                
-                <h3>User 2: carlpac82</h3>
-                <div class="user-row">
-                    <input type="hidden" name="username_2" value="carlpac82">
-                    <label>Email:</label>
-                    <input type="email" name="email_2" value="carlpac82@example.com">
-                    <label>First Name:</label>
-                    <input type="text" name="first_name_2" value="Carlos">
-                    <label>Is Admin:</label>
-                    <select name="is_admin_2">
-                        <option value="1" selected>Yes</option>
-                        <option value="0">No</option>
-                    </select>
-                </div>
-                
-                <h3>User 3: dprudente</h3>
-                <div class="user-row">
-                    <input type="hidden" name="username_3" value="dprudente">
-                    <label>Email:</label>
-                    <input type="email" name="email_3" value="dprudente@example.com">
-                    <label>First Name:</label>
-                    <input type="text" name="first_name_3" value="Daniela">
-                    <label>Is Admin:</label>
-                    <select name="is_admin_3">
-                        <option value="1">Yes</option>
-                        <option value="0" selected>No</option>
-                    </select>
-                </div>
-                
-                <button type="submit">Create All Users</button>
-            </form>
-        </body>
-        </html>
-    """)
-
-@app.post("/setup-users")
-async def setup_users_action(request: Request):
-    """Create multiple users at once"""
-    form_data = await request.form()
-    initial_password = form_data.get("initial_password", "").strip()
-    
-    if len(initial_password) < 8:
-        return HTMLResponse("""
-            <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                <h1>❌ Error</h1>
-                <p>Password must be at least 8 characters.</p>
-                <a href="/setup-users">Go Back</a>
-            </body></html>
-        """)
-    
-    with _db_lock:
-        con = _db_connect()
-        try:
-            # Ensure users table exists (create if missing)
-            try:
-                cur = con.execute("SELECT COUNT(*) FROM users")
-                count = cur.fetchone()[0]
-                if count > 0:
-                    return HTMLResponse("""
-                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                            <h1>❌ Setup Already Complete</h1>
-                            <p>Users already exist.</p>
-                            <a href="/login">Go to Login</a>
-                        </body></html>
-                    """)
-            except Exception:
-                # Table doesn't exist - create it
-                con.execute("""
-                    CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        username TEXT UNIQUE NOT NULL,
-                        password_hash TEXT NOT NULL,
-                        email TEXT,
-                        first_name TEXT,
-                        is_admin INTEGER DEFAULT 0,
-                        enabled INTEGER DEFAULT 1,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-                con.commit()
-            
-            # Create users
-            pwd_hash = _hash_password(initial_password)
-            users_created = []
-            
-            for i in range(1, 4):
-                username = form_data.get(f"username_{i}", "").strip()
-                email = form_data.get(f"email_{i}", "").strip()
-                first_name = form_data.get(f"first_name_{i}", "").strip()
-                is_admin = int(form_data.get(f"is_admin_{i}", "0"))
-                
-                if username:
-                    con.execute(
-                        "INSERT INTO users (username, password_hash, email, first_name, is_admin, enabled) VALUES (?, ?, ?, ?, ?, ?)",
-                        (username, pwd_hash, email, first_name, is_admin, 1)
-                    )
-                    users_created.append(username)
-            
-            con.commit()
-            
-            users_list = "<br>".join([f"• {u}" for u in users_created])
-            
-            return HTMLResponse(f"""
-                <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                    <h1>✅ Users Created Successfully!</h1>
-                    <p><strong>Created {len(users_created)} users:</strong></p>
-                    <p>{users_list}</p>
-                    <p style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px;">
-                        <strong>⚠️ IMPORTANTE:</strong><br>
-                        Todos os users têm a MESMA password inicial.<br>
-                        Depois de fazer login, altera as passwords em /admin/users.
-                    </p>
-                    <a href="/login" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
-                        Go to Login
-                    </a>
-                </body></html>
-            """)
-        finally:
-            con.close()
 
 @app.post("/logout")
 async def logout_action(request: Request):
@@ -1908,182 +1490,6 @@ async def admin_users_new_post(
     except Exception:
         pass
     return RedirectResponse(url="/admin/users", status_code=HTTP_303_SEE_OTHER)
-
-
-# --- Admin: Car Groups (Vehicles) ---
-@app.get("/admin/car-groups", response_class=HTMLResponse)
-async def admin_car_groups(request: Request):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    groups = []
-    try:
-        with _db_lock:
-            con = _db_connect()
-            try:
-                cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled FROM car_groups ORDER BY brand, name")
-                for r in cur.fetchall():
-                    brand = r[3] or ""
-                    model = r[4] or ""
-                    # Se não tem brand/model, extrair do name
-                    if not brand and r[2]:
-                        brand, model = _extract_brand_model(r[2])
-                    groups.append({
-                        "id": r[0], "code": r[1], "name": r[2], "brand": brand, "model": model,
-                        "description": r[5] or "", "seats": r[6] or "", "doors": r[7] or "",
-                        "transmission": r[8] or "", "is_automatic": bool(r[9]), "category": r[10] or "Uncategorized",
-                        "photo_url": r[11] or "", "sort_order": r[12] or 0, "enabled": bool(r[13])
-                    })
-            finally:
-                con.close()
-    except Exception:
-        return JSONResponse({"ok": False, "error": "Failed to load vehicles"}, status_code=500)
-    return templates.TemplateResponse("admin_car_groups.html", {"request": request, "groups": groups})
-
-@app.get("/admin/car-groups/new", response_class=HTMLResponse)
-async def admin_car_groups_new(request: Request):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": None})
-
-@app.post("/admin/car-groups/new")
-async def admin_car_groups_new_post(
-    request: Request,
-    code: str = Form(...),
-    name: str = Form(...),
-    description: str = Form(""),
-    seats: str = Form(""),
-    doors: str = Form(""),
-    transmission: str = Form(""),
-    is_automatic: str = Form("0"),
-    category: str = Form(""),
-    photo_url: str = Form(""),
-    sort_order: str = Form("0"),
-    enabled: str = Form("1"),
-):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    code = (code or "").strip().upper()
-    name = (name or "").strip()
-    if not code or not name:
-        return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": "Code and Name required"})
-    
-    # Extract brand and model from name
-    brand, model = _extract_brand_model(name)
-    seats_int = int(seats) if seats and seats.isdigit() else None
-    doors_int = int(doors) if doors and doors.isdigit() else None
-    sort_int = int(sort_order) if sort_order and sort_order.isdigit() else 0
-    if not category:
-        category = "Uncategorized"
-    
-    with _db_lock:
-        con = _db_connect()
-        try:
-            con.execute(
-                "INSERT INTO car_groups (code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled, created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                (code, name, brand, model, description, seats_int, doors_int, transmission, 1 if is_automatic in ("1","true","on") else 0, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()))
-            )
-            con.commit()
-        except sqlite3.IntegrityError:
-            return templates.TemplateResponse("admin_new_car_group.html", {"request": request, "error": "Code already exists"})
-        finally:
-            con.close()
-    try:
-        log_activity(request, "admin_create_vehicle", details=f"code={code}, name={name}")
-    except Exception:
-        pass
-    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
-
-@app.get("/admin/car-groups/{group_id}/edit", response_class=HTMLResponse)
-async def admin_car_groups_edit(request: Request, group_id: int):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    with _db_lock:
-        con = _db_connect()
-        try:
-            cur = con.execute("SELECT id, code, name, brand, model, description, seats, doors, transmission, is_automatic, category, photo_url, sort_order, enabled FROM car_groups WHERE id=?", (group_id,))
-            r = cur.fetchone()
-            if not r:
-                raise HTTPException(status_code=404, detail="Not found")
-            brand = r[3] or ""
-            model = r[4] or ""
-            if not brand and r[2]:
-                brand, model = _extract_brand_model(r[2])
-            g = {
-                "id": r[0], "code": r[1], "name": r[2], "brand": brand, "model": model,
-                "description": r[5] or "", "seats": r[6] or "", "doors": r[7] or "",
-                "transmission": r[8] or "", "is_automatic": bool(r[9]), "category": r[10] or "Uncategorized",
-                "photo_url": r[11] or "", "sort_order": r[12] or 0, "enabled": bool(r[13])
-            }
-        finally:
-            con.close()
-    return templates.TemplateResponse("admin_edit_car_group.html", {"request": request, "g": g, "error": None})
-
-@app.post("/admin/car-groups/{group_id}/edit")
-async def admin_car_groups_edit_post(
-    request: Request,
-    group_id: int,
-    name: str = Form(...),
-    description: str = Form(""),
-    seats: str = Form(""),
-    doors: str = Form(""),
-    transmission: str = Form(""),
-    is_automatic: str = Form("0"),
-    category: str = Form(""),
-    photo_url: str = Form(""),
-    sort_order: str = Form("0"),
-    enabled: str = Form("1"),
-):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    
-    # Extract brand and model from name
-    brand, model = _extract_brand_model(name)
-    seats_int = int(seats) if seats and seats.isdigit() else None
-    doors_int = int(doors) if doors and doors.isdigit() else None
-    sort_int = int(sort_order) if sort_order and sort_order.isdigit() else 0
-    if not category:
-        category = "Uncategorized"
-    
-    with _db_lock:
-        con = _db_connect()
-        try:
-            con.execute(
-                "UPDATE car_groups SET name=?, brand=?, model=?, description=?, seats=?, doors=?, transmission=?, is_automatic=?, category=?, photo_url=?, sort_order=?, enabled=? WHERE id=?",
-                (name, brand, model, description, seats_int, doors_int, transmission, 1 if is_automatic in ("1","true","on") else 0, category, photo_url, sort_int, 1 if enabled in ("1","true","on") else 0, group_id)
-            )
-            con.commit()
-        finally:
-            con.close()
-    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
-
-@app.post("/admin/car-groups/{group_id}/delete")
-async def admin_car_groups_delete(request: Request, group_id: int):
-    try:
-        require_admin(request)
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    with _db_lock:
-        con = _db_connect()
-        try:
-            con.execute("DELETE FROM car_groups WHERE id=?", (group_id,))
-            con.commit()
-        finally:
-            con.close()
-    try:
-        log_activity(request, "admin_delete_car_group", details=f"id={group_id}")
-    except Exception:
-        pass
-    return RedirectResponse(url="/admin/car-groups", status_code=HTTP_303_SEE_OTHER)
 
 
 @app.get("/api/prices")
@@ -2844,11 +2250,7 @@ async def track_by_params(request: Request):
                 time.sleep(0.5)
                 
                 # Preencher formulário
-                start_date_str = start_dt.strftime("%d/%m/%Y")
-                end_date_str = end_dt.strftime("%d/%m/%Y")
                 print(f"[SELENIUM] Preenchendo formulário: {carjet_location}", file=sys.stderr, flush=True)
-                print(f"[SELENIUM] Datas: {start_date_str} → {end_date_str} ({days} dias)", file=sys.stderr, flush=True)
-                print(f"[SELENIUM] Horário recolha: 16:00, Horário entrega: 10:00", file=sys.stderr, flush=True)
                 driver.execute_script("""
                     function fill(sel, val) {
                         const el = document.querySelector(sel);
@@ -2866,11 +2268,11 @@ async def track_by_params(request: Request):
                     
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
-                    if (h1) h1.value = '16:00';  // Pickup às 16:00 (CarJet aceita melhor)
-                    if (h2) h2.value = '10:00';  // Dropoff às 10:00 (OK)
+                    if (h1) h1.value = '10:00';
+                    if (h2) h2.value = '10:00';
                     
-                    return {r1, r2, r3, r4, h1: h1?.value, h2: h2?.value};
-                """, carjet_location, start_date_str, end_date_str)
+                    return {r1, r2, r3, r4};
+                """, carjet_location, start_dt.strftime("%d/%m/%Y"), end_dt.strftime("%d/%m/%Y"))
                 
                 time.sleep(0.5)
                 
@@ -3696,9 +3098,85 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
         except Exception:
             return False
 
-    # Blocklist DISABLED - Show all cars
+    # Blocklist of car models to exclude
+    _blocked_models = [
+        "Mercedes S Class Auto",
+        "MG ZS Auto",
+        "Mercedes CLA Coupe Auto",
+        "Mercedes A Class",
+        "Mercedes A Class Auto",
+        "BMW 1 Series Auto",
+        "BMW 3 Series SW Auto",
+        "Volvo V60 Auto",
+        "Volvo XC40 Auto",
+        "Mercedes C Class Auto",
+        "Tesla Model 3 Auto",
+        "Electric",
+        "BMW 2 Series Gran Coupe Auto",
+        "Mercedes C Class SW Auto",
+        "Mercedes E Class Auto",
+        "Mercedes E Class SW Auto",
+        "BMW 5 Series SW Auto",
+        "BMW X1 Auto",
+        "Mercedes CLE Coupe Auto",
+        "Volkswagen T-Roc Cabrio",
+        "Mercedes GLA Auto",
+        "Volvo XC60 Auto",
+        "Volvo EX30 Auto",
+        "BMW 3 Series Auto",
+        "Volvo V60 4x4 Auto",
+        "Hybrid",
+        "Mazda MX5 Cabrio Auto",
+        "Mercedes CLA Auto",
+    ]
+
+    def _norm_text(s: str) -> str:
+        s = (s or "").strip().lower()
+        # remove duplicate spaces and commas spacing
+        s = " ".join(s.replace(",", " ").split())
+        return s
+
+    _blocked_norm = set(_norm_text(x) for x in _blocked_models)
+
     def _is_blocked_model(name: str) -> bool:
-        # Return False to show all cars (no blocking)
+        n = _norm_text(name)
+        if not n:
+            return False
+        if n in _blocked_norm:
+            return True
+        # Regex-based strong match on key model families and powertrains
+        patterns = [
+            r"\bmercedes\s+s\s*class\b",
+            r"\bmercedes\s+cla\b",
+            r"\bmercedes\s+cle\b",
+            r"\bmercedes\s+a\s*class\b",
+            r"\bmercedes\s+c\s*class\b",
+            r"\bmercedes\s+e\s*class\b",
+            r"\bmercedes\s+gla\b",
+            r"\bbmw\s+1\s*series\b",
+            r"\bbmw\s+2\s*series\b",
+            r"\bbmw\s+3\s*series\b",
+            r"\bbmw\s+5\s*series\b",
+            r"\bbmw\s*x1\b",
+            r"\bvolvo\s+v60\b",
+            r"\bvolvo\s+xc40\b",
+            r"\bvolvo\s+xc60\b",
+            r"\bvolvo\s+ex30\b",
+            r"\btesla\s+model\s*3\b",
+            r"\bmg\s+zs\b",
+            r"\bmazda\s+mx5\b",
+            r"\bvolkswagen\s+t-roc\b",
+            r"\belectric\b",
+            r"\bhybrid\b",
+        ]
+        import re as _re
+        for p in patterns:
+            if _re.search(p, n):
+                return True
+        # also check if any blocked long phrase is contained in name
+        for b in _blocked_norm:
+            if len(b) >= 6 and b in n:
+                return True
         return False
 
     # --- Photo cache helpers (SQLite) ---
@@ -4056,7 +3534,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
 
     # Pass 2: try to parse explicit car cards/rows from the HTML (preferred over regex)
     try:
-        cards = soup.select("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row, [class*='offer']")
+        cards = soup.select("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row")
         print(f"[PARSE] Found {len(cards)} cards to parse")
         idx = 0
         cards_with_price = 0
@@ -5913,8 +5391,78 @@ async def track_by_url(request: Request):
 
 
 def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[str]) -> List[Dict[str, Any]]:
-    # Blocklist DISABLED - Show all cars
+    # Secondary guard: blocklist filter to ensure unwanted vehicles never appear
+    _blocked_models = [
+        "Mercedes S Class Auto",
+        "MG ZS Auto",
+        "Mercedes CLA Coupe Auto",
+        "Mercedes A Class",
+        "Mercedes A Class Auto",
+        "BMW 1 Series Auto",
+        "BMW 3 Series SW Auto",
+        "Volvo V60 Auto",
+        "Volvo XC40 Auto",
+        "Mercedes C Class Auto",
+        "Tesla Model 3 Auto",
+        "Electric",
+        "BMW 2 Series Gran Coupe Auto",
+        "Mercedes C Class SW Auto",
+        "Mercedes E Class Auto",
+        "Mercedes E Class SW Auto",
+        "BMW 5 Series SW Auto",
+        "BMW X1 Auto",
+        "Mercedes CLE Coupe Auto",
+        "Volkswagen T-Roc Cabrio",
+        "Mercedes GLA Auto",
+        "Volvo XC60 Auto",
+        "Volvo EX30 Auto",
+        "BMW 3 Series Auto",
+        "Volvo V60 4x4 Auto",
+        "Hybrid",
+        "Mazda MX5 Cabrio Auto",
+        "Mercedes CLA Auto",
+    ]
+    def _norm_text(s: str) -> str:
+        s = (s or "").strip().lower()
+        return " ".join(s.replace(",", " ").split())
+    _blocked_norm = set(_norm_text(x) for x in _blocked_models)
+    import re as _re
+    _patterns = [
+        r"\bmercedes\s+s\s*class\b",
+        r"\bmercedes\s+cla\b",
+        r"\bmercedes\s+cle\b",
+        r"\bmercedes\s+a\s*class\b",
+        r"\bmercedes\s+c\s*class\b",
+        r"\bmercedes\s+e\s*class\b",
+        r"\bmercedes\s+gla\b",
+        r"\bbmw\s+1\s*series\b",
+        r"\bbmw\s+2\s*series\b",
+        r"\bbmw\s+3\s*series\b",
+        r"\bbmw\s+5\s*series\b",
+        r"\bbmw\s*x1\b",
+        r"\bvolvo\s+v60\b",
+        r"\bvolvo\s+xc40\b",
+        r"\bvolvo\s+xc60\b",
+        r"\bvolvo\s+ex30\b",
+        r"\btesla\s+model\s*3\b",
+        r"\bmg\s+zs\b",
+        r"\bmazda\s+mx5\b",
+        r"\bvolkswagen\s+t-roc\b",
+        r"\belectric\b",
+        r"\bhybrid\b",
+    ]
     def _blocked(name: str) -> bool:
+        n = _norm_text(name)
+        if not n:
+            return False
+        if n in _blocked_norm:
+            return True
+        for p in _patterns:
+            if _re.search(p, n):
+                return True
+        for b in _blocked_norm:
+            if len(b) >= 6 and b in n:
+                return True
         return False
 
     detailed: List[Dict[str, Any]] = []
