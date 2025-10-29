@@ -18,14 +18,15 @@ Agora você pode **exportar e importar** todas as configurações para não perd
 
 O ficheiro JSON contém:
 - ✅ **VEHICLES** - Todos os 124+ veículos categorizados
-- ✅ **SUPPLIER_MAP** - Mapeamento de fornecedores
+- ✅ **SUPPLIER_MAP** - Mapeamento de 53 fornecedores
 - ✅ **Users** - Todos os utilizadores e passwords
+- ✅ **FOTOS** - Todas as fotos dos veículos (em base64)
 
 Exemplo de ficheiro exportado:
 ```json
 {
-  "version": "1.0",
-  "exported_at": "2025-10-29T17:39:00",
+  "version": "1.1",
+  "exported_at": "2025-10-29T17:45:00",
   "vehicles": {
     "fiat 500": "MINI 5 Portas",
     "renault clio": "ECONOMY",
@@ -33,11 +34,20 @@ Exemplo de ficheiro exportado:
   },
   "suppliers": {
     "AUP": "Auto Prudente Rent a Car",
+    "AVS": "Avis",
+    "DOL": "Dollar",
     ...
   },
   "users": [
-    {"username": "admin", "password": "..."}
-  ]
+    {"username": "admin", "password": "hashed_password"}
+  ],
+  "photos": {
+    "peugeot 3008": {
+      "data": "/9j/4AAQSkZJRgABAQAA...",
+      "content_type": "image/jpeg",
+      "url": "https://www.carjet.com/..."
+    }
+  }
 }
 ```
 
@@ -54,6 +64,7 @@ Exemplo de ficheiro exportado:
 ### O Que Acontece
 
 - ✅ **Users restaurados** automaticamente na base de dados
+- ✅ **Fotos restauradas** automaticamente (base64 → BLOB)
 - ✅ **Código gerado** para VEHICLES e SUPPLIER_MAP
 - ✅ **Modal aparece** com código pronto para copiar
 
