@@ -273,6 +273,15 @@ VEHICLES = {
     'citroen c1 auto': 'MINI Auto',
     'fiat 500 auto': 'MINI Auto',
     'fiat 500 4p': 'MINI 4 Portas',
+    'mercedes a class auto': 'ECONOMY Auto',
+    'mercedes c class auto': 'ECONOMY Auto',
+    'mercedes c class sw auto': 'Station Wagon Auto',
+    'mercedes cle coupe auto': 'ECONOMY Auto',
+    'mercedes e class auto': 'ECONOMY Auto',
+    'mercedes e class sw auto': 'Station Wagon Auto',
+    'mercedes s class auto': 'ECONOMY Auto',
+    'renault austral': 'SUV',
+    'renault twingo': 'ECONOMY',
 }
 
 
