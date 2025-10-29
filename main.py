@@ -6539,39 +6539,57 @@ async def save_vehicle(request: Request):
         try:
             import carjet_direct
             import importlib
+            import re
             
             # Ler o arquivo atual
             carjet_path = os.path.join(os.path.dirname(__file__), 'carjet_direct.py')
             with open(carjet_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+                lines = f.readlines()
             
-            # Verificar se o veículo já existe no VEHICLES
-            vehicle_line = f"    '{clean_name}':"
+            # Encontrar o início e fim do dicionário VEHICLES
+            vehicles_start = -1
+            vehicles_end = -1
             
-            if vehicle_line in content:
+            for i, line in enumerate(lines):
+                if 'VEHICLES = {' in line:
+                    vehicles_start = i
+                elif vehicles_start > 0 and line.strip() == '}' and vehicles_end == -1:
+                    vehicles_end = i
+                    break
+            
+            if vehicles_start == -1 or vehicles_end == -1:
+                raise Exception("Could not find VEHICLES dictionary")
+            
+            # Verificar se o veículo já existe
+            vehicle_pattern = f"    '{re.escape(clean_name)}':"
+            vehicle_exists = False
+            vehicle_line_idx = -1
+            
+            for i in range(vehicles_start, vehicles_end):
+                if vehicle_pattern in lines[i]:
+                    vehicle_exists = True
+                    vehicle_line_idx = i
+                    break
+            
+            if vehicle_exists:
                 # Atualizar entrada existente
-                import re
-                pattern = rf"    '{re.escape(clean_name)}':\s*'[^']*',"
-                replacement = f"    '{clean_name}': '{category}',"
-                content = re.sub(pattern, replacement, content)
+                lines[vehicle_line_idx] = f"    '{clean_name}': '{category}',\n"
             else:
-                # Adicionar nova entrada (antes do último })
+                # Adicionar nova entrada antes do }
                 new_entry = f"    '{clean_name}': '{category}',\n"
-                # Encontrar a última linha do dicionário VEHICLES
-                vehicles_end = content.rfind('}')
-                if vehicles_end > 0:
-                    content = content[:vehicles_end] + new_entry + content[vehicles_end:]
+                lines.insert(vehicles_end, new_entry)
             
             # Escrever de volta
             with open(carjet_path, 'w', encoding='utf-8') as f:
-                f.write(content)
+                f.writelines(lines)
             
             # Recarregar o módulo
             importlib.reload(carjet_direct)
             
             message = "Vehicle saved and carjet_direct.py updated automatically!"
         except Exception as e:
-            message = f"Vehicle saved but failed to update carjet_direct.py: {str(e)}"
+            import traceback
+            message = f"Vehicle saved but failed to update carjet_direct.py: {str(e)}\n{traceback.format_exc()}"
         
         # Gerar código Python
         code = f"    '{clean_name}': '{category}',"

@@ -214,6 +214,7 @@ VEHICLES = {
     'volkswagen multivan auto': '7 Lugares Auto',
     'vw multivan auto': '7 Lugares Auto',
     'citroen c4 grand spacetourer auto': '7 Lugares Auto',
+    'citroen c4 picasso auto': '7 Lugares Auto',
     'mercedes glb auto': '7 Lugares Auto',
     
     # 9 Lugares
