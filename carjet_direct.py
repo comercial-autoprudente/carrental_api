@@ -77,8 +77,8 @@ def normalize_supplier(name: str) -> str:
 
 def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     """
-    Detecta categoria (Group) baseado no nome do carro
-    Usa mesma lógica do frontend
+    Detecta categoria (código apenas, sem 'Group') baseado no nome do carro
+    Retorna apenas o código (B1, D, E2, etc) - o frontend faz o mapeamento
     """
     car = car_name.lower()
     trans = transmission.lower()
@@ -86,64 +86,64 @@ def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     
     # Casos específicos primeiro
     if 'peugeot' in car and '308' in car and auto:
-        return 'Group E2'
+        return 'E2'
     if 'fiat' in car and '500l' in car:
-        return 'Group J1'
+        return 'J1'
     if 'kia' in car and 'ceed' in car:
-        return 'Group D'
+        return 'D'
     if 'mini' in car and 'countryman' in car:
-        return 'Group G'
+        return 'G'
     if 'caddy' in car and auto:
-        return 'Group M2'
+        return 'M2'
     if 'peugeot' in car and 'rifter' in car:
-        return 'Group M1'
+        return 'M1'
     if 'citroen' in car and 'c1' in car and auto:
-        return 'Group E1'
+        return 'E1'
     if 'citroen' in car and 'c3' in car and 'aircross' in car:
-        return 'Group L1' if auto else 'Group J1'
+        return 'L1' if auto else 'J1'
     if 'peugeot' in car and '5008' in car:
-        return 'Group M1'
+        return 'M1'
     if 'fiat' in car and '500x' in car:
-        return 'Group L1' if auto else 'Group J1'
+        return 'L1' if auto else 'J1'
     if 'cross' in car and ('vw' in car or 'volkswagen' in car):
-        return 'Group L1' if auto else 'Group J1'
+        return 'L1' if auto else 'J1'
     if 'peugeot' in car and '308' in car and 'sw' in car and auto:
-        return 'Group L2'
+        return 'L2'
     
     # Categorias por tipo de veículo
     if any(x in car for x in ['fiat 500', 'citroen c1', 'toyota aygo', 'volkswagen up', 'peugeot 108', 'hyundai i10']):
         if '4' in car and 'door' in car:
-            return 'Group B1'
-        return 'Group E1' if auto else 'Group B2'
+            return 'B1'
+        return 'E1' if auto else 'B2'
     
     if any(x in car for x in ['renault clio', 'peugeot 208', 'ford fiesta', 'seat ibiza', 'hyundai i20', 'opel corsa']):
-        return 'Group E2' if auto else 'Group D'
+        return 'E2' if auto else 'D'
     
     if any(x in car for x in ['juke', '2008', 'captur', 'stonic', 'kauai', 'kona']):
-        return 'Group F'
+        return 'F'
     
     if 'mini' in car and 'cooper' in car:
-        return 'Group G'
+        return 'G'
     
     if any(x in car for x in ['crossover', 'aircross', '500x', 't-cross', 'taigo', 'arona']):
-        return 'Group L1' if auto else 'Group J1'
+        return 'L1' if auto else 'J1'
     
     if ('sw' in car or 'estate' in car or 'wagon' in car) and not '7' in car:
-        return 'Group L2' if auto else 'Group J2'
+        return 'L2' if auto else 'J2'
     
     if any(x in car for x in ['3008', 'qashqai', 'c-hr', 'tiguan', 'karoq', 'tucson']):
-        return 'Group L1' if auto else 'Group F'
+        return 'L1' if auto else 'F'
     
     if any(x in car for x in ['lodgy', 'scenic', 'rifter', '7 seater']) or '7' in car:
-        return 'Group M2' if auto else 'Group M1'
+        return 'M2' if auto else 'M1'
     
     if '9' in car or 'tourneo' in car or 'vito' in car or 'transporter' in car:
-        return 'Group N'
+        return 'N'
     
     # Fallback baseado em tamanho
     if auto:
-        return 'Group E2'
-    return 'Group D'
+        return 'E2'
+    return 'D'
 
 
 def scrape_carjet_direct(location: str, start_dt: datetime, end_dt: datetime, quick: int = 0) -> List[Dict[str, Any]]:
