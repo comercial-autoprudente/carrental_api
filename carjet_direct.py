@@ -535,19 +535,54 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                             supplier = normalized
                             break
 
-                # Preço
+                # Preço - PRIORIZAR .price.pr-euros (preço total, NÃO por dia)
                 price = '€0.00'
-                for tag in block.find_all(['span', 'div', 'p']):
-                    text = tag.get_text(strip=True)
-                    match = re.search(r'€?\s*(\d+(?:[.,]\d{2})?)\s*€?', text)
-                    if match:
-                        try:
-                            price_val = float(match.group(1).replace(',', '.'))
-                            if 10 < price_val < 10000:
-                                price = f'€{price_val:.2f}'
-                                break
-                        except:
-                            pass
+                
+                # 1ª PRIORIDADE: Buscar .price.pr-euros MAS excluir .price-day-euros e .old-price
+                # Procurar por LISTA de classes para verificar todas
+                for span_tag in block.find_all('span'):
+                    classes = span_tag.get('class', [])
+                    if not classes:
+                        continue
+                    
+                    # Verificar se tem 'price' E 'pr-euros' MAS NÃO tem 'day' nem 'old-price'
+                    has_price = 'price' in classes
+                    has_pr_euros = 'pr-euros' in classes
+                    has_day = any('day' in c for c in classes)
+                    has_old = any('old' in c for c in classes)
+                    
+                    if has_price and has_pr_euros and not has_day and not has_old:
+                        text = span_tag.get_text(strip=True)
+                        # Formato esperado: "68,18 €" ou "68.18€"
+                        match = re.search(r'(\d+(?:[.,]\d{2})?)\s*€', text)
+                        if match:
+                            try:
+                                price_val = float(match.group(1).replace(',', '.'))
+                                if 10 < price_val < 10000:
+                                    price = f'{price_val:.2f} €'
+                                    break  # Encontrou o correto!
+                            except:
+                                pass
+                
+                # 2ª PRIORIDADE: Se não encontrou .pr-euros, buscar .price genérico (mas pode ser libras!)
+                if price == '€0.00':
+                    for tag in block.find_all(['span', 'div'], class_=lambda x: x and 'price' in x if x else False):
+                        text = tag.get_text(strip=True)
+                        # Ignorar preços em libras (£) e preços por dia
+                        if '£' in text or 'libras' in tag.get('class', []):
+                            continue
+                        if 'day' in tag.get('class', []) or 'dia' in tag.get('class', []):
+                            continue
+                        
+                        match = re.search(r'(\d+(?:[.,]\d{2})?)\s*€', text)
+                        if match:
+                            try:
+                                price_val = float(match.group(1).replace(',', '.'))
+                                if 10 < price_val < 10000:
+                                    price = f'{price_val:.2f} €'
+                                    break
+                            except:
+                                pass
                 
                 if price == '€0.00':
                     continue
