@@ -68,7 +68,6 @@
         
         <!-- Brand Index for Navigation -->
         <div id="brandsIndex" class="bg-white rounded-lg shadow p-4 hidden">
-            <h3 class="font-semibold mb-3">📍 Navigate by Brand:</h3>
             <div id="brandsIndexContent" class="flex flex-wrap gap-2">
                 <!-- Brand buttons will be inserted here -->
             </div>
@@ -443,7 +442,7 @@
                 brandsIndexContent.innerHTML = '';
                 Object.keys(byBrand).sort().forEach(brand => {
                     const btn = document.createElement('button');
-                    btn.className = 'px-3 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 capitalize font-semibold';
+                    btn.className = 'px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] capitalize font-semibold transition-all';
                     btn.textContent = `${brand} (${byBrand[brand].length})`;
                     btn.onclick = () => scrollToBrand(brand);
                     brandsIndexContent.appendChild(btn);
@@ -463,8 +462,8 @@
                 brandSection.className = 'mb-6';
                 
                 const brandHeader = document.createElement('div');
-                brandHeader.className = 'bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 border-b-2 border-blue-700';
-                brandHeader.innerHTML = `<h3 class="text-xl font-bold capitalize text-white flex items-center gap-2">🚗 ${brand} <span class="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">${vehicles.length} vehicles</span></h3>`;
+                brandHeader.className = 'bg-[#009cb6] px-6 py-4 border-b-4 border-[#f4ad0f] cursor-pointer hover:bg-[#007a8e] transition-colors';
+                brandHeader.innerHTML = `<h3 class="text-xl font-bold capitalize text-white flex items-center gap-3">${brand} <span class="text-sm font-normal bg-[#f4ad0f] text-gray-900 px-3 py-1 rounded-full">${vehicles.length} vehicles</span></h3>`;
                 brandSection.appendChild(brandHeader);
                 
                 const table = document.createElement('table');
@@ -515,9 +514,16 @@
         function scrollToBrand(brand) {
             const el = document.getElementById(`brand-${brand}`);
             if (el) {
-                el.scrollIntoView({behavior:'smooth',block:'start'});
-                el.classList.add('ring-4','ring-blue-500','ring-opacity-50');
-                setTimeout(()=>el.classList.remove('ring-4','ring-blue-500','ring-opacity-50'),2000);
+                // Scroll with offset for header
+                const yOffset = -20;
+                const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                window.scrollTo({top: y, behavior: 'smooth'});
+                
+                // Highlight with UI colors
+                el.classList.add('ring-4','ring-[#f4ad0f]');
+                setTimeout(() => {
+                    el.classList.remove('ring-4','ring-[#f4ad0f]');
+                }, 2000);
             }
         }
         
