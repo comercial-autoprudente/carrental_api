@@ -366,6 +366,31 @@ app = FastAPI(title="Rental Price Tracker")
 app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY, same_site="lax")
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database and create default users on startup"""
+    print(f"========================================", flush=True)
+    print(f"🚀 APP STARTUP - Rental Price Tracker", flush=True)
+    print(f"========================================", flush=True)
+    
+    # Initialize database tables
+    try:
+        print(f"📊 Initializing database tables...", flush=True)
+        _ensure_users_table()
+        print(f"   ✅ users table ready", flush=True)
+    except Exception as e:
+        print(f"⚠️  Database initialization error: {e}", flush=True)
+    
+    # Create default users
+    try:
+        print(f"👥 Creating default users...", flush=True)
+        _ensure_default_users()
+        print(f"✅ Default users ready (admin/admin)", flush=True)
+    except Exception as e:
+        print(f"⚠️  Default users error: {e}", flush=True)
+    
+    print(f"========================================", flush=True)
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     # Redirect to login on unauthorized/forbidden
