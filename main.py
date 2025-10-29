@@ -4721,8 +4721,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             "transmission": transmission_label,
             "link": link,
         })
-        if len(items) >= 50:
-            break
+        # REMOVED: if len(items) >= 50: break  # Removido limite para mostrar TODOS os carros
     # If no detailed items parsed, fall back to provider summaries to ensure prices are shown
     if not items and summary_items:
         items = summary_items
