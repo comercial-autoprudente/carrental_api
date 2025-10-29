@@ -6256,17 +6256,17 @@ async def search_vehicles(request: Request, q: str = ""):
 
 @app.get("/admin/car-groups", response_class=HTMLResponse)
 async def admin_car_groups(request: Request):
-    """Página de administração dos grupos de carros com fichas editáveis"""
+    """Página de administração dos grupos de carros - NOVA versão com abas e criação de categorias"""
     require_auth(request)
     
-    # Ler o ficheiro HTML
-    html_path = os.path.join(os.path.dirname(__file__), "admin_vehicles_page.html")
+    # Ler o ficheiro HTML NOVO (vehicle_editor.html)
+    html_path = os.path.join(os.path.dirname(__file__), "vehicle_editor.html")
     try:
         with open(html_path, 'r', encoding='utf-8') as f:
             html_content = f.read()
         return HTMLResponse(content=html_content)
     except FileNotFoundError:
-        return HTMLResponse(content="<h1>Erro: Ficheiro admin_vehicles_page.html não encontrado</h1>", status_code=500)
+        return HTMLResponse(content="<h1>Erro: Ficheiro vehicle_editor.html não encontrado</h1>", status_code=500)
 
 @app.get("/admin/vehicles-editor", response_class=HTMLResponse)
 async def admin_vehicles_editor(request: Request):
