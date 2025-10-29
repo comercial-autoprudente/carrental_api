@@ -6339,3 +6339,170 @@ async def get_vehicles_with_originals(request: Request):
     except Exception as e:
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+# ============================================================
+# VEHICLE PHOTOS MANAGEMENT
+# ============================================================
+
+def _ensure_vehicle_photos_table():
+    """Garante que a tabela de fotos de veículos existe"""
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute("""
+                    CREATE TABLE IF NOT EXISTS vehicle_photos (
+                        vehicle_name TEXT PRIMARY KEY,
+                        photo_data BLOB,
+                        photo_url TEXT,
+                        content_type TEXT,
+                        uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                con.commit()
+            finally:
+                con.close()
+    except Exception as e:
+        print(f"Erro ao criar tabela vehicle_photos: {e}")
+
+@app.on_event("startup")
+async def startup_vehicle_photos():
+    """Inicializar tabela de fotos na startup"""
+    _ensure_vehicle_photos_table()
+
+@app.post("/api/vehicles/{vehicle_name}/photo/upload")
+async def upload_vehicle_photo(vehicle_name: str, request: Request, file: UploadFile = File(...)):
+    """Upload de foto para um veículo"""
+    require_auth(request)
+    try:
+        # Ler dados do arquivo
+        photo_data = await file.read()
+        content_type = file.content_type or 'image/jpeg'
+        
+        # Salvar no banco
+        _ensure_vehicle_photos_table()
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                conn.execute("""
+                    INSERT OR REPLACE INTO vehicle_photos (vehicle_name, photo_data, content_type, photo_url)
+                    VALUES (?, ?, ?, NULL)
+                """, (vehicle_name, photo_data, content_type))
+                conn.commit()
+            finally:
+                conn.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": "Foto enviada com sucesso",
+            "vehicle": vehicle_name,
+            "size": len(photo_data)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.post("/api/vehicles/{vehicle_name}/photo/from-url")
+async def download_vehicle_photo_from_url(vehicle_name: str, request: Request):
+    """Baixar foto de URL e salvar no banco"""
+    require_auth(request)
+    try:
+        body = await request.json()
+        photo_url = body.get('url', '').strip()
+        
+        if not photo_url:
+            return _no_store_json({"ok": False, "error": "URL não fornecida"}, 400)
+        
+        # Baixar imagem
+        import httpx
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(photo_url)
+            response.raise_for_status()
+            
+            photo_data = response.content
+            content_type = response.headers.get('content-type', 'image/jpeg')
+        
+        # Salvar no banco
+        _ensure_vehicle_photos_table()
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                conn.execute("""
+                    INSERT OR REPLACE INTO vehicle_photos (vehicle_name, photo_data, content_type, photo_url)
+                    VALUES (?, ?, ?, ?)
+                """, (vehicle_name, photo_data, content_type, photo_url))
+                conn.commit()
+            finally:
+                conn.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": "Foto baixada e salva com sucesso",
+            "vehicle": vehicle_name,
+            "url": photo_url,
+            "size": len(photo_data)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.get("/api/vehicles/{vehicle_name}/photo")
+async def get_vehicle_photo(vehicle_name: str):
+    """Obter foto de um veículo"""
+    try:
+        _ensure_vehicle_photos_table()
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                row = conn.execute("""
+                    SELECT photo_data, content_type FROM vehicle_photos WHERE vehicle_name = ?
+                """, (vehicle_name,)).fetchone()
+            finally:
+                conn.close()
+        
+        if not row or not row[0]:
+            # Retornar imagem padrão ou 404
+            return JSONResponse({"ok": False, "error": "Foto não encontrada"}, 404)
+        
+        from fastapi.responses import Response
+        return Response(content=row[0], media_type=row[1])
+        
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, 500)
+
+@app.get("/api/vehicles/photos/all")
+async def get_all_vehicle_photos(request: Request):
+    """Listar todos os veículos com fotos"""
+    require_auth(request)
+    try:
+        _ensure_vehicle_photos_table()
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                rows = conn.execute("""
+                    SELECT vehicle_name, photo_url, uploaded_at, 
+                           LENGTH(photo_data) as size
+                    FROM vehicle_photos
+                    ORDER BY vehicle_name
+                """).fetchall()
+            finally:
+                conn.close()
+        
+        photos = [
+            {
+                "vehicle": row[0],
+                "url": row[1],
+                "uploaded_at": row[2],
+                "size": row[3]
+            }
+            for row in rows
+        ]
+        
+        return _no_store_json({
+            "ok": True,
+            "photos": photos,
+            "total": len(photos)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)

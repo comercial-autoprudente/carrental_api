@@ -49,6 +49,7 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Foto</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome Original (Scraping)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome Editado (Limpo)</th>
@@ -145,6 +146,42 @@
                                 <option value="N">N - 9 Seater</option>
                             </select>
                         </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <label class="block text-sm font-medium mb-2">Foto do Veículo</label>
+                        
+                        <!-- Preview da foto -->
+                        <div id="photoPreview" class="mb-3 hidden">
+                            <img id="photoPreviewImage" src="" alt="Preview" class="h-32 w-auto rounded border">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Upload de ficheiro -->
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Upload de Ficheiro</label>
+                                <input type="file" id="photoFile" accept="image/*" 
+                                       class="w-full text-sm border rounded-lg p-2">
+                            </div>
+                            
+                            <!-- URL da foto -->
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Ou colar URL</label>
+                                <div class="flex gap-2">
+                                    <input type="url" id="photoUrl" 
+                                           placeholder="https://www.carjet.com/cdn/img/..." 
+                                           class="flex-1 px-3 py-2 border rounded-lg text-sm">
+                                    <button type="button" onclick="downloadPhotoFromUrl()" 
+                                            class="px-3 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] text-sm whitespace-nowrap">
+                                        📥 Baixar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-500 mt-2">
+                            A foto será salva na base de dados. Formatos: JPG, PNG, WebP
+                        </p>
                     </div>
                     
                     <div class="bg-blue-50 border border-blue-200 rounded p-3">
@@ -285,8 +322,15 @@
             
             filtered.forEach((vehicle, idx) => {
                 const actualIndex = vehiclesData.indexOf(vehicle);
+                const photoUrl = `/api/vehicles/${encodeURIComponent(vehicle.clean)}/photo`;
                 const row = `
                     <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <img src="${photoUrl}" 
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2740%27%3E%3Crect width=%2760%27 height=%2740%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2712%27%3E🚗%3C/text%3E%3C/svg%3E'"
+                                 alt="${vehicle.clean}" 
+                                 class="h-10 w-auto rounded border">
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="font-semibold capitalize">${vehicle.brand}</span>
                         </td>
@@ -339,7 +383,13 @@
             document.getElementById('editModel').value = vehicle.model;
             document.getElementById('editCategory').value = vehicle.category;
             document.getElementById('editGroup').value = categoryToGroup[vehicle.category] || 'D';
+            document.getElementById('photoUrl').value = '';
+            document.getElementById('photoFile').value = '';
             document.getElementById('codePreview').classList.add('hidden');
+            
+            // Carregar foto do veículo
+            loadVehiclePhoto(vehicle.clean);
+            
             document.getElementById('editModal').classList.remove('hidden');
         }
         
@@ -433,6 +483,105 @@
         
         // Carregar ao iniciar
         loadVehicles();
+
+        // Funções de gestão de fotos
+        let currentVehicleName = "";
+        
+        async function loadVehiclePhoto(vehicleName) {
+            currentVehicleName = vehicleName;
+            const photoUrl = `/api/vehicles/${encodeURIComponent(vehicleName)}/photo`;
+            const preview = document.getElementById("photoPreview");
+            const previewImage = document.getElementById("photoPreviewImage");
+            
+            try {
+                const response = await fetch(photoUrl);
+                if (response.ok) {
+                    previewImage.src = photoUrl + "?t=" + Date.now();
+                    preview.classList.remove("hidden");
+                } else {
+                    preview.classList.add("hidden");
+                }
+            } catch (error) {
+                preview.classList.add("hidden");
+            }
+        }
+        
+        async function downloadPhotoFromUrl() {
+            const url = document.getElementById("photoUrl").value.trim();
+            if (!url) {
+                alert("Por favor, cole uma URL válida!");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/vehicles/${encodeURIComponent(currentVehicleName)}/photo/from-url`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert("✅ Foto baixada e salva com sucesso!");
+                    await loadVehiclePhoto(currentVehicleName);
+                    renderTable();
+                } else {
+                    alert("❌ Erro: " + data.error);
+                }
+            } catch (error) {
+                alert("❌ Erro ao baixar foto: " + error.message);
+            }
+        }
+        
+        async function uploadPhotoFile() {
+            const fileInput = document.getElementById("photoFile");
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            try {
+                const response = await fetch(`/api/vehicles/${encodeURIComponent(currentVehicleName)}/photo/upload`, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert("✅ Foto enviada com sucesso!");
+                    await loadVehiclePhoto(currentVehicleName);
+                    renderTable();
+                } else {
+                    alert("❌ Erro: " + data.error);
+                }
+            } catch (error) {
+                alert("❌ Erro ao enviar foto: " + error.message);
+            }
+        }
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            const fileInput = document.getElementById("photoFile");
+            if (fileInput) {
+                fileInput.addEventListener("change", async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            document.getElementById("photoPreviewImage").src = e.target.result;
+                            document.getElementById("photoPreview").classList.remove("hidden");
+                        };
+                        reader.readAsDataURL(file);
+                        await uploadPhotoFile();
+                    }
+                });
+            }
+        });
+
     </script>
 </body>
 </html>
+
