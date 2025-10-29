@@ -287,6 +287,7 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
     return items
 
 import os
+import sys
 import secrets
 import re
 from urllib.parse import urljoin
