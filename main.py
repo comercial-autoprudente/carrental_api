@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:20
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-01:36
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-01:20-FIX-SYS", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-01:36-SELENIUM-16H", flush=True)
 print("📦 FEATURES: Vehicles + Auto-Create Users + 60+ Cars", flush=True)
-print("🔧 FIX: Added missing sys import", flush=True)
+print("🔧 FIX: Selenium pickup 16:00 (NO fixed URLs!)", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -353,10 +353,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-01:35-FIX-SELENIUM-HOURS"
+APP_VERSION = "2025-01-29-01:36-SELENIUM-16H"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: Selenium pickup time 15:00 (was 10:00), added detailed logs
+# FIX: Selenium pickup time 16:00 (user requested, NO fixed URLs!)
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -2848,7 +2848,7 @@ async def track_by_params(request: Request):
                 end_date_str = end_dt.strftime("%d/%m/%Y")
                 print(f"[SELENIUM] Preenchendo formulário: {carjet_location}", file=sys.stderr, flush=True)
                 print(f"[SELENIUM] Datas: {start_date_str} → {end_date_str} ({days} dias)", file=sys.stderr, flush=True)
-                print(f"[SELENIUM] Horário recolha: 15:00, Horário entrega: 10:00", file=sys.stderr, flush=True)
+                print(f"[SELENIUM] Horário recolha: 16:00, Horário entrega: 10:00", file=sys.stderr, flush=True)
                 driver.execute_script("""
                     function fill(sel, val) {
                         const el = document.querySelector(sel);
@@ -2866,7 +2866,7 @@ async def track_by_params(request: Request):
                     
                     const h1 = document.querySelector('select[name="fechaRecogidaSelHour"]');
                     const h2 = document.querySelector('select[name="fechaEntregaSelHour"]');
-                    if (h1) h1.value = '15:00';  // Pickup às 15:00 (CarJet aceita)
+                    if (h1) h1.value = '16:00';  // Pickup às 16:00 (CarJet aceita melhor)
                     if (h2) h2.value = '10:00';  // Dropoff às 10:00 (OK)
                     
                     return {r1, r2, r3, r4, h1: h1?.value, h2: h2?.value};
