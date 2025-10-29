@@ -388,8 +388,12 @@ def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     if any(x in car for x in ['crossover', 'aircross', '500x', 't-cross', 'taigo', 'arona']):
         return 'SUV Auto' if auto else 'Crossover'
     
-    if ('sw' in car or 'estate' in car or 'wagon' in car) and not '7' in car:
-        return 'Station Wagon Auto' if auto else 'Station Wagon'
+    # Station Wagon - IMPORTANTE: NÃO confundir com sedan!
+    # Só é SW se tiver explicitamente: sw, estate, wagon, touring, combi
+    # E NÃO pode ter "sedan" no nome
+    if 'sedan' not in car and 'saloon' not in car:
+        if (' sw' in car or 'estate' in car or 'wagon' in car or 'touring' in car or 'combi' in car) and '7' not in car:
+            return 'Station Wagon Auto' if auto else 'Station Wagon'
     
     if any(x in car for x in ['3008', 'qashqai', 'c-hr', 'tiguan', 'karoq', 'tucson']):
         return 'SUV Auto' if auto else 'SUV'
