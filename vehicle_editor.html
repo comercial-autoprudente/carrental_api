@@ -1261,13 +1261,26 @@
                     setTimeout(() => successMsg.remove(), 3000);
                     
                     // Aguardar um pouco para garantir que a foto foi salva
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    await new Promise(resolve => setTimeout(resolve, 300));
                     
                     // Recarregar foto usando a função loadVehiclePhoto
                     await loadVehiclePhoto(currentVehicleName);
                     
-                    // Re-renderizar tabela para mostrar foto atualizada
-                    renderTable();
+                    // FORÇAR reload de TODAS as imagens na tabela
+                    // Encontrar todas as imagens do veículo atual e forçar reload
+                    const allImages = document.querySelectorAll(`img[src*="${encodeURIComponent(currentVehicleName)}"]`);
+                    const newTimestamp = Date.now();
+                    allImages.forEach(img => {
+                        const baseUrl = img.src.split('?')[0];
+                        img.src = baseUrl + '?t=' + newTimestamp;
+                        console.log('[UPLOAD] Force reloading image:', img.src);
+                    });
+                    
+                    // Re-renderizar tabela após um delay
+                    setTimeout(() => {
+                        renderTable();
+                        console.log('[UPLOAD] Table re-rendered');
+                    }, 100);
                     
                     console.log('[UPLOAD] Preview and table updated');
                 } else {
