@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Editor de Veículos</title>
+    <title>Vehicle Editor</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,24 +10,21 @@
     <header class="bg-[#009cb6] border-b sticky top-0 z-50">
         <div class="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <a href="/" class="text-white font-semibold hover:underline">← Voltar</a>
-                <h1 class="text-white text-xl font-bold">Editor de Nomes de Veículos</h1>
+                <a href="/" class="text-white font-semibold hover:underline">← Back</a>
+                <h1 class="text-white text-xl font-bold">Vehicle Names Editor</h1>
             </div>
             <div class="flex items-center gap-4 text-white text-sm">
-                <span id="totalVehicles">0</span> veículos
+                <span id="totalVehicles">0</span> vehicles
                 <button onclick="downloadAllImages()" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg font-semibold">
-                    📸 Baixar Fotos
+                    📸 Download Photos
                 </button>
                 <button onclick="exportConfiguration()" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">
-                    📤 Exportar Config
+                    📤 Export Config
                 </button>
                 <button onclick="document.getElementById('importFile').click()" class="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold">
-                    📥 Importar Config
+                    📥 Import Config
                 </button>
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importConfiguration(event)">
-                <button onclick="saveAllChanges()" class="px-4 py-2 bg-[#f4ad0f] hover:bg-[#e39e0e] rounded-lg font-semibold">
-                    💾 Exportar VEHICLES
-                </button>
             </div>
         </div>
     </header>
@@ -39,11 +36,11 @@
                 <nav class="flex space-x-4 px-4" aria-label="Tabs">
                     <button onclick="switchTab('all')" id="tabAll" 
                             class="tab-button border-b-2 border-[#009cb6] text-[#009cb6] py-3 px-4 font-semibold">
-                        Todos os Veículos
+                        All Vehicles
                     </button>
                     <button onclick="switchTab('uncategorized')" id="tabUncategorized" 
                             class="tab-button border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4">
-                        Não Categorizados <span id="uncategorizedCount" class="ml-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs"></span>
+                        Uncategorized <span id="uncategorizedCount" class="ml-1 bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs"></span>
                     </button>
                 </nav>
             </div>
@@ -69,22 +66,22 @@
             </div>
         </div>
         
-        <!-- Filtros -->
+        <!-- Filters -->
         <div class="bg-white rounded-lg shadow p-4" id="filtersSection">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                <input type="text" id="searchInput" placeholder="🔍 Buscar..." 
+                <input type="text" id="searchInput" placeholder="🔍 Search..." 
                        class="px-4 py-2 border rounded-lg">
                 
                 <select id="filterBrand" class="px-4 py-2 border rounded-lg">
-                    <option value="">Todas as marcas</option>
+                    <option value="">All brands</option>
                 </select>
                 
                 <select id="filterCategory" class="px-4 py-2 border rounded-lg">
-                    <option value="">Todas as categorias</option>
+                    <option value="">All categories</option>
                 </select>
                 
                 <button onclick="loadVehicles()" class="px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e]">
-                    🔄 Recarregar
+                    🔄 Reload
                 </button>
             </div>
         </div>
@@ -213,36 +210,36 @@
         <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">Editar Veículo</h2>
+                    <h2 class="text-xl font-bold">Edit Vehicle</h2>
                     <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
                 </div>
                 
                 <form class="space-y-4">
                     <div class="bg-gray-50 p-4 rounded-lg">
-                        <label class="block text-sm font-medium mb-1">Nome Original (do scraping)</label>
+                        <label class="block text-sm font-medium mb-1">Original Name (from scraping)</label>
                         <input type="text" id="editOriginalName" readonly 
                                class="w-full px-3 py-2 border rounded-lg bg-gray-100 text-gray-600" />
-                        <p class="text-xs text-gray-500 mt-1">Este é o nome que vem do CarJet (não editável)</p>
+                        <p class="text-xs text-gray-500 mt-1">This is the name from CarJet (not editable)</p>
                     </div>
                     
                     <div>
-                        <label class="block text-sm font-medium mb-1">Nome Editado (limpo) *</label>
+                        <label class="block text-sm font-medium mb-1">Edited Name (clean) *</label>
                         <input type="text" id="editCleanName" 
                                class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
                                placeholder="Ex: peugeot 3008" />
-                        <p class="text-xs text-gray-500 mt-1">Este é o nome que será usado no sistema (sempre em lowercase)</p>
+                        <p class="text-xs text-gray-500 mt-1">This is the name that will be used in the system (always lowercase)</p>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Marca</label>
+                            <label class="block text-sm font-medium mb-1">Brand</label>
                             <input type="text" id="editBrand" 
                                    class="w-full px-3 py-2 border rounded-lg" 
                                    placeholder="Ex: peugeot" />
                         </div>
                         
                         <div>
-                            <label class="block text-sm font-medium mb-1">Modelo</label>
+                            <label class="block text-sm font-medium mb-1">Model</label>
                             <input type="text" id="editModel" 
                                    class="w-full px-3 py-2 border rounded-lg" 
                                    placeholder="Ex: 3008" />
@@ -257,7 +254,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="block text-sm font-medium">Categoria</label>
+                                <label class="block text-sm font-medium">Category</label>
                                 <button type="button" onclick="showNewCategoryInput()" 
                                         class="px-3 py-1 text-xs bg-[#009cb6] text-white rounded hover:bg-[#007a8e] font-semibold border-2 border-[#009cb6] transition-all">
                                     ➕ New Category
@@ -283,7 +280,7 @@
                         
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="block text-sm font-medium">Grupo</label>
+                                <label class="block text-sm font-medium">Group</label>
                                 <button type="button" onclick="showNewGroupInput()" 
                                         class="px-3 py-1 text-xs bg-[#f4ad0f] text-gray-900 rounded hover:bg-[#e39e0e] font-semibold border-2 border-[#f4ad0f] transition-all">
                                     ➕ New Group
@@ -309,7 +306,7 @@
                     </div>
                     
                     <div class="border-t pt-4">
-                        <label class="block text-sm font-medium mb-2">Foto do Veículo</label>
+                        <label class="block text-sm font-medium mb-2">Vehicle Photo</label>
                         
                         <!-- Preview da foto -->
                         <div id="photoPreview" class="mb-3 hidden">
@@ -319,69 +316,69 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <!-- Upload de ficheiro -->
                             <div>
-                                <label class="block text-xs text-gray-600 mb-1">Upload de Ficheiro</label>
+                                <label class="block text-xs text-gray-600 mb-1">Upload File</label>
                                 <input type="file" id="photoFile" accept="image/*" 
                                        class="w-full text-sm border rounded-lg p-2">
                             </div>
                             
                             <!-- URL da foto -->
                             <div>
-                                <label class="block text-xs text-gray-600 mb-1">Ou colar URL</label>
+                                <label class="block text-xs text-gray-600 mb-1">Or paste URL</label>
                                 <div class="flex gap-2">
                                     <input type="url" id="photoUrl" 
                                            placeholder="https://www.carjet.com/cdn/img/..." 
                                            class="flex-1 px-3 py-2 border rounded-lg text-sm">
                                     <button type="button" onclick="downloadPhotoFromUrl()" 
                                             class="px-3 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] text-sm whitespace-nowrap">
-                                        📥 Baixar
+                                        📥 Download
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
                         <p class="text-xs text-gray-500 mt-2">
-                            A foto será salva na base de dados. Formatos: JPG, PNG, WebP
+                            The photo will be saved in the database. Formats: JPG, PNG, WebP
                         </p>
                     </div>
                     
                     <div class="bg-blue-50 border border-blue-200 rounded p-3">
                         <p class="text-sm text-blue-800">
-                            💡 <strong>Dica:</strong> O nome editado será usado como chave no dicionário VEHICLES. 
-                            Use sempre lowercase e mantenha consistência.
+                            💡 <strong>Tip:</strong> The edited name will be used as a key in the VEHICLES dictionary. 
+                            Always use lowercase and maintain consistency.
                         </p>
                     </div>
                     
                     <div class="flex gap-3">
                         <button type="button" onclick="saveEdit()" 
                                 class="flex-1 px-4 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e]">
-                            💾 Salvar Alterações
+                            💾 Save Changes
                         </button>
                         <button type="button" onclick="closeModal()" 
                                 class="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                            Cancelar
+                            Cancel
                         </button>
                     </div>
                 </form>
                 
                 <div id="codePreview" class="hidden mt-4 border-t pt-4">
-                    <label class="block text-sm font-medium mb-2">Código gerado:</label>
+                    <label class="block text-sm font-medium mb-2">Generated code:</label>
                     <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto"><code id="generatedCode"></code></pre>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Modal de Exportação -->
+    <!-- Export Modal -->
     <div id="exportModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">Exportar VEHICLES</h2>
+                    <h2 class="text-xl font-bold">Export VEHICLES</h2>
                     <button onclick="closeExportModal()" class="text-gray-500 hover:text-gray-700 text-2xl">✕</button>
                 </div>
                 
                 <p class="text-sm text-gray-600 mb-4">
-                    Copie este código e substitua o dicionário VEHICLES em <code class="bg-gray-100 px-2 py-1 rounded">carjet_direct.py</code>
+                    Copy this code and replace the VEHICLES dictionary in <code class="bg-gray-100 px-2 py-1 rounded">carjet_direct.py</code>
                 </p>
                 
                 <pre class="bg-gray-900 text-green-400 p-4 rounded text-xs overflow-x-auto max-h-96"><code id="fullExportCode"></code></pre>
@@ -389,11 +386,11 @@
                 <div class="flex gap-3 mt-4">
                     <button onclick="copyExportCode()" 
                             class="flex-1 px-4 py-2 bg-[#f4ad0f] text-white rounded-lg hover:bg-[#e39e0e]">
-                        📋 Copiar Tudo
+                        📋 Copy All
                     </button>
                     <button onclick="closeExportModal()" 
                             class="px-4 py-2 border rounded-lg hover:bg-gray-50">
-                        Fechar
+                        Close
                     </button>
                 </div>
             </div>
@@ -460,7 +457,7 @@
                 renderTable();
                 
             } catch (error) {
-                alert('Erro ao carregar: ' + error.message);
+                alert('Error loading: ' + error.message);
             }
         }
         
@@ -869,7 +866,7 @@
             const group = document.getElementById('editGroup').value;
             
             if (!cleanName || !category) {
-                alert('Preencha o nome editado e categoria!');
+                alert('Fill in the edited name and category!');
                 return;
             }
             
@@ -917,7 +914,7 @@
         function copyExportCode() {
             const code = document.getElementById('fullExportCode').textContent;
             navigator.clipboard.writeText(code).then(() => {
-                alert('✅ Código copiado! Cole em carjet_direct.py');
+                alert('✅ Code copied! Paste it in carjet_direct.py');
             });
         }
         
@@ -969,9 +966,9 @@
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 
-                alert('✅ Configuração exportada com sucesso!\nGuarde este ficheiro para fazer backup.');
+                alert('✅ Configuration exported successfully!\nSave this file for backup.');
             } catch (error) {
-                alert('❌ Erro ao exportar: ' + error.message);
+                alert('❌ Export error: ' + error.message);
             }
         }
         
@@ -1015,17 +1012,17 @@
                         modal.innerHTML = `
                             <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                                 <div class="p-6">
-                                    <h2 class="text-xl font-bold mb-4">Código Importado</h2>
-                                    <p class="text-sm mb-4">Copie este código e cole em <code>carjet_direct.py</code>:</p>
+                                    <h2 class="text-xl font-bold mb-4">Imported Code</h2>
+                                    <p class="text-sm mb-4">Copy this code and paste it in <code>carjet_direct.py</code>:</p>
                                     <pre class="bg-gray-900 text-green-400 p-4 rounded text-xs overflow-x-auto mb-4">${data.vehicles_code}${data.suppliers_code || ''}</pre>
                                     <div class="flex gap-3">
-                                        <button onclick="navigator.clipboard.writeText(\`${data.vehicles_code}${data.suppliers_code || ''}\`).then(() => alert('Copiado!')); this.parentElement.parentElement.parentElement.remove()" 
+                                        <button onclick="navigator.clipboard.writeText(\`${data.vehicles_code}${data.suppliers_code || ''}\`).then(() => alert('Copied!')); this.parentElement.parentElement.parentElement.remove()" 
                                                 class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                                            📋 Copiar Código
+                                            📋 Copy Code
                                         </button>
                                         <button onclick="this.parentElement.parentElement.parentElement.remove()" 
                                                 class="px-4 py-2 border rounded hover:bg-gray-50">
-                                            Fechar
+                                            Close
                                         </button>
                                     </div>
                                 </div>
@@ -1040,7 +1037,7 @@
                     alert('❌ Erro: ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Erro ao importar: ' + error.message);
+                alert('❌ Import error: ' + error.message);
             }
             
             // Limpar input
@@ -1049,14 +1046,14 @@
         
         // Função para baixar todas as imagens
         async function downloadAllImages() {
-            if (!confirm('📸 Baixar todas as fotos dos veículos?\n\nIsto pode demorar alguns minutos (~115 imagens).')) {
+            if (!confirm('📸 Download all vehicle photos?\n\nThis may take a few minutes (~115 images).')) {
                 return;
             }
             
             const btn = event.target;
             const originalText = btn.textContent;
             btn.disabled = true;
-            btn.textContent = '⏳ Baixando...';
+            btn.textContent = '⏳ Downloading...';
             btn.classList.add('opacity-50', 'cursor-not-allowed');
             
             try {
@@ -1067,19 +1064,19 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    alert(`✅ Download concluído!\n\n` +
-                          `Baixadas: ${data.downloaded}\n` +
-                          `Já existiam: ${data.skipped}\n` +
-                          `Erros: ${data.errors?.length || 0}\n\n` +
-                          `As fotos agora aparecem nas fichas dos veículos!`);
+                    alert(`✅ Download complete!\n\n` +
+                          `Downloaded: ${data.downloaded}\n` +
+                          `Already existed: ${data.skipped}\n` +
+                          `Errors: ${data.errors?.length || 0}\n\n` +
+                          `Photos now appear in vehicle cards!`);
                     
                     // Recarregar tabela para mostrar as fotos
                     renderTable();
                 } else {
-                    alert('❌ Erro ao baixar fotos: ' + data.error);
+                    alert('❌ Error downloading photos: ' + data.error);
                 }
             } catch (error) {
-                alert('❌ Erro: ' + error.message);
+                alert('❌ Error: ' + error.message);
             } finally {
                 btn.disabled = false;
                 btn.textContent = originalText;
@@ -1115,7 +1112,7 @@
         async function downloadPhotoFromUrl() {
             const url = document.getElementById("photoUrl").value.trim();
             if (!url) {
-                alert("Por favor, cole uma URL válida!");
+                alert("Please paste a valid URL!");
                 return;
             }
             
@@ -1129,14 +1126,14 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    alert("✅ Foto baixada e salva com sucesso!");
+                    alert("✅ Photo downloaded and saved successfully!");
                     await loadVehiclePhoto(currentVehicleName);
                     renderTable();
                 } else {
-                    alert("❌ Erro: " + data.error);
+                    alert("❌ Error: " + data.error);
                 }
             } catch (error) {
-                alert("❌ Erro ao baixar foto: " + error.message);
+                alert("❌ Error downloading photo: " + error.message);
             }
         }
         
@@ -1158,14 +1155,14 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    alert("✅ Foto enviada com sucesso!");
+                    alert("✅ Photo uploaded successfully!");
                     await loadVehiclePhoto(currentVehicleName);
                     renderTable();
                 } else {
-                    alert("❌ Erro: " + data.error);
+                    alert("❌ Error: " + data.error);
                 }
             } catch (error) {
-                alert("❌ Erro ao enviar foto: " + error.message);
+                alert("❌ Error uploading photo: " + error.message);
             }
         }
         
