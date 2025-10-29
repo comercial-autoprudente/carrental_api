@@ -164,12 +164,33 @@
                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#009cb6]">
                     <p class="text-xs text-gray-500 mt-1">Descriptive name for the group</p>
                 </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Assign to Category</label>
+                    <select id="newGroupCategory" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-[#009cb6]">
+                        <option value="">Select a category...</option>
+                        <option value="MINI 4 Portas">MINI 4 Portas</option>
+                        <option value="MINI 5 Portas">MINI 5 Portas</option>
+                        <option value="MINI Auto">MINI Auto</option>
+                        <option value="ECONOMY">ECONOMY</option>
+                        <option value="ECONOMY Auto">ECONOMY Auto</option>
+                        <option value="SUV">SUV</option>
+                        <option value="SUV Auto">SUV Auto</option>
+                        <option value="Crossover">Crossover</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Station Wagon">Station Wagon</option>
+                        <option value="Station Wagon Auto">Station Wagon Auto</option>
+                        <option value="7 Lugares">7 Lugares</option>
+                        <option value="7 Lugares Auto">7 Lugares Auto</option>
+                        <option value="9 Lugares">9 Lugares</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">This group will be assigned to the selected category</p>
+                </div>
                 <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
                     <p class="text-xs text-gray-700">
                         <strong>Examples:</strong><br>
-                        • B1 - Mini 4 Doors<br>
-                        • D - Economy<br>
-                        • P3 - Premium Plus
+                        • B1 - Mini 4 Doors → MINI 4 Portas<br>
+                        • D - Economy → ECONOMY<br>
+                        • P3 - Premium Plus → Premium
                     </p>
                 </div>
                 <div class="flex gap-3 pt-2">
@@ -741,6 +762,7 @@
             document.getElementById('newGroupModal').classList.remove('hidden');
             document.getElementById('newGroupCode').value = '';
             document.getElementById('newGroupName').value = '';
+            document.getElementById('newGroupCategory').value = '';
             setTimeout(() => document.getElementById('newGroupCode').focus(), 100);
         }
         
@@ -751,6 +773,7 @@
         function confirmNewGroup() {
             const code = document.getElementById('newGroupCode').value.trim().toUpperCase();
             const name = document.getElementById('newGroupName').value.trim();
+            const category = document.getElementById('newGroupCategory').value;
             
             if (!code) {
                 alert('❌ Please enter a group code (ex: P3)');
@@ -759,6 +782,11 @@
             
             if (!name) {
                 alert('❌ Please enter a group name');
+                return;
+            }
+            
+            if (!category) {
+                alert('❌ Please select a category to assign this group to');
                 return;
             }
             
@@ -777,12 +805,15 @@
             option2.textContent = `${code} - ${name}`;
             catGroupSelect.appendChild(option2);
             
+            // Assign group to category in mapping
+            categoryToGroup[category] = code;
+            
             // Show success message
             const successMsg = document.createElement('div');
             successMsg.className = 'fixed top-4 right-4 bg-[#f4ad0f] text-gray-900 px-6 py-3 rounded-lg shadow-lg z-50 font-semibold';
-            successMsg.textContent = `✓ Group "${code} - ${name}" created`;
+            successMsg.innerHTML = `✓ Group "${code} - ${name}" created<br><span class="text-sm">Assigned to category: ${category}</span>`;
             document.body.appendChild(successMsg);
-            setTimeout(() => successMsg.remove(), 3000);
+            setTimeout(() => successMsg.remove(), 4000);
             
             closeNewGroupModal();
         }
