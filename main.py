@@ -816,76 +816,79 @@ def map_category_to_group(category: str) -> str:
     """
     Mapeia categorias descritivas para códigos de grupos definidos:
     B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others
+    
+    CASE-INSENSITIVE: Converte para lowercase para comparação
     """
     if not category:
         return "Others"
     
-    cat = category.strip()
+    # Converter para lowercase para mapeamento case-insensitive
+    cat = category.strip().lower()
     
-    # Mapeamento direto
+    # Mapeamento direto (TUDO EM LOWERCASE)
     category_map = {
         # B1 - Mini 4 Portas
-        "Mini 4 Doors": "B1",
-        "Mini 4 Portas": "B1",
+        "mini 4 doors": "B1",
+        "mini 4 portas": "B1",
         
         # B2 - Mini 5 Portas
-        "Mini": "B2",
-        "Mini 5 Doors": "B2",
-        "Mini 5 Portas": "B2",
+        "mini": "B2",
+        "mini 5 doors": "B2",
+        "mini 5 portas": "B2",
         
         # D - Economy
-        "Economy": "D",
-        "Económico": "D",
-        "Compact": "D",
+        "economy": "D",
+        "económico": "D",
+        "compact": "D",
         
         # E1 - Mini Automatic
-        "Mini Automatic": "E1",
-        "Mini Auto": "E1",
+        "mini automatic": "E1",
+        "mini auto": "E1",
         
         # E2 - Economy Automatic
-        "Economy Automatic": "E2",
-        "Económico Automatic": "E2",
+        "economy automatic": "E2",
+        "económico automatic": "E2",
         
         # F - SUV
-        "SUV": "F",
+        "suv": "F",
         
         # G - Premium
-        "Premium": "G",
-        "Luxury": "G",
-        "Luxo": "G",
+        "premium": "G",
+        "luxury": "G",
+        "luxo": "G",
         
         # J1 - Crossover
-        "Crossover": "J1",
+        "crossover": "J1",
         
         # J2 - Estate/Station Wagon
-        "Estate/Station Wagon": "J2",
-        "Station Wagon": "J2",
-        "Estate": "J2",
-        "Carrinha": "J2",
+        "estate/station wagon": "J2",
+        "station wagon": "J2",
+        "estate": "J2",
+        "carrinha": "J2",
         
         # L1 - SUV Automatic
-        "SUV Automatic": "L1",
-        "SUV Auto": "L1",
+        "suv automatic": "L1",
+        "suv auto": "L1",
         
         # L2 - Station Wagon Automatic
-        "Station Wagon Automatic": "L2",
-        "Estate Automatic": "L2",
-        "Carrinha Automatic": "L2",
+        "station wagon automatic": "L2",
+        "estate automatic": "L2",
+        "carrinha automatic": "L2",
         
         # M1 - 7 Seater
-        "7 Seater": "M1",
+        "7 seater": "M1",
         "7 lugares": "M1",
-        "People Carrier": "M1",
+        "people carrier": "M1",
         
         # M2 - 7 Seater Automatic
-        "7 Seater Automatic": "M2",
-        "7 lugares Automatic": "M2",
+        "7 seater automatic": "M2",
+        "7 lugares automatic": "M2",
         "7 lugares automático": "M2",
         
         # N - 9 Seater
-        "9 Seater": "N",
+        "9 seater": "N",
         "9 lugares": "N",
-        "Minivan": "N",
+        "minivan": "N",
     }
     
     return category_map.get(cat, "Others")
@@ -1161,6 +1164,17 @@ IDLE_TIMEOUT_SECONDS = 30 * 60  # 30 minutes
 @app.get("/healthz")
 async def healthz():
     return JSONResponse({"ok": True})
+
+@app.get("/debug/test-group")
+async def debug_test_group():
+    """Endpoint de teste para verificar se campo group funciona"""
+    test_items = [
+        {"car": "Test Car 1", "category": "MINI 5 Portas", "price": "10 €", "supplier": "Test", "transmission": "Manual", "photo": "", "link": ""},
+        {"car": "Test Car 2", "category": "7 lugares", "price": "20 €", "supplier": "Test", "transmission": "Manual", "photo": "", "link": ""},
+        {"car": "Test Car 3", "category": "9 Seater", "price": "30 €", "supplier": "Test", "transmission": "Manual", "photo": "", "link": ""},
+    ]
+    result = normalize_and_sort(test_items, None)
+    return JSONResponse({"ok": True, "items": result})
 
 def require_auth(request: Request):
     if not request.session.get("auth", False):
@@ -2050,6 +2064,8 @@ async def track_by_params(request: Request):
                 items = direct_items
                 # Aplicar ajustes de preço se necessário
                 items = apply_price_adjustments(items, "https://www.carjet.com")
+                # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                items = normalize_and_sort(items, supplier_priority=None)
                 # Retornar resultado
                 return _no_store_json({
                     "ok": True,
@@ -2136,6 +2152,8 @@ async def track_by_params(request: Request):
                         print(f"[SCRAPERAPI] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
                         if items:
                             print(f"[SCRAPERAPI] Primeiro: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                        # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                        items = normalize_and_sort(items, supplier_priority=None)
                         return _no_store_json({
                             "ok": True,
                             "items": items,
@@ -2263,6 +2281,8 @@ async def track_by_params(request: Request):
                                     its_dp = apply_price_adjustments(its_dp, f"https://www.carjet.com/do/list/{lang}")
                                     if its_dp:
                                         print(f"[PLAYWRIGHT] ✅ Fallback POST retornou {len(its_dp)} carros", file=sys.stderr, flush=True)
+                                        # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                                        its_dp = normalize_and_sort(its_dp, supplier_priority=None)
                                         return _no_store_json({
                                             "ok": True,
                                             "items": its_dp,
@@ -2315,6 +2335,8 @@ async def track_by_params(request: Request):
                             print(f"[PLAYWRIGHT] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
                             if items:
                                 print(f"[PLAYWRIGHT] Primeiro: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+                            # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                            items = normalize_and_sort(items, supplier_priority=None)
                             return _no_store_json({
                                 "ok": True,
                                 "items": items,
@@ -2381,6 +2403,8 @@ async def track_by_params(request: Request):
                 
                 if items:
                     print(f"[TEST MODE] {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                    # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                    items = normalize_and_sort(items, supplier_priority=None)
                     return _no_store_json({
                         "ok": True,
                         "items": items,
@@ -2508,6 +2532,8 @@ async def track_by_params(request: Request):
                     
                     if items:
                         print(f"[SELENIUM] ✅ {len(items)} carros encontrados!", file=sys.stderr, flush=True)
+                        # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                        items = normalize_and_sort(items, supplier_priority=None)
                         # SUCESSO! Retornar resultados
                         return _no_store_json({
                             "ok": True,
@@ -2540,6 +2566,8 @@ async def track_by_params(request: Request):
                             its_dp = apply_price_adjustments(its_dp, f"https://www.carjet.com/do/list/{lang}")
                             if its_dp:
                                 print(f"[SELENIUM] ✅ Fallback POST retornou {len(its_dp)} carros", file=sys.stderr, flush=True)
+                                # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+                                its_dp = normalize_and_sort(its_dp, supplier_priority=None)
                                 return _no_store_json({
                                     "ok": True,
                                     "items": its_dp,
@@ -3151,6 +3179,8 @@ async def track_by_params(request: Request):
         print(f"[API] RESPONSE: {len(items)} items, days={days}, start={start_dt.date()}, end={end_dt.date()}", file=sys.stderr, flush=True)
         if items:
             print(f"[API] First car: {items[0].get('car', 'N/A')} - {items[0].get('price', 'N/A')}", file=sys.stderr, flush=True)
+        # APLICAR NORMALIZE_AND_SORT para adicionar campo 'group'
+        items = normalize_and_sort(items, supplier_priority=None)
         return _no_store_json({
             "ok": True,
             "items": items,
@@ -5761,6 +5791,11 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
         if not group_code:
             group_code = map_category_to_group(it.get("category", ""))
         
+        # DEBUG: Log primeiro item
+        if len(detailed) == 0 and len(summary) == 0:
+            import sys
+            print(f"[DEBUG] Primeiro item: cat={it.get('category')}, group_from_it={it.get('group')}, group_mapped={group_code}", file=sys.stderr, flush=True)
+        
         row = {
             "supplier": it.get("supplier", ""),
             "car": it.get("car", ""),
@@ -5774,6 +5809,12 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
             "photo": it.get("photo", ""),
             "link": it.get("link", ""),
         }
+        
+        # DEBUG: Verificar se group está no row antes de append
+        if len(detailed) == 0 and len(summary) == 0:
+            import sys
+            print(f"[DEBUG] row tem 'group'? {'group' in row}, valor={row.get('group')}", file=sys.stderr, flush=True)
+        
         if (row["car"] or "").strip():
             detailed.append(row)
         else:
