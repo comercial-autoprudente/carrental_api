@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+# ========================================
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:02
+# ========================================
+print("\n" + "="*60, flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-00:02-FORCE", flush=True)
+print("📦 FEATURES: Vehicles + Car Groups + 60+ Cars", flush=True)
+print("="*60 + "\n", flush=True)
+
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
     try:
         return JSONResponse(
@@ -343,8 +351,9 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-28-23-31-MANUAL-DEPLOY-REQUIRED"
+APP_VERSION = "2025-01-29-00:02-FORCE"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
+# This version should appear TWICE in logs: on module load + on startup event
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
