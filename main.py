@@ -6633,11 +6633,33 @@ def _ensure_vehicle_name_overrides_table():
     except Exception as e:
         print(f"Erro ao criar tabela vehicle_name_overrides: {e}")
 
+def _ensure_vehicle_images_table():
+    """Garante que a tabela de imagens de veículos existe"""
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute("""
+                    CREATE TABLE IF NOT EXISTS vehicle_images (
+                        vehicle_key TEXT PRIMARY KEY,
+                        image_data BLOB NOT NULL,
+                        content_type TEXT DEFAULT 'image/jpeg',
+                        source_url TEXT,
+                        downloaded_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                con.commit()
+            finally:
+                con.close()
+    except Exception as e:
+        print(f"Erro ao criar tabela vehicle_images: {e}")
+
 @app.on_event("startup")
 async def startup_vehicle_photos():
     """Inicializar tabelas de veículos na startup"""
     _ensure_vehicle_photos_table()
     _ensure_vehicle_name_overrides_table()
+    _ensure_vehicle_images_table()
 
 @app.post("/api/vehicles/{vehicle_name}/photo/upload")
 async def upload_vehicle_photo(vehicle_name: str, request: Request, file: UploadFile = File(...)):
@@ -7189,6 +7211,226 @@ async def get_vehicle_name_overrides(request: Request):
             "ok": True,
             "overrides": overrides,
             "total": len(overrides)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+# ============================================================
+# VEHICLE IMAGES - Download e Storage
+# ============================================================
+
+@app.post("/api/vehicles/images/download")
+async def download_vehicle_images(request: Request):
+    """Download automático de todas as imagens de veículos dos URLs"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES
+        import httpx
+        
+        downloaded = 0
+        skipped = 0
+        errors = []
+        
+        # Mapear veículos para URLs de imagens (simplificado - expandir conforme necessário)
+        image_mappings = {
+            'fiat 500 cabrio': 'https://www.carjet.com/cdn/img/cars/M/car_L154.jpg',
+            'fiat 500': 'https://www.carjet.com/cdn/img/cars/M/car_C25.jpg',
+            'renault clio': 'https://www.carjet.com/cdn/img/cars/M/car_C04.jpg',
+            'toyota aygo': 'https://www.carjet.com/cdn/img/cars/M/car_C29.jpg',
+            'citroen c1': 'https://www.carjet.com/cdn/img/cars/M/car_C96.jpg',
+        }
+        
+        for vehicle_key in VEHICLES.keys():
+            try:
+                # Verificar se já existe
+                with _db_lock:
+                    con = _db_connect()
+                    try:
+                        existing = con.execute("SELECT vehicle_key FROM vehicle_images WHERE vehicle_key = ?", (vehicle_key,)).fetchone()
+                        if existing:
+                            skipped += 1
+                            continue
+                    finally:
+                        con.close()
+                
+                # Buscar URL da imagem
+                image_url = image_mappings.get(vehicle_key)
+                if not image_url:
+                    continue
+                
+                # Download da imagem
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.get(image_url)
+                    if response.status_code == 200:
+                        image_data = response.content
+                        content_type = response.headers.get('content-type', 'image/jpeg')
+                        
+                        # Salvar na BD
+                        with _db_lock:
+                            con = _db_connect()
+                            try:
+                                con.execute("""
+                                    INSERT INTO vehicle_images (vehicle_key, image_data, content_type, source_url, downloaded_at)
+                                    VALUES (?, ?, ?, ?, datetime('now'))
+                                """, (vehicle_key, image_data, content_type, image_url))
+                                con.commit()
+                                downloaded += 1
+                            finally:
+                                con.close()
+            except Exception as e:
+                errors.append(f"{vehicle_key}: {str(e)}")
+        
+        return _no_store_json({
+            "ok": True,
+            "downloaded": downloaded,
+            "skipped": skipped,
+            "errors": errors[:10]
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+# ============================================================
+# EXPORT/IMPORT - Base de Dados Completa
+# ============================================================
+
+@app.get("/api/export/config")
+async def export_config(request: Request):
+    """Exporta configuração completa: veículos, imagens, overrides"""
+    require_auth(request)
+    try:
+        import base64
+        from datetime import datetime
+        
+        export_data = {
+            "version": "1.0",
+            "exported_at": datetime.utcnow().isoformat(),
+            "vehicles": {},
+            "name_overrides": [],
+            "images": {}
+        }
+        
+        # 1. Exportar VEHICLES
+        try:
+            from carjet_direct import VEHICLES
+            export_data["vehicles"] = dict(VEHICLES)
+        except Exception as e:
+            print(f"Aviso: não foi possível exportar VEHICLES: {e}")
+        
+        # 2. Exportar name overrides
+        with _db_lock:
+            con = _db_connect()
+            try:
+                rows = con.execute("SELECT original_name, edited_name, updated_at FROM vehicle_name_overrides").fetchall()
+                export_data["name_overrides"] = [
+                    {
+                        "original_name": row[0],
+                        "edited_name": row[1],
+                        "updated_at": row[2]
+                    }
+                    for row in rows
+                ]
+            finally:
+                con.close()
+        
+        # 3. Exportar imagens (como Base64)
+        with _db_lock:
+            con = _db_connect()
+            try:
+                rows = con.execute("SELECT vehicle_key, image_data, content_type, source_url FROM vehicle_images").fetchall()
+                for row in rows:
+                    vehicle_key = row[0]
+                    image_data = row[1]
+                    content_type = row[2]
+                    source_url = row[3]
+                    
+                    # Converter para Base64
+                    image_base64 = base64.b64encode(image_data).decode('utf-8')
+                    
+                    export_data["images"][vehicle_key] = {
+                        "data": image_base64,
+                        "content_type": content_type,
+                        "source_url": source_url
+                    }
+            finally:
+                con.close()
+        
+        # Retornar como JSON para download
+        return JSONResponse(
+            content=export_data,
+            headers={
+                "Content-Disposition": f"attachment; filename=carrental_config_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
+            }
+        )
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.post("/api/import/config")
+async def import_config(request: Request):
+    """Importa configuração completa de um ficheiro JSON"""
+    require_auth(request)
+    try:
+        import base64
+        
+        body = await request.json()
+        
+        if not body or "version" not in body:
+            return _no_store_json({"ok": False, "error": "Ficheiro de configuração inválido"}, 400)
+        
+        imported = {
+            "name_overrides": 0,
+            "images": 0
+        }
+        
+        # 1. Importar name overrides
+        if "name_overrides" in body:
+            with _db_lock:
+                con = _db_connect()
+                try:
+                    for override in body["name_overrides"]:
+                        con.execute("""
+                            INSERT INTO vehicle_name_overrides (original_name, edited_name, updated_at)
+                            VALUES (?, ?, ?)
+                            ON CONFLICT(original_name) DO UPDATE SET
+                                edited_name = excluded.edited_name,
+                                updated_at = excluded.updated_at
+                        """, (override["original_name"], override["edited_name"], override.get("updated_at", "now")))
+                        imported["name_overrides"] += 1
+                    con.commit()
+                finally:
+                    con.close()
+        
+        # 2. Importar imagens
+        if "images" in body:
+            with _db_lock:
+                con = _db_connect()
+                try:
+                    for vehicle_key, image_info in body["images"].items():
+                        # Converter de Base64 para bytes
+                        image_data = base64.b64decode(image_info["data"])
+                        content_type = image_info.get("content_type", "image/jpeg")
+                        source_url = image_info.get("source_url", "")
+                        
+                        con.execute("""
+                            INSERT INTO vehicle_images (vehicle_key, image_data, content_type, source_url, downloaded_at)
+                            VALUES (?, ?, ?, ?, datetime('now'))
+                            ON CONFLICT(vehicle_key) DO UPDATE SET
+                                image_data = excluded.image_data,
+                                content_type = excluded.content_type,
+                                source_url = excluded.source_url,
+                                downloaded_at = excluded.downloaded_at
+                        """, (vehicle_key, image_data, content_type, source_url))
+                        imported["images"] += 1
+                    con.commit()
+                finally:
+                    con.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": "Configuração importada com sucesso",
+            "imported": imported
         })
     except Exception as e:
         import traceback
