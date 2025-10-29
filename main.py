@@ -251,7 +251,7 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                 # Only add if we have a price
                 if price_text:
                     # Mapear categoria para código de grupo
-                    group_code = map_category_to_group(category)
+                    group_code = map_category_to_group(category, car)
                     items.append({
                         "id": idx,
                         "car": car,
@@ -812,18 +812,41 @@ def _verify_password(pw: str, stored: str) -> bool:
     except Exception:
         return False
 
-def map_category_to_group(category: str) -> str:
+def map_category_to_group(category: str, car_name: str = "") -> str:
     """
     Mapeia categorias descritivas para códigos de grupos definidos:
     B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others
     
     CASE-INSENSITIVE: Converte para lowercase para comparação
+    
+    B1 vs B2 LOGIC (baseado em LUGARES, não PORTAS):
+    - B1 = Mini 4 LUGARES (Fiat 500, Peugeot 108, C1, etc)
+    - B2 = Mini 5 LUGARES (Fiat Panda, Toyota Aygo, VW Up, etc)
     """
     if not category:
         return "Others"
     
     # Converter para lowercase para mapeamento case-insensitive
     cat = category.strip().lower()
+    car_lower = car_name.lower() if car_name else ""
+    
+    # IMPORTANTE: Carros específicos de 4 LUGARES devem ser B1
+    # mesmo que o CarJet os categorize como "MINI 5 Portas"
+    b1_4_lugares_models = [
+        'fiat 500', 'fiat500',
+        'peugeot 108', 'peugeot108',
+        'citroen c1', 'citroën c1', 'c1',
+    ]
+    
+    # Se categoria é "mini" OU contém "mini", verificar modelo específico
+    if 'mini' in cat and not 'countryman' in car_lower:
+        # Verificar se é um modelo de 4 lugares (B1)
+        for model in b1_4_lugares_models:
+            if model in car_lower:
+                return "B1"
+        # Se não é B1 específico, é B2 (5 lugares)
+        # Modelos B2: Fiat Panda, Toyota Aygo, VW Up, Hyundai i10, Kia Picanto, etc
+        return "B2"
     
     # Mapeamento direto (TUDO EM LOWERCASE)
     category_map = {
@@ -3743,7 +3766,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 except Exception:
                     photo_url = ""
                 # Mapear categoria para código de grupo
-                group_code = map_category_to_group(display_category)
+                group_code = map_category_to_group(display_category, "")
                 summary_items.append({
                     "id": idx,
                     "car": "",
@@ -3816,7 +3839,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                         else:
                             display_category = f"{display_category} Automatic"
                 # Mapear categoria para código de grupo
-                group_code = map_category_to_group(display_category)
+                group_code = map_category_to_group(display_category, "")
                 summary_items.append({
                     "id": idx,
                     "car": "",
@@ -4659,7 +4682,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 cards_blocked += 1
                 continue
             # Mapear categoria para código de grupo
-            group_code = map_category_to_group(category)
+            group_code = map_category_to_group(category, car_name)
             items.append({
                 "id": idx,
                 "car": car_name,
@@ -4751,7 +4774,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
         # detect currency symbol present in the text
         curr = "EUR" if re.search(r"EUR", price_text, re.I) else ("EUR" if "€" in price_text else "")
         # Mapear categoria para código de grupo
-        group_code = map_category_to_group(category)
+        group_code = map_category_to_group(category, car_name)
         items.append({
             "id": idx,
             "car": car_name,
@@ -5801,7 +5824,7 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
         # Se não tiver grupo definido, mapear a partir da categoria
         group_code = it.get("group", "")
         if not group_code:
-            group_code = map_category_to_group(it.get("category", ""))
+            group_code = map_category_to_group(it.get("category", ""), it.get("car", ""))
         
         # DEBUG: Log primeiro item
         if len(detailed) == 0 and len(summary) == 0:
