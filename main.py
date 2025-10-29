@@ -1327,6 +1327,168 @@ async def setup_admin_action(
         finally:
             con.close()
 
+@app.get("/setup-users", response_class=HTMLResponse)
+async def setup_users_page(request: Request):
+    """Create multiple users at once (only if DB is empty)"""
+    with _db_lock:
+        con = _db_connect()
+        try:
+            cur = con.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+            if count > 0:
+                return HTMLResponse("""
+                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                        <h1>❌ Setup Already Complete</h1>
+                        <p>Users already exist.</p>
+                        <a href="/login" style="color: #007bff;">Go to Login</a>
+                    </body></html>
+                """)
+        finally:
+            con.close()
+    
+    return HTMLResponse("""
+        <html>
+        <head>
+            <title>Setup Multiple Users</title>
+            <style>
+                body { font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; }
+                h1 { color: #333; }
+                .user-row { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+                input, select { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+                label { display: block; margin-top: 10px; font-weight: bold; }
+                button { background: #007bff; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; margin-top: 20px; }
+                button:hover { background: #0056b3; }
+                .note { background: #fff3cd; padding: 10px; border-left: 4px solid #ffc107; margin: 20px 0; }
+            </style>
+        </head>
+        <body>
+            <h1>🔧 Setup Multiple Users</h1>
+            <div class="note">
+                <strong>⚠️ NOTA:</strong> Todos os users serão criados com a MESMA password inicial.
+                Depois podes alterar individualmente em /admin/users.
+            </div>
+            
+            <form method="post" action="/setup-users">
+                <label>Password Inicial (para todos os users):</label>
+                <input type="password" name="initial_password" required placeholder="Mínimo 8 caracteres">
+                
+                <h3>User 1: admin</h3>
+                <div class="user-row">
+                    <input type="hidden" name="username_1" value="admin">
+                    <label>Email:</label>
+                    <input type="email" name="email_1" value="admin@example.com">
+                    <label>First Name:</label>
+                    <input type="text" name="first_name_1" value="Admin">
+                    <label>Is Admin:</label>
+                    <select name="is_admin_1">
+                        <option value="1" selected>Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                
+                <h3>User 2: carlpac82</h3>
+                <div class="user-row">
+                    <input type="hidden" name="username_2" value="carlpac82">
+                    <label>Email:</label>
+                    <input type="email" name="email_2" value="carlpac82@example.com">
+                    <label>First Name:</label>
+                    <input type="text" name="first_name_2" value="Carlos">
+                    <label>Is Admin:</label>
+                    <select name="is_admin_2">
+                        <option value="1" selected>Yes</option>
+                        <option value="0">No</option>
+                    </select>
+                </div>
+                
+                <h3>User 3: dprudente</h3>
+                <div class="user-row">
+                    <input type="hidden" name="username_3" value="dprudente">
+                    <label>Email:</label>
+                    <input type="email" name="email_3" value="dprudente@example.com">
+                    <label>First Name:</label>
+                    <input type="text" name="first_name_3" value="Daniela">
+                    <label>Is Admin:</label>
+                    <select name="is_admin_3">
+                        <option value="1">Yes</option>
+                        <option value="0" selected>No</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Create All Users</button>
+            </form>
+        </body>
+        </html>
+    """)
+
+@app.post("/setup-users")
+async def setup_users_action(request: Request):
+    """Create multiple users at once"""
+    form_data = await request.form()
+    initial_password = form_data.get("initial_password", "").strip()
+    
+    if len(initial_password) < 8:
+        return HTMLResponse("""
+            <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                <h1>❌ Error</h1>
+                <p>Password must be at least 8 characters.</p>
+                <a href="/setup-users">Go Back</a>
+            </body></html>
+        """)
+    
+    with _db_lock:
+        con = _db_connect()
+        try:
+            # Check if any users exist
+            cur = con.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+            if count > 0:
+                return HTMLResponse("""
+                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                        <h1>❌ Setup Already Complete</h1>
+                        <p>Users already exist.</p>
+                        <a href="/login">Go to Login</a>
+                    </body></html>
+                """)
+            
+            # Create users
+            pwd_hash = _hash_password(initial_password)
+            users_created = []
+            
+            for i in range(1, 4):
+                username = form_data.get(f"username_{i}", "").strip()
+                email = form_data.get(f"email_{i}", "").strip()
+                first_name = form_data.get(f"first_name_{i}", "").strip()
+                is_admin = int(form_data.get(f"is_admin_{i}", "0"))
+                
+                if username:
+                    con.execute(
+                        "INSERT INTO users (username, password_hash, email, first_name, is_admin, enabled) VALUES (?, ?, ?, ?, ?, ?)",
+                        (username, pwd_hash, email, first_name, is_admin, 1)
+                    )
+                    users_created.append(username)
+            
+            con.commit()
+            
+            users_list = "<br>".join([f"• {u}" for u in users_created])
+            
+            return HTMLResponse(f"""
+                <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                    <h1>✅ Users Created Successfully!</h1>
+                    <p><strong>Created {len(users_created)} users:</strong></p>
+                    <p>{users_list}</p>
+                    <p style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px;">
+                        <strong>⚠️ IMPORTANTE:</strong><br>
+                        Todos os users têm a MESMA password inicial.<br>
+                        Depois de fazer login, altera as passwords em /admin/users.
+                    </p>
+                    <a href="/login" style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+                        Go to Login
+                    </a>
+                </body></html>
+            """)
+        finally:
+            con.close()
+
 @app.post("/logout")
 async def logout_action(request: Request):
     try:
