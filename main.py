@@ -6597,11 +6597,11 @@ async def export_configuration(request: Request):
         with _db_lock:
             conn = _db_connect()
             try:
-                users_rows = conn.execute("SELECT username, password FROM users").fetchall()
+                users_rows = conn.execute("SELECT username, password_hash FROM users").fetchall()
             finally:
                 conn.close()
         
-        users_data = [{"username": r[0], "password": r[1]} for r in users_rows]
+        users_data = [{"username": r[0], "password_hash": r[1]} for r in users_rows]
         
         # Exportar fotos (em base64 para incluir no JSON)
         photos_data = {}
@@ -6702,9 +6702,10 @@ async def import_configuration(request: Request, file: UploadFile = File(...)):
                 try:
                     for user in config["users"]:
                         # Inserir ou atualizar user
+                        password_hash = user.get("password_hash") or user.get("password")
                         conn.execute(
-                            "INSERT OR REPLACE INTO users (username, password) VALUES (?, ?)",
-                            (user["username"], user["password"])
+                            "INSERT OR REPLACE INTO users (username, password_hash) VALUES (?, ?)",
+                            (user["username"], password_hash)
                         )
                         imported_users += 1
                     conn.commit()
