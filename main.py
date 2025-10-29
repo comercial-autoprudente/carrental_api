@@ -6179,3 +6179,68 @@ async def get_history(request: Request):
         for r in rows
     ]
     return JSONResponse({"ok": True, "count": len(items), "items": items})
+
+# ============================================================
+# VEHICLES MANAGEMENT ENDPOINTS
+# ============================================================
+
+@app.get("/api/vehicles")
+async def get_vehicles(request: Request):
+    """Retorna todos os veículos mapeados no dicionário VEHICLES"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES
+        
+        # Organizar por categoria
+        by_category = {}
+        for car, category in VEHICLES.items():
+            if category not in by_category:
+                by_category[category] = []
+            by_category[category].append(car)
+        
+        # Ordenar categorias e carros
+        for cat in by_category:
+            by_category[cat] = sorted(by_category[cat])
+        
+        return _no_store_json({
+            "ok": True,
+            "total": len(VEHICLES),
+            "vehicles": dict(sorted(VEHICLES.items())),
+            "by_category": dict(sorted(by_category.items())),
+            "categories": sorted(set(VEHICLES.values()))
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+
+@app.get("/api/vehicles/search")
+async def search_vehicles(request: Request, q: str = ""):
+    """Busca veículos no dicionário VEHICLES"""
+    require_auth(request)
+    try:
+        from carjet_direct import VEHICLES, detect_category_from_car
+        
+        query = q.lower().strip()
+        if not query:
+            return _no_store_json({"ok": False, "error": "Query parameter 'q' is required"}, 400)
+        
+        # Buscar matches
+        matches = {}
+        for car, category in VEHICLES.items():
+            if query in car:
+                matches[car] = category
+        
+        # Testar categoria usando a função
+        detected_category = detect_category_from_car(q, '')
+        
+        return _no_store_json({
+            "ok": True,
+            "query": q,
+            "matches": matches,
+            "detected_category": detected_category,
+            "in_vehicles": q.lower() in VEHICLES
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
