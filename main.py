@@ -6494,6 +6494,61 @@ async def search_vehicles(request: Request, q: str = ""):
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
 
+@app.post("/api/vehicles/save")
+async def save_vehicle(request: Request):
+    """Salva ou atualiza um veículo no sistema"""
+    require_auth(request)
+    try:
+        body = await request.json()
+        
+        original_name = body.get('original_name', '').strip()
+        clean_name = body.get('clean_name', '').lower().strip()
+        category = body.get('category', '').strip()
+        
+        if not clean_name or not category:
+            return _no_store_json({"ok": False, "error": "clean_name and category are required"}, 400)
+        
+        # Salvar na tabela vehicle_name_overrides
+        with _db_lock:
+            con = _db_connect()
+            try:
+                # Verificar se já existe
+                existing = con.execute(
+                    "SELECT edited_name FROM vehicle_name_overrides WHERE original_name = ?",
+                    (original_name,)
+                ).fetchone()
+                
+                if existing:
+                    # Atualizar
+                    con.execute(
+                        "UPDATE vehicle_name_overrides SET edited_name = ?, updated_at = datetime('now') WHERE original_name = ?",
+                        (clean_name, original_name)
+                    )
+                else:
+                    # Inserir novo
+                    con.execute(
+                        "INSERT INTO vehicle_name_overrides (original_name, edited_name, updated_at) VALUES (?, ?, datetime('now'))",
+                        (original_name, clean_name)
+                    )
+                
+                con.commit()
+            finally:
+                con.close()
+        
+        # Gerar código Python para adicionar ao carjet_direct.py
+        code = f"    '{clean_name}': '{category}',"
+        
+        return _no_store_json({
+            "ok": True,
+            "message": "Vehicle saved successfully",
+            "clean_name": clean_name,
+            "category": category,
+            "code": code
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
 # ============================================================
 # ADMIN - CAR GROUPS MANAGEMENT
 # ============================================================

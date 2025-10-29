@@ -230,7 +230,7 @@
                         <p class="text-xs text-gray-500 mt-1">This is the name that will be used in the system (always lowercase)</p>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-3 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Brand</label>
                             <input type="text" id="editBrand" 
@@ -243,6 +243,16 @@
                             <input type="text" id="editModel" 
                                    class="w-full px-3 py-2 border rounded-lg" 
                                    placeholder="Ex: 3008" />
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Transmission</label>
+                            <div class="flex items-center h-10">
+                                <input type="checkbox" id="editIsAutomatic" 
+                                       class="w-5 h-5 text-[#009cb6] border-gray-300 rounded focus:ring-[#009cb6]"
+                                       onchange="updateCategoryForAutomatic()" />
+                                <label for="editIsAutomatic" class="ml-2 text-sm font-medium">Automatic</label>
+                            </div>
                         </div>
                     </div>
                     
@@ -805,7 +815,7 @@
             // Abrir modal de edição pré-preenchido para adicionar ao VEHICLES
             editingIndex = -1; // Novo veículo
             
-            document.getElementById('editOriginalName').value = cleanName + ' (do scraping)';
+            document.getElementById('editOriginalName').value = cleanName + ' (from scraping)';
             document.getElementById('editCleanName').value = cleanName;
             document.getElementById('editBrand').value = brand;
             document.getElementById('editModel').value = model;
@@ -815,6 +825,10 @@
             document.getElementById('photoFile').value = '';
             document.getElementById('codePreview').classList.add('hidden');
             document.getElementById('photoPreview').classList.add('hidden');
+            
+            // Detectar se é automático
+            const isAutomatic = /\bauto\b|\bautomático\b|\bautomatic\b/i.test(cleanName);
+            document.getElementById('editIsAutomatic').checked = isAutomatic;
             
             currentVehicleName = cleanName;
             
@@ -835,13 +849,18 @@
             document.getElementById('photoFile').value = '';
             document.getElementById('codePreview').classList.add('hidden');
             
+            // Detectar se é automático
+            const isAutomatic = /\bauto\b|\bautomático\b|\bautomatic\b/i.test(vehicle.clean) || vehicle.category.includes('Auto');
+            document.getElementById('editIsAutomatic').checked = isAutomatic;
+            
             // Carregar foto do veículo
             loadVehiclePhoto(vehicle.clean);
             
             document.getElementById('editModal').classList.remove('hidden');
         }
         
-        function saveEdit() {
+        async function saveEdit() {
+            const originalName = document.getElementById('editOriginalName').value;
             const cleanName = document.getElementById('editCleanName').value.toLowerCase().trim();
             const brand = document.getElementById('editBrand').value.toLowerCase().trim();
             const model = document.getElementById('editModel').value.toLowerCase().trim();
@@ -853,51 +872,77 @@
                 return;
             }
             
-            // Se editingIndex é -1, é um novo veículo (uncategorized)
-            if (editingIndex === -1) {
-                // Adicionar novo veículo
-                vehiclesData.push({
-                    original: cleanName,
-                    clean: cleanName,
-                    brand: brand,
-                    model: model,
-                    category: category,
-                    group: group
+            try {
+                // Salvar no backend
+                const response = await fetch('/api/vehicles/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        original_name: originalName,
+                        clean_name: cleanName,
+                        category: category
+                    })
                 });
                 
-                // Gerar código
-                const code = `    '${cleanName}': '${category}',  # Group ${group} | ${brand} ${model}`;
+                const data = await response.json();
                 
-                // Copiar código automaticamente para clipboard
-                navigator.clipboard.writeText(code).then(() => {
-                    // Mostrar mensagem de sucesso
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-                    successMsg.innerHTML = `✅ Vehicle added!<br><span class="text-sm">Code copied to clipboard</span>`;
-                    document.body.appendChild(successMsg);
-                    setTimeout(() => successMsg.remove(), 3000);
-                });
-                
-                // Fechar modal
-                closeModal();
-                
-                // Recarregar dados do servidor
-                loadVehicles();
+                if (data.ok) {
+                    // Copiar código para clipboard
+                    navigator.clipboard.writeText(data.code).then(() => {
+                        // Mostrar mensagem de sucesso
+                        const successMsg = document.createElement('div');
+                        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                        successMsg.innerHTML = `✅ Vehicle saved!<br><span class="text-sm">Code copied to clipboard</span>`;
+                        document.body.appendChild(successMsg);
+                        setTimeout(() => successMsg.remove(), 3000);
+                    });
+                    
+                    // Fechar modal
+                    closeModal();
+                    
+                    // Recarregar dados do servidor
+                    await loadVehicles();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error saving vehicle: ' + error.message);
+            }
+        }
+        
+        function updateCategoryForAutomatic() {
+            const isAutomatic = document.getElementById('editIsAutomatic').checked;
+            const categorySelect = document.getElementById('editCategory');
+            const currentCategory = categorySelect.value;
+            
+            if (isAutomatic) {
+                // Adicionar " Auto" à categoria se ainda não tiver
+                if (!currentCategory.includes('Auto')) {
+                    // Mapear para versão Auto
+                    const autoMapping = {
+                        'MINI 4 Portas': 'MINI Auto',
+                        'MINI 5 Portas': 'MINI Auto',
+                        'ECONOMY': 'ECONOMY Auto',
+                        'SUV': 'SUV Auto',
+                        'Station Wagon': 'Station Wagon Auto',
+                        '7 Lugares': '7 Lugares Auto'
+                    };
+                    
+                    const autoCategory = autoMapping[currentCategory] || currentCategory + ' Auto';
+                    categorySelect.value = autoCategory;
+                    
+                    // Atualizar grupo também
+                    const group = categoryToGroup[autoCategory] || 'E2';
+                    document.getElementById('editGroup').value = group;
+                }
             } else {
-                // Atualizar veículo existente
-                vehiclesData[editingIndex].clean = cleanName;
-                vehiclesData[editingIndex].brand = brand;
-                vehiclesData[editingIndex].model = model;
-                vehiclesData[editingIndex].category = category;
-                vehiclesData[editingIndex].group = group;
+                // Remover " Auto" da categoria
+                const manualCategory = currentCategory.replace(' Auto', '');
+                categorySelect.value = manualCategory;
                 
-                // Gerar código
-                const code = `    '${cleanName}': '${category}',  # Group ${group} | ${brand} ${model}`;
-                document.getElementById('generatedCode').textContent = code;
-                document.getElementById('codePreview').classList.remove('hidden');
-                
-                // Re-renderizar
-                renderTable();
+                // Atualizar grupo também
+                const group = categoryToGroup[manualCategory] || 'D';
+                document.getElementById('editGroup').value = group;
             }
         }
         
