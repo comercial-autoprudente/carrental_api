@@ -331,29 +331,45 @@
       function getCleanVehicleName(originalName) {
         if (!originalName) return '';
         
-        // Remove common suffixes
-        const cleaned = String(originalName)
+        console.log('[CLEAN NAME] Original:', originalName);
+        
+        // Remove common suffixes (with or without spaces!)
+        let cleaned = String(originalName)
+          // Com espaços
           .replace(/\s+ou\s+similar(es)?/gi, '')
           .replace(/\s+ou\s+semelhante(s)?/gi, '')
           .replace(/\s+or\s+similar/gi, '')
-          .replace(/\s+(pequeno|médio|grande|small|medium|large)/gi, '')
+          // SEM espaços (problema atual!)
+          .replace(/ou\s*similar(es)?/gi, '')
+          .replace(/ou\s*semelhante(s)?/gi, '')
+          .replace(/or\s*similar/gi, '')
+          // Tamanhos
+          .replace(/\s*(pequeno|médio|grande|small|medium|large)/gi, '')
+          // Vírgulas e pontos extras
+          .replace(/,\s*/g, ' ')
+          .replace(/\s+/g, ' ')
           .trim()
           .toLowerCase();
         
+        console.log('[CLEAN NAME] Cleaned:', cleaned);
+        
         // Look up in mapping
         if (vehicleNameMapping[cleaned]) {
-          // Return capitalized: "Fiat Panda"
-          return vehicleNameMapping[cleaned]
+          const result = vehicleNameMapping[cleaned]
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
+          console.log('[CLEAN NAME] Mapped:', result);
+          return result;
         }
         
         // Fallback: capitalize cleaned name
-        return cleaned
+        const result = cleaned
           .split(' ')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' ');
+        console.log('[CLEAN NAME] Fallback:', result);
+        return result;
       }
       
       // Load mapping when DOM is ready
