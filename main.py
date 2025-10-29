@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 # ========================================
-# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:40
+# ⚠️ CRITICAL VERSION CHECK - 2025-01-29-00:47
 # ========================================
 print("\n" + "="*60, flush=True)
-print("🔥 LOADING main.py - VERSION: 2025-01-29-00:40-SETUP-USERS-FIX", flush=True)
+print("🔥 LOADING main.py - VERSION: 2025-01-29-00:47-AUTO-CREATE-TABLES", flush=True)
 print("📦 FEATURES: Vehicles + Setup Users + 60+ Cars", flush=True)
-print("🔧 FIX: /setup-users and /setup-admin handle missing tables", flush=True)
+print("🔧 FIX: Auto-create users table if missing", flush=True)
 print("="*60 + "\n", flush=True)
 
 def _no_store_json(payload: Dict[str, Any], status_code: int = 200) -> JSONResponse:
@@ -352,10 +352,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
 TARGET_URL = os.getenv("TARGET_URL", "https://example.com")
 
 # App version - Change this to force Render reload
-APP_VERSION = "2025-01-29-00:40-SETUP-USERS-FIX"
+APP_VERSION = "2025-01-29-00:47-AUTO-CREATE-TABLES"
 # ⚠️ CRITICAL: If you don't see this version in Render logs, do MANUAL DEPLOY!
 # This version should appear TWICE in logs: on module load + on startup event
-# FIX: Added try/except to /setup-users and /setup-admin to handle missing tables
+# FIX: /setup-users and /setup-admin now AUTO-CREATE tables if missing
 SCRAPER_SERVICE = os.getenv("SCRAPER_SERVICE", "")
 SCRAPER_API_KEY = os.getenv("SCRAPER_API_KEY", "")
 SCRAPER_COUNTRY = os.getenv("SCRAPER_COUNTRY", "").strip()
@@ -387,7 +387,8 @@ async def startup_event():
     print(f"========================================", flush=True)
     print(f"🚀 APP STARTUP - VERSION: {APP_VERSION}", flush=True)
     print(f"📦 Features: Vehicles, Setup Users, Car Groups, 60+ Cars", flush=True)
-    print(f"🔧 FIX: /setup-users and /setup-admin endpoints working", flush=True)
+    print(f"🔧 FIX: Auto-create users table on first setup", flush=True)
+    print(f"✅ /setup-users will CREATE table automatically!", flush=True)
     print(f"========================================", flush=True)
 
 @app.exception_handler(HTTPException)
@@ -1301,17 +1302,33 @@ async def setup_admin_action(
     with _db_lock:
         con = _db_connect()
         try:
-            # Check if any users exist
-            cur = con.execute("SELECT COUNT(*) FROM users")
-            count = cur.fetchone()[0]
-            if count > 0:
-                return HTMLResponse("""
-                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                        <h1>❌ Setup Already Complete</h1>
-                        <p>Admin user already exists.</p>
-                        <a href="/login" style="color: #007bff;">Go to Login</a>
-                    </body></html>
+            # Ensure users table exists (create if missing)
+            try:
+                cur = con.execute("SELECT COUNT(*) FROM users")
+                count = cur.fetchone()[0]
+                if count > 0:
+                    return HTMLResponse("""
+                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                            <h1>❌ Setup Already Complete</h1>
+                            <p>Admin user already exists.</p>
+                            <a href="/login" style="color: #007bff;">Go to Login</a>
+                        </body></html>
+                    """)
+            except Exception:
+                # Table doesn't exist - create it
+                con.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        email TEXT,
+                        first_name TEXT,
+                        is_admin INTEGER DEFAULT 0,
+                        enabled INTEGER DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
                 """)
+                con.commit()
             
             # Create first admin user
             pwd_hash = _hash_password(password.strip())
@@ -1449,17 +1466,33 @@ async def setup_users_action(request: Request):
     with _db_lock:
         con = _db_connect()
         try:
-            # Check if any users exist
-            cur = con.execute("SELECT COUNT(*) FROM users")
-            count = cur.fetchone()[0]
-            if count > 0:
-                return HTMLResponse("""
-                    <html><body style="font-family: Arial; padding: 40px; text-align: center;">
-                        <h1>❌ Setup Already Complete</h1>
-                        <p>Users already exist.</p>
-                        <a href="/login">Go to Login</a>
-                    </body></html>
+            # Ensure users table exists (create if missing)
+            try:
+                cur = con.execute("SELECT COUNT(*) FROM users")
+                count = cur.fetchone()[0]
+                if count > 0:
+                    return HTMLResponse("""
+                        <html><body style="font-family: Arial; padding: 40px; text-align: center;">
+                            <h1>❌ Setup Already Complete</h1>
+                            <p>Users already exist.</p>
+                            <a href="/login">Go to Login</a>
+                        </body></html>
+                    """)
+            except Exception:
+                # Table doesn't exist - create it
+                con.execute("""
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE NOT NULL,
+                        password_hash TEXT NOT NULL,
+                        email TEXT,
+                        first_name TEXT,
+                        is_admin INTEGER DEFAULT 0,
+                        enabled INTEGER DEFAULT 1,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
                 """)
+                con.commit()
             
             # Create users
             pwd_hash = _hash_password(initial_password)
