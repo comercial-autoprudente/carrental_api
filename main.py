@@ -6604,32 +6604,39 @@ async def export_configuration(request: Request):
         users_data = [{"username": r[0], "password": r[1]} for r in users_rows]
         
         # Exportar fotos (em base64 para incluir no JSON)
-        _ensure_vehicle_photos_table()
         photos_data = {}
-        with _db_lock:
-            conn = _db_connect()
-            try:
-                photos_rows = conn.execute("""
-                    SELECT vehicle_name, photo_data, content_type, photo_url
-                    FROM vehicle_photos
-                """).fetchall()
-                
-                for row in photos_rows:
-                    vehicle_name = row[0]
-                    photo_data = row[1]
-                    content_type = row[2]
-                    photo_url = row[3]
+        try:
+            _ensure_vehicle_photos_table()
+            with _db_lock:
+                conn = _db_connect()
+                try:
+                    photos_rows = conn.execute("""
+                        SELECT vehicle_name, photo_data, content_type, photo_url
+                        FROM vehicle_photos
+                    """).fetchall()
                     
-                    if photo_data:
-                        # Converter BLOB para base64
-                        photo_base64 = base64.b64encode(photo_data).decode('utf-8')
-                        photos_data[vehicle_name] = {
-                            "data": photo_base64,
-                            "content_type": content_type,
-                            "url": photo_url
-                        }
-            finally:
-                conn.close()
+                    for row in photos_rows:
+                        vehicle_name = row[0]
+                        photo_data = row[1]
+                        content_type = row[2]
+                        photo_url = row[3]
+                        
+                        if photo_data:
+                            # Converter BLOB para base64
+                            photo_base64 = base64.b64encode(photo_data).decode('utf-8')
+                            photos_data[vehicle_name] = {
+                                "data": photo_base64,
+                                "content_type": content_type,
+                                "url": photo_url
+                            }
+                except sqlite3.OperationalError:
+                    # Tabela não existe, sem fotos
+                    pass
+                finally:
+                    conn.close()
+        except Exception as e:
+            # Erro ao exportar fotos, continuar sem elas
+            print(f"Warning: Could not export photos: {e}")
         
         config = {
             "version": "1.1",  # Incrementar versão
