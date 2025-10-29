@@ -46,6 +46,26 @@
             </div>
         </div>
         
+        <!-- Management Buttons -->
+        <div class="bg-gradient-to-r from-blue-50 to-yellow-50 border-2 border-[#009cb6] rounded-lg shadow-lg p-4 mb-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-[#009cb6] mb-1">📋 Category & Group Management</h3>
+                    <p class="text-sm text-gray-600">Create and manage vehicle categories and groups</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="showNewCategoryInput()" 
+                            class="px-6 py-3 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] font-semibold border-2 border-[#009cb6] shadow-lg transition-all transform hover:scale-105">
+                        ➕ New Category
+                    </button>
+                    <button onclick="showNewGroupInput()" 
+                            class="px-6 py-3 bg-[#f4ad0f] text-gray-900 rounded-lg hover:bg-[#e39e0e] font-semibold border-2 border-[#f4ad0f] shadow-lg transition-all transform hover:scale-105">
+                        ➕ New Group
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Filtros -->
         <div class="bg-white rounded-lg shadow p-4" id="filtersSection">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
