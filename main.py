@@ -6780,3 +6780,51 @@ async def get_vehicles_last_update():
         "ok": True,
         "last_update": _vehicles_last_update
     })
+
+# ============================================================
+# VEHICLE NAME MAPPING FOR FRONTEND
+# ============================================================
+
+@app.get("/api/vehicles/name-mapping")
+async def get_vehicle_name_mapping():
+    """Retorna mapeamento de nomes originais para clean names para usar na frontend"""
+    try:
+        from carjet_direct import VEHICLES
+        import re
+        
+        # Criar mapeamento inverso: original -> clean
+        name_mapping = {}
+        
+        # Para cada clean name no VEHICLES, criar variações possíveis do nome original
+        for clean_name, category in VEHICLES.items():
+            # O clean name em si
+            name_mapping[clean_name] = clean_name
+            
+            # Variações comuns do nome original
+            # Ex: "fiat 500" pode vir como "Fiat 500 ou Similar", "FIAT 500", etc
+            parts = clean_name.split()
+            if len(parts) >= 2:
+                brand = parts[0]
+                model = ' '.join(parts[1:])
+                
+                # Variações comuns
+                variations = [
+                    f"{brand} {model}",
+                    f"{brand.upper()} {model}",
+                    f"{brand.capitalize()} {model.capitalize()}",
+                    f"{brand.upper()} {model.upper()}",
+                    f"{brand.capitalize()} {model}",
+                ]
+                
+                for var in variations:
+                    name_mapping[var.lower()] = clean_name
+        
+        return _no_store_json({
+            "ok": True,
+            "mapping": name_mapping,
+            "total": len(name_mapping)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
