@@ -271,6 +271,8 @@ VEHICLES = {
     'mini cooper cabrio': 'Premium',
     'cupra formentor auto': 'SUV Auto',
     'citroen c1 auto': 'MINI Auto',
+    'fiat 500 auto': 'MINI Auto',
+    'fiat 500 4p': 'MINI 4 Portas',
 }
 
 
