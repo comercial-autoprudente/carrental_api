@@ -322,11 +322,32 @@
           if (data.ok) {
             vehicleNameMapping = data.mapping;
             console.log('[NAME MAPPING] Loaded', Object.keys(vehicleNameMapping).length, 'vehicle names');
+            return true;
           }
+          return false;
         } catch (error) {
           console.error('[NAME MAPPING] Error loading:', error);
+          return false;
         }
       }
+      
+      // Função global para recarregar mapping após editar nomes no editor
+      window.reloadVehicleMapping = async function() {
+        console.log('[NAME MAPPING] Recarregando mapeamento...');
+        const success = await loadVehicleMapping();
+        if (success) {
+          console.log('[NAME MAPPING] ✅ Mapeamento atualizado! Nova pesquisa usará nomes editados.');
+          // Mostrar notificação
+          try {
+            const notif = document.createElement('div');
+            notif.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50';
+            notif.innerHTML = '✅ Nomes de veículos atualizados!';
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+          } catch(_) {}
+        }
+        return success;
+      };
       
       function getCleanVehicleName(originalName) {
         if (!originalName) return '';

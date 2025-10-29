@@ -6614,10 +6614,30 @@ def _ensure_vehicle_photos_table():
     except Exception as e:
         print(f"Erro ao criar tabela vehicle_photos: {e}")
 
+def _ensure_vehicle_name_overrides_table():
+    """Garante que a tabela de nomes editados existe"""
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute("""
+                    CREATE TABLE IF NOT EXISTS vehicle_name_overrides (
+                        original_name TEXT PRIMARY KEY,
+                        edited_name TEXT NOT NULL,
+                        updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                con.commit()
+            finally:
+                con.close()
+    except Exception as e:
+        print(f"Erro ao criar tabela vehicle_name_overrides: {e}")
+
 @app.on_event("startup")
 async def startup_vehicle_photos():
-    """Inicializar tabela de fotos na startup"""
+    """Inicializar tabelas de veículos na startup"""
     _ensure_vehicle_photos_table()
+    _ensure_vehicle_name_overrides_table()
 
 @app.post("/api/vehicles/{vehicle_name}/photo/upload")
 async def upload_vehicle_photo(vehicle_name: str, request: Request, file: UploadFile = File(...)):
@@ -7036,27 +7056,23 @@ async def get_vehicles_last_update():
 
 @app.get("/api/vehicles/name-mapping")
 async def get_vehicle_name_mapping():
-    """Retorna mapeamento de nomes originais para clean names para usar na frontend"""
+    """Retorna mapeamento de nomes originais para clean names para usar na frontend
+    INCLUI nomes editados guardados na base de dados"""
     try:
         from carjet_direct import VEHICLES
         import re
         
-        # Criar mapeamento inverso: original -> clean
+        # 1. Criar mapeamento base do VEHICLES
         name_mapping = {}
         
-        # Para cada clean name no VEHICLES, criar variações possíveis do nome original
         for clean_name, category in VEHICLES.items():
-            # O clean name em si
             name_mapping[clean_name] = clean_name
             
-            # Variações comuns do nome original
-            # Ex: "fiat 500" pode vir como "Fiat 500 ou Similar", "FIAT 500", etc
             parts = clean_name.split()
             if len(parts) >= 2:
                 brand = parts[0]
                 model = ' '.join(parts[1:])
                 
-                # Variações comuns
                 variations = [
                     f"{brand} {model}",
                     f"{brand.upper()} {model}",
@@ -7068,6 +7084,23 @@ async def get_vehicle_name_mapping():
                 for var in variations:
                     name_mapping[var.lower()] = clean_name
         
+        # 2. Aplicar OVERRIDES da base de dados (nomes editados pelo utilizador)
+        try:
+            with _db_lock:
+                con = _db_connect()
+                try:
+                    rows = con.execute("SELECT original_name, edited_name FROM vehicle_name_overrides").fetchall()
+                    for original, edited in rows:
+                        # Normalizar chave
+                        key = original.lower().strip()
+                        # Aplicar override
+                        name_mapping[key] = edited
+                        print(f"[NAME MAPPING] Override aplicado: '{original}' → '{edited}'")
+                finally:
+                    con.close()
+        except Exception as db_err:
+            print(f"[NAME MAPPING] Aviso: Não foi possível carregar overrides da BD: {db_err}")
+        
         return _no_store_json({
             "ok": True,
             "mapping": name_mapping,
@@ -7077,3 +7110,86 @@ async def get_vehicle_name_mapping():
         import traceback
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
 
+@app.post("/api/vehicles/name-overrides")
+async def save_vehicle_name_override(request: Request):
+    """Salva ou atualiza um nome editado de veículo"""
+    require_auth(request)
+    try:
+        body = await request.json()
+        original_name = body.get("original_name", "").strip()
+        edited_name = body.get("edited_name", "").strip()
+        
+        if not original_name or not edited_name:
+            return _no_store_json({"ok": False, "error": "original_name e edited_name são obrigatórios"}, 400)
+        
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute("""
+                    INSERT INTO vehicle_name_overrides (original_name, edited_name, updated_at)
+                    VALUES (?, ?, datetime('now'))
+                    ON CONFLICT(original_name) DO UPDATE SET
+                        edited_name = excluded.edited_name,
+                        updated_at = excluded.updated_at
+                """, (original_name, edited_name))
+                con.commit()
+            finally:
+                con.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": f"Nome editado salvo: '{original_name}' → '{edited_name}'"
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.delete("/api/vehicles/name-overrides/{original_name}")
+async def delete_vehicle_name_override(original_name: str, request: Request):
+    """Remove um override de nome de veículo"""
+    require_auth(request)
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                con.execute("DELETE FROM vehicle_name_overrides WHERE original_name = ?", (original_name,))
+                con.commit()
+            finally:
+                con.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "message": f"Override removido: '{original_name}'"
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
+
+@app.get("/api/vehicles/name-overrides")
+async def get_vehicle_name_overrides(request: Request):
+    """Lista todos os overrides de nomes de veículos"""
+    require_auth(request)
+    try:
+        with _db_lock:
+            con = _db_connect()
+            try:
+                rows = con.execute("SELECT original_name, edited_name, updated_at FROM vehicle_name_overrides ORDER BY updated_at DESC").fetchall()
+                overrides = [
+                    {
+                        "original_name": row[0],
+                        "edited_name": row[1],
+                        "updated_at": row[2]
+                    }
+                    for row in rows
+                ]
+            finally:
+                con.close()
+        
+        return _no_store_json({
+            "ok": True,
+            "overrides": overrides,
+            "total": len(overrides)
+        })
+    except Exception as e:
+        import traceback
+        return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
