@@ -568,6 +568,11 @@
                     const isUncat = vehicle.isUncategorized || false;
                     const bgClass = isUncat ? 'bg-yellow-50 hover:bg-yellow-100' : 'hover:bg-gray-50';
                     
+                    // Capitalize clean name (Brand Model)
+                    const cleanNameCapitalized = vehicle.clean.split(' ').map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+                    ).join(' ');
+                    
                     // Get group from category
                     const categoryClean = vehicle.category.replace(' (sugestão)', '');
                     const group = categoryToGroup[categoryClean] || '—';
@@ -589,7 +594,7 @@
                             <img src="${photoUrl}" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2740%27%3E%3Crect width=%2760%27 height=%2740%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2712%27%3E🚗%3C/text%3E%3C/svg%3E';" alt="${vehicle.clean}" class="h-12 w-auto rounded border shadow-sm">
                         </td>
                         <td class="px-6 py-4"><div class="text-sm text-gray-500">${vehicle.original}</div></td>
-                        <td class="px-6 py-4"><div class="text-sm font-mono ${isUncat?'text-yellow-600':'text-blue-600'} font-semibold">${vehicle.clean}</div></td>
+                        <td class="px-6 py-4"><div class="text-sm ${isUncat?'text-yellow-600':'text-blue-600'} font-semibold">${cleanNameCapitalized}</div></td>
                         <td class="px-6 py-4 whitespace-nowrap">${groupBadge}</td>
                         <td class="px-6 py-4">${badge}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${editBtn}</td>
