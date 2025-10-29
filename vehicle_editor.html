@@ -15,6 +15,9 @@
             </div>
             <div class="flex items-center gap-4 text-white text-sm">
                 <span id="totalVehicles">0</span> veículos
+                <button onclick="downloadAllImages()" class="px-3 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg font-semibold">
+                    📸 Baixar Fotos
+                </button>
                 <button onclick="exportConfiguration()" class="px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">
                     📤 Exportar Config
                 </button>
@@ -1042,6 +1045,46 @@
             
             // Limpar input
             event.target.value = '';
+        }
+        
+        // Função para baixar todas as imagens
+        async function downloadAllImages() {
+            if (!confirm('📸 Baixar todas as fotos dos veículos?\n\nIsto pode demorar alguns minutos (~115 imagens).')) {
+                return;
+            }
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⏳ Baixando...';
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                const response = await fetch('/api/vehicles/images/download', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert(`✅ Download concluído!\n\n` +
+                          `Baixadas: ${data.downloaded}\n` +
+                          `Já existiam: ${data.skipped}\n` +
+                          `Erros: ${data.errors?.length || 0}\n\n` +
+                          `As fotos agora aparecem nas fichas dos veículos!`);
+                    
+                    // Recarregar tabela para mostrar as fotos
+                    renderTable();
+                } else {
+                    alert('❌ Erro ao baixar fotos: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Erro: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
         }
         
         // Carregar ao iniciar
