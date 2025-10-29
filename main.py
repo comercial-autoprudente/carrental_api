@@ -1956,6 +1956,36 @@ async def track_by_params(request: Request):
         # MODO REAL: Usar ScraperAPI para scraping dinâmico
         if TEST_MODE_LOCAL == 0 and SCRAPER_API_KEY:
             try:
+        # PRIORIDADE 1: Tentar método direto (sem browser) - NOVO!
+        try:
+            from carjet_direct import scrape_carjet_direct
+            print(f"[DIRECT] Tentando método direto (sem browser)...", file=sys.stderr, flush=True)
+            
+            direct_items = scrape_carjet_direct(location, start_dt, end_dt, quick)
+            
+            if direct_items and len(direct_items) > 0:
+                print(f"[DIRECT] ✅ Sucesso! {len(direct_items)} carros encontrados", file=sys.stderr, flush=True)
+                items = direct_items
+                # Aplicar ajustes de preço se necessário
+                items = apply_price_adjustments(items, "https://www.carjet.com")
+                # Retornar resultado
+                return _no_store_json({
+                    "ok": True,
+                    "items": items,
+                    "location": location,
+                    "start_date": start_dt.date().isoformat(),
+                    "start_time": start_dt.strftime("%H:%M"),
+                    "end_date": end_dt.date().isoformat(),
+                    "end_time": end_dt.strftime("%H:%M"),
+                    "days": days,
+                    "method": "direct_api",
+                })
+            else:
+                print(f"[DIRECT] ⚠️ Método direto retornou 0 items, tentando fallback...", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"[DIRECT] ❌ Erro no método direto: {e}", file=sys.stderr, flush=True)
+            print(f"[DIRECT] Continuando para métodos alternativos...", file=sys.stderr, flush=True)
+        
                 import httpx
                 import sys
                 from urllib.parse import urlencode
