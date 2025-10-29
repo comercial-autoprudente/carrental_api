@@ -54,6 +54,162 @@ SUPPLIER_MAP = {
 }
 
 
+# Mapeamento manual de veículos para categorias
+VEHICLES = {
+    # MINI 4 Portas
+    'fiat 500 4p': 'MINI 4 Portas',
+    
+    # MINI 5 Portas
+    'fiat 500': 'MINI 5 Portas',
+    'citroen c1': 'MINI 5 Portas',
+    'toyota aygo': 'MINI 5 Portas',
+    'volkswagen up': 'MINI 5 Portas',
+    'peugeot 108': 'MINI 5 Portas',
+    'hyundai i10': 'MINI 5 Portas',
+    'kia picanto': 'MINI 5 Portas',
+    'fiat panda': 'MINI 5 Portas',
+    
+    # MINI Auto
+    'fiat 500 auto': 'MINI Auto',
+    'citroen c1 auto': 'MINI Auto',
+    'toyota aygo auto': 'MINI Auto',
+    'peugeot 108 auto': 'MINI Auto',
+    
+    # ECONOMY
+    'renault clio': 'ECONOMY',
+    'peugeot 208': 'ECONOMY',
+    'ford fiesta': 'ECONOMY',
+    'seat ibiza': 'ECONOMY',
+    'hyundai i20': 'ECONOMY',
+    'opel corsa': 'ECONOMY',
+    'volkswagen polo': 'ECONOMY',
+    'nissan micra': 'ECONOMY',
+    'kia ceed': 'ECONOMY',
+    'dacia sandero': 'ECONOMY',
+    'skoda fabia': 'ECONOMY',
+    'renault twingo': 'ECONOMY',
+    'citroen c3': 'ECONOMY',
+    
+    # ECONOMY Auto
+    'renault clio auto': 'ECONOMY Auto',
+    'peugeot 208 auto': 'ECONOMY Auto',
+    'ford fiesta auto': 'ECONOMY Auto',
+    'seat ibiza auto': 'ECONOMY Auto',
+    'hyundai i20 auto': 'ECONOMY Auto',
+    'opel corsa auto': 'ECONOMY Auto',
+    'peugeot 308 auto': 'ECONOMY Auto',
+    'toyota corolla auto': 'ECONOMY Auto',
+    
+    # SUV
+    'nissan juke': 'SUV',
+    'peugeot 2008': 'SUV',
+    'renault captur': 'SUV',
+    'kia stonic': 'SUV',
+    'hyundai kauai': 'SUV',
+    'hyundai kona': 'SUV',
+    'ford kuga': 'SUV',
+    'peugeot 3008': 'SUV',
+    'nissan qashqai': 'SUV',
+    'kia sportage': 'SUV',
+    'seat ateca': 'SUV',
+    'renault austral': 'SUV',
+    'skoda kamiq': 'SUV',
+    'hyundai tucson': 'SUV',
+    
+    # SUV Auto
+    'peugeot 3008 auto': 'SUV Auto',
+    'toyota chr auto': 'SUV Auto',
+    'toyota c-hr auto': 'SUV Auto',
+    'ford ecosport auto': 'SUV Auto',
+    'opel crossland x auto': 'SUV Auto',
+    'volkswagen tiguan auto': 'SUV Auto',
+    'skoda karoq auto': 'SUV Auto',
+    'citroen c3 aircross auto': 'SUV Auto',
+    'volkswagen t-cross auto': 'SUV Auto',
+    'vw t-cross auto': 'SUV Auto',
+    'fiat 500x auto': 'SUV Auto',
+    
+    # Crossover
+    'fiat 500x': 'Crossover',
+    'volkswagen t-cross': 'Crossover',
+    'vw t-cross': 'Crossover',
+    'volkswagen taigo': 'Crossover',
+    'vw taigo': 'Crossover',
+    'jeep avenger': 'Crossover',
+    'citroen c3 aircross': 'Crossover',
+    'seat arona': 'Crossover',
+    'ford puma': 'Crossover',
+    'fiat 500l': 'Crossover',
+    'citroen c4 cactus': 'Crossover',
+    'mazda cx-3': 'Crossover',
+    'mitsubishi asx': 'Crossover',
+    
+    # Premium
+    'mini cooper': 'Premium',
+    'mini countryman': 'Premium',
+    'audi a1': 'Premium',
+    'cupra formentor': 'Premium',
+    'ds 4': 'Premium',
+    
+    # Station Wagon
+    'renault clio sw': 'Station Wagon',
+    'opel astra sw': 'Station Wagon',
+    'skoda fabia sw': 'Station Wagon',
+    'seat leon sw': 'Station Wagon',
+    'ford focus sw': 'Station Wagon',
+    'peugeot 308 sw': 'Station Wagon',
+    'volkswagen golf sw': 'Station Wagon',
+    'vw golf sw': 'Station Wagon',
+    'skoda octavia': 'Station Wagon',
+    'skoda octavia sw': 'Station Wagon',
+    'volkswagen passat': 'Station Wagon',
+    'vw passat': 'Station Wagon',
+    'fiat tipo sw': 'Station Wagon',
+    
+    # Station Wagon Auto
+    'peugeot 308 sw auto': 'Station Wagon Auto',
+    'toyota corolla sw auto': 'Station Wagon Auto',
+    'cupra leon sw auto': 'Station Wagon Auto',
+    
+    # 7 Lugares
+    'peugeot 5008': '7 Lugares',
+    'peugeot rifter': '7 Lugares',
+    'dacia lodgy': '7 Lugares',
+    'opel zafira': '7 Lugares',
+    'renault grand scenic': '7 Lugares',
+    'citroen grand picasso': '7 Lugares',
+    'citroen c4 grand picasso': '7 Lugares',
+    'dacia jogger': '7 Lugares',
+    
+    # 7 Lugares Auto
+    'volkswagen caddy auto': '7 Lugares Auto',
+    'vw caddy auto': '7 Lugares Auto',
+    'volkswagen multivan auto': '7 Lugares Auto',
+    'vw multivan auto': '7 Lugares Auto',
+    'citroen c4 grand spacetourer auto': '7 Lugares Auto',
+    'mercedes glb auto': '7 Lugares Auto',
+    
+    # 9 Lugares
+    'ford tourneo': '9 Lugares',
+    'volkswagen sharan': '9 Lugares',
+    'vw sharan': '9 Lugares',
+    'ford galaxy': '9 Lugares',
+    'ford transit': '9 Lugares',
+    'opel vivaro': '9 Lugares',
+    'toyota proace': '9 Lugares',
+    'fiat talento': '9 Lugares',
+    'citroen spacetourer': '9 Lugares',
+    'renault trafic': '9 Lugares',
+    'peugeot traveller': '9 Lugares',
+    'volkswagen transporter': '9 Lugares',
+    'vw transporter': '9 Lugares',
+    'mercedes vito': '9 Lugares',
+    'volkswagen caravelle': '9 Lugares',
+    'vw caravelle': '9 Lugares',
+    'mercedes v class': '9 Lugares',
+}
+
+
 def normalize_supplier(name: str) -> str:
     """Converte código/nome de supplier para nome completo"""
     if not name:
@@ -87,12 +243,41 @@ def normalize_supplier(name: str) -> str:
 def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     """
     Detecta categoria baseado no nome do carro
+    Consulta primeiro o dicionário VEHICLES para mapeamento exato
     Retorna nome descritivo da categoria para exibição na UI
     """
-    car = car_name.lower()
+    car = car_name.lower().strip()
     trans = transmission.lower()
     auto = 'auto' in car or 'auto' in trans or 'automatic' in trans
     
+    # 1. PRIORIDADE: Consultar dicionário VEHICLES para match exato
+    # Normalizar nome do carro para busca
+    car_normalized = car
+    car_normalized = re.sub(r'\s+', ' ', car_normalized)  # Normalizar espaços
+    
+    # Tentar match direto
+    if car_normalized in VEHICLES:
+        return VEHICLES[car_normalized]
+    
+    # Tentar variações comuns
+    variations = [
+        car_normalized,
+        car_normalized.replace('volkswagen', 'vw'),
+        car_normalized.replace('vw', 'volkswagen'),
+        car_normalized.replace('citroën', 'citroen'),
+        car_normalized.replace('citroen', 'citroën'),
+    ]
+    
+    for variant in variations:
+        if variant in VEHICLES:
+            return VEHICLES[variant]
+    
+    # Tentar busca parcial (substring match) - do mais específico ao menos específico
+    for key in sorted(VEHICLES.keys(), key=len, reverse=True):
+        if key in car_normalized:
+            return VEHICLES[key]
+    
+    # 2. FALLBACK: Regras genéricas caso não encontre no VEHICLES
     # Casos específicos primeiro
     if 'peugeot' in car and '308' in car and auto:
         return 'ECONOMY Auto'
