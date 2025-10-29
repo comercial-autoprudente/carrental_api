@@ -552,15 +552,26 @@
         };
         const map = new Map();
         (items || []).forEach(it => {
-          const disp = String(displayCategory(it) || '').trim();
+          // USAR CAMPO 'group' DIRETO DA API (B1, B2, D, etc)
           let key = '';
-          const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
-          if (m) {
-            const code = m[1].toUpperCase();
-            key = codeToCat[code] || normalizeCat(it.category);
-          } else {
-            key = normalizeCat(disp) || normalizeCat(it.category);
+          if (it.group && it.group.trim()) {
+            // Usar código do grupo da API
+            const code = String(it.group).trim().toUpperCase();
+            key = codeToCat[code] || '';
           }
+          
+          // Fallback: tentar extrair da categoria se não tiver grupo
+          if (!key) {
+            const disp = String(displayCategory(it) || '').trim();
+            const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
+            if (m) {
+              const code = m[1].toUpperCase();
+              key = codeToCat[code] || normalizeCat(it.category);
+            } else {
+              key = normalizeCat(disp) || normalizeCat(it.category);
+            }
+          }
+          
           if (!key) return;
           if (!map.has(key)) map.set(key, []);
           map.get(key).push(it);
