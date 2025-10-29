@@ -4744,10 +4744,10 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                         category = "Mini 4 Doors"
             except Exception:
                 pass
-            # Skip blocked models
-            if car_name and _is_blocked_model(car_name):
-                cards_blocked += 1
-                continue
+            # Skip blocked models - DISABLED: mostrar todos os carros
+            # if car_name and _is_blocked_model(car_name):
+            #     cards_blocked += 1
+            #     continue
             # Mapear categoria para código de grupo
             group_code = map_category_to_group(category, car_name)
             items.append({
@@ -5871,8 +5871,9 @@ def normalize_and_sort(items: List[Dict[str, Any]], supplier_priority: Optional[
     except Exception:
         GBP_TO_EUR = 1.16
     for it in items:
-        if _blocked(it.get("car", "")):
-            continue
+        # DISABLED: mostrar todos os carros
+        # if _blocked(it.get("car", "")):
+        #     continue
         price_text_in = it.get("price", "") or ""
         price_num = extract_price_number(price_text_in)
         price_curr = ""
