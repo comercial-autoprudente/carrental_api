@@ -12,11 +12,9 @@
       <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
+          <span class="text-white text-sm font-medium">Settings</span>
         </div>
         <nav class="flex items-center gap-3 text-white text-sm">
-          <a href="/admin/users" class="hover:underline">Users</a>
-          <a href="/admin/car-groups" class="hover:underline">Vehicles</a>
-          <span class="underline font-bold">Price Adj</span>
           <a href="/" class="hover:underline">Home</a>
           <form method="post" action="/logout"><button class="hover:underline">Logout</button></form>
         </nav>
@@ -26,8 +24,8 @@
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Price Adjustment</h2>
         <div class="flex items-center gap-2">
-          <a href="/admin/settings" class="px-3 py-2 rounded bg-[#009cb6] text-white text-sm border border-[#009cb6] hover:bg-[#0086a1] transition-colors">Price Adjustment</a>
           <a href="/admin/users" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Users</a>
+          <a href="/admin/car-groups" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Vehicles</a>
         </div>
       </div>
       {% if saved %}

@@ -12,11 +12,9 @@
       <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
+          <span class="text-white text-sm font-medium">Settings</span>
         </div>
         <nav class="flex items-center gap-3 text-white text-sm">
-          <span class="underline font-bold">Users</span>
-          <a href="/admin/car-groups" class="hover:underline">Vehicles</a>
-          <a href="/admin/settings" class="hover:underline">Price Adj</a>
           <a href="/" class="hover:underline">Home</a>
           <form method="post" action="/logout"><button class="hover:underline">Logout</button></form>
         </nav>
@@ -29,8 +27,8 @@
           <a href="/admin/users/new" class="px-2 py-1 rounded border border-[#009cb6] text-[#009cb6] text-xs bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white focus:bg-[#f6b511] focus:border-[#f6b511] focus:text-white active:bg-[#f6b511] transition-colors">New User</a>
         </div>
         <div class="flex items-center gap-2">
+          <a href="/admin/car-groups" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Vehicles</a>
           <a href="/admin/settings" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Price Adjustment</a>
-          <a href="/admin/users" class="px-3 py-2 rounded bg-[#009cb6] text-white text-sm border border-[#009cb6] hover:bg-[#0086a1] transition-colors">Users</a>
         </div>
       </div>
       <div class="overflow-x-auto bg-white rounded shadow p-4">

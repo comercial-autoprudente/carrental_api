@@ -10,11 +10,9 @@
       <div class="mx-auto max-w-6xl px-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
+          <span class="text-white text-sm font-medium">Settings</span>
         </div>
         <nav class="flex items-center gap-3 text-white text-sm">
-          <a href="/admin/users" class="hover:underline">Users</a>
-          <a href="/admin/car-groups" class="underline font-bold">Vehicles</a>
-          <a href="/admin/settings" class="hover:underline">Price Adj</a>
           <a href="/" class="hover:underline">Home</a>
           <form method="post" action="/logout"><button class="hover:underline">Logout</button></form>
         </nav>
@@ -22,10 +20,16 @@
     </header>
     <main class="mx-auto max-w-6xl px-4 py-6">
       <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-semibold text-gray-800">Vehicles Management</h1>
-        <a href="/admin/car-groups/new" class="px-4 py-2 bg-[#f4ad0f] text-white rounded hover:bg-[#009cb6] transition-colors">
-          + New Vehicle
-        </a>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-semibold text-gray-800">Vehicles Management</h1>
+          <a href="/admin/car-groups/new" class="px-4 py-2 bg-[#f4ad0f] text-white rounded hover:bg-[#009cb6] transition-colors">
+            + New Vehicle
+          </a>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="/admin/users" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Users</a>
+          <a href="/admin/settings" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Price Adjustment</a>
+        </div>
       </div>
       {% if groups %}
       <div class="bg-white shadow rounded-lg overflow-hidden">
