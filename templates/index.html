@@ -1139,9 +1139,10 @@
       }
 
       function displayCategory(it) {
-        // PRIORIDADE 1: Usar campo 'group' da API (já mapeado no backend)
-        if (it.group) {
-          return `Group ${it.group}`;
+        // Retornar a categoria original (Economy, SUV, Mini, etc)
+        // NÃO mostrar o código do grupo (B1, D, F, etc)
+        if (it.category) {
+          return it.category;
         }
         
         // FALLBACK: Se não tiver 'group', tentar mapear localmente
