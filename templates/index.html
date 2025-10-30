@@ -2023,18 +2023,22 @@
       function getSupplierLogo(supplierName) {
         // Tentar match direto
         if (supplierLogoMap[supplierName]) {
-          return supplierLogoMap[supplierName];
+          const logo = supplierLogoMap[supplierName];
+          console.log(`[LOGO] "${supplierName}" → ${logo}`);
+          return logo;
         }
         
         // Tentar match parcial (case insensitive)
         const nameLower = supplierName.toLowerCase();
         for (const [key, logo] of Object.entries(supplierLogoMap)) {
           if (key.toLowerCase() === nameLower || nameLower.includes(key.toLowerCase())) {
+            console.log(`[LOGO PARTIAL] "${supplierName}" → ${logo} (matched "${key}")`);
             return logo;
           }
         }
         
         // Fallback: sem logo
+        console.warn(`[LOGO NOT FOUND] "${supplierName}"`);
         return null;
       }
 
