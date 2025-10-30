@@ -174,6 +174,7 @@ VEHICLES = {
     # Luxury (X)
     'mini cooper': 'Luxury',
     'mini countryman': 'Luxury',
+    'mini countryman auto': 'Luxury',
     'audi a1': 'Luxury',
     'cupra formentor': 'Luxury',
     'ds 4': 'Luxury',
