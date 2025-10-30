@@ -1238,24 +1238,7 @@
       function renderCardsForItems(items) {
         return `
           <div class="grid grid-cols-1 gap-3">
-            ${(items || []).map((it, idx) => {
-              const deposit = it.deposit || 'High Deposit';
-              let depositColor = 'text-gray-600';
-              let depositBg = 'bg-gray-100';
-              if (deposit.includes('Zero')) {
-                depositColor = 'text-green-700';
-                depositBg = 'bg-green-100';
-              } else if (deposit.includes('Low')) {
-                depositColor = 'text-blue-700';
-                depositBg = 'bg-blue-100';
-              } else if (deposit.includes('Medium')) {
-                depositColor = 'text-yellow-700';
-                depositBg = 'bg-yellow-100';
-              } else {
-                depositColor = 'text-red-700';
-                depositBg = 'bg-red-100';
-              }
-              return `
+            ${(items || []).map((it, idx) => `
               <div class="rounded-md border bg-white ${(/auto prudente/i.test(it.supplier||'')) ? 'auto-prudente' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}" data-supplier="${escapeHtml(displaySupplierName(it.supplier))}">
                 <div class="flex items-center gap-3 p-3">
                   ${imgTagFor(it, 'card')}
@@ -1263,15 +1246,13 @@
                     <div class="text-xs text-gray-500 flex items-center">${renderSupplierLogo(it.supplier)}</div>
                     <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml(it.car || '-')}</div>
                     <div class="text-xs text-gray-600">${escapeHtml(displayCategory(it))}</div>
-                    <div class="mt-1"><span class="text-xs ${depositColor} ${depositBg} px-2 py-0.5 rounded">${escapeHtml(deposit)}</span></div>
                   </div>
                   <div class="text-right">
                     <div class="text-sm font-semibold text-gray-900">${escapeHtml(it.price || '')}</div>
                   </div>
                 </div>
               </div>
-              `;
-            }).join('')}
+            `).join('')}
           </div>`;
       }
 
@@ -1287,29 +1268,11 @@
                     <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Supplier</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Car</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Category</th>
-                    <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Deposit</th>
                     <th class="px-4 py-2 text-left text-xs font-medium text-white uppercase">Total Price</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                  ${(items || []).map((it, idx) => {
-                    const deposit = it.deposit || 'High Deposit';
-                    let depositColor = 'text-gray-600';
-                    let depositBg = '';
-                    if (deposit.includes('Zero')) {
-                      depositColor = 'text-green-700 font-semibold';
-                      depositBg = 'bg-green-50';
-                    } else if (deposit.includes('Low')) {
-                      depositColor = 'text-blue-700 font-semibold';
-                      depositBg = 'bg-blue-50';
-                    } else if (deposit.includes('Medium')) {
-                      depositColor = 'text-yellow-700 font-semibold';
-                      depositBg = 'bg-yellow-50';
-                    } else {
-                      depositColor = 'text-red-700';
-                      depositBg = 'bg-red-50';
-                    }
-                    return `
+                  ${(items || []).map((it, idx) => `
                     <tr class="${(/auto prudente/i.test(it.supplier||'')) ? '' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}" data-supplier="${escapeHtml(displaySupplierName(it.supplier))}">
                       <td class="px-4 py-2 text-sm text-gray-600">${idx + 1}</td>
                       <td class="px-4 py-2 text-sm">
@@ -1318,11 +1281,9 @@
                       <td class="px-4 py-2 text-sm">${renderSupplierLogo(it.supplier)}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(it.car || '-')}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displayCategory(it))}</td>
-                      <td class="px-2 py-2 text-xs ${depositColor}"><span class="px-2 py-1 rounded ${depositBg}">${escapeHtml(deposit)}</span></td>
                       <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>
                     </tr>
-                    `;
-                  }).join('')}
+                  `).join('')}
                 </tbody>
               </table>
             </div>

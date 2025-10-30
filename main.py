@@ -4890,42 +4890,6 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             # if car_name and _is_blocked_model(car_name):
             #     cards_blocked += 1
             #     continue
-            
-            # Determinar nível de depósito baseado em padrões conhecidos de suppliers
-            deposit_level = "Medium Deposit (< 500€)"  # Default mais comum
-            try:
-                supplier_lower = (supplier or "").lower()
-                car_lower = (car_name or "").lower()
-                
-                # ZERO DEPOSIT - Suppliers conhecidos com zero franquia
-                zero_deposit_suppliers = [
-                    'goldcar', 'ok mobility', 'ok rent', 'firefly', 'record',
-                    'surprice', 'centauro', 'interrent', 'rhodium', 'flizzr'
-                ]
-                if any(s in supplier_lower for s in zero_deposit_suppliers):
-                    deposit_level = "Zero Deposit"
-                
-                # LOW DEPOSIT (< 250€) - Suppliers com depósito baixo
-                elif any(s in supplier_lower for s in ['budget', 'thrifty', 'dollar', 'alamo', 'enterprise', 'keddy']):
-                    deposit_level = "Low Deposit (< 250€)"
-                
-                # HIGH DEPOSIT - Suppliers premium ou carros de luxo
-                elif any(s in supplier_lower for s in ['sixt', 'hertz', 'avis', 'europcar', 'national']):
-                    # Carros premium/luxury = High, resto = Medium
-                    if any(x in car_lower for x in ['bmw', 'mercedes', 'audi', 'volvo', 'tesla', 'premium', 'luxury']):
-                        deposit_level = "High Deposit"
-                    else:
-                        deposit_level = "Medium Deposit (< 500€)"
-                
-                # Verificar se tem "non-refundable" ou "não reembolsável" no nome
-                if 'non-refundable' in supplier_lower or 'não reembolsável' in supplier_lower or 'nr' in supplier_lower:
-                    # Non-refundable geralmente tem depósito mais baixo
-                    if deposit_level == "High Deposit":
-                        deposit_level = "Medium Deposit (< 500€)"
-                
-            except Exception:
-                pass
-            
             # Mapear categoria para código de grupo
             group_code = map_category_to_group(category, car_name)
             items.append({
@@ -4939,7 +4903,6 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 "transmission": transmission_label,
                 "photo": photo,
                 "link": link,
-                "deposit": deposit_level,
             })
             idx += 1
         print(f"[PARSE] Stats: price={cards_with_price}, name={cards_with_name}, blocked={cards_blocked}, items={len(items)}")
