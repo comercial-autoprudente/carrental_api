@@ -221,15 +221,11 @@
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-[#f4ad0f] bg-opacity-20 border border-[#f4ad0f]"></div>
-                <span>Preço não encontrado - pesquisa alternativa (amarelo)</span>
+                <span>Sem preço (amarelo)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
                 <span>Preço inserido manualmente (vermelho)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-white border border-gray-300"></div>
-                <span>Sem preço</span>
             </div>
         </div>
     </main>
@@ -292,6 +288,9 @@
                             this.parentElement.classList.add('bg-red-100');
                         }
                     });
+                    
+                    // Iniciar com amarelo (sem preço)
+                    td.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
                     
                     td.appendChild(input);
                     tr.appendChild(td);
@@ -369,12 +368,8 @@
                                         // Remover todas as cores
                                         input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
                                         
-                                        // Azul se encontrado na data original, Amarelo se data alternativa
-                                        if (isAlternativeSearch) {
-                                            input.parentElement.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
-                                        } else {
-                                            input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
-                                        }
+                                        // Azul sempre que encontrar preço (original ou alternativa)
+                                        input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
                                         
                                         foundPrices = true;
                                     }
@@ -474,12 +469,8 @@
                                             // Remover cores antigas
                                             input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
                                             
-                                            // Azul para data original, Amarelo para alternativa
-                                            if (dateOffset > 0) {
-                                                input.parentElement.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
-                                            } else {
-                                                input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
-                                            }
+                                            // Azul sempre que encontrar preço
+                                            input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
                                             
                                             foundPrices = true;
                                         }
