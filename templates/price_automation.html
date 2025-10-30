@@ -53,34 +53,117 @@
 
         <!-- Controles -->
         <div class="bg-white shadow mb-6 p-4">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Localização</label>
-                        <select id="location" class="px-3 py-2 border border-gray-300">
+                        <select id="location" class="px-3 py-2 border border-gray-300 rounded">
                             <option value="Aeroporto de Faro">Aeroporto de Faro</option>
                             <option value="Albufeira" selected>Albufeira</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                        <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300">
-                    </div>
-                    <div class="flex items-end">
-                        <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                            </svg>
-                            Pesquisar Todos
-                        </button>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                        <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300 rounded">
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="downloadExcel()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2" title="Descarregar Excel">
+                    <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2 rounded">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                        Pesquisar Todos
+                    </button>
+                    <button onclick="downloadExcel()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2 rounded" title="Descarregar Excel Completo">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Descarregar
+                        Descarregar Completo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botões individuais por dias -->
+            <div class="border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Pesquisar por período individual:</label>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="searchSingleDay(1)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 1 dia">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        1d
+                    </button>
+                    <button onclick="searchSingleDay(2)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 2 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        2d
+                    </button>
+                    <button onclick="searchSingleDay(3)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 3 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        3d
+                    </button>
+                    <button onclick="searchSingleDay(4)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 4 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        4d
+                    </button>
+                    <button onclick="searchSingleDay(5)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 5 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        5d
+                    </button>
+                    <button onclick="searchSingleDay(6)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 6 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        6d
+                    </button>
+                    <button onclick="searchSingleDay(7)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 7 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        7d
+                    </button>
+                    <button onclick="searchSingleDay(8)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 8 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        8d
+                    </button>
+                    <button onclick="searchSingleDay(9)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 9 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        9d
+                    </button>
+                    <button onclick="searchSingleDay(14)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 14 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        14d
+                    </button>
+                    <button onclick="searchSingleDay(22)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 22 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        22d
+                    </button>
+                    <button onclick="searchSingleDay(28)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 28 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        28d
+                    </button>
+                    <button onclick="searchSingleDay(31)" class="px-3 py-2 border border-gray-300 hover:bg-gray-50 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar 31 dias">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        31d
                     </button>
                 </div>
             </div>
@@ -197,6 +280,75 @@
 
                 tbody.appendChild(tr);
             });
+        }
+
+        async function searchSingleDay(day) {
+            const location = document.getElementById('location').value;
+            const pickupDate = document.getElementById('pickupDate').value;
+
+            if (!pickupDate) {
+                alert('⚠️ Selecione uma data primeiro');
+                return;
+            }
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.classList.remove('hidden');
+            progressText.textContent = `A pesquisar ${day} dias...`;
+            progressPercent.textContent = '0%';
+            progressFill.style.width = '0%';
+
+            try {
+                const response = await fetch('/api/track-by-params', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        location: location,
+                        start_date: pickupDate,
+                        start_time: '15:00',
+                        days: day,
+                        lang: 'pt',
+                        currency: 'EUR'
+                    })
+                });
+
+                progressPercent.textContent = '50%';
+                progressFill.style.width = '50%';
+
+                const data = await response.json();
+                
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const grupo = item.group || extractGroup(item.car);
+                        if (grupos.includes(grupo)) {
+                            const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
+                            if (input) {
+                                const preco = parseFloat(item.price_num || 0);
+                                if (preco > 0) {
+                                    input.value = preco.toFixed(2);
+                                    input.dataset.manual = 'false';
+                                    input.parentElement.classList.add('bg-green-100');
+                                    input.parentElement.classList.remove('bg-yellow-100');
+                                }
+                            }
+                        }
+                    });
+                }
+
+                progressText.textContent = `✅ ${day} dias concluído!`;
+                progressPercent.textContent = '100%';
+                progressFill.style.width = '100%';
+            } catch (err) {
+                console.error(`Erro ao pesquisar ${day} dias:`, err);
+                progressText.textContent = `❌ Erro ao pesquisar ${day} dias`;
+            }
+
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+            }, 2000);
         }
 
         async function searchAllPrices() {
