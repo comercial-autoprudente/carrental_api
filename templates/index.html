@@ -1209,10 +1209,15 @@
         const supplierName = displaySupplierName(supplier);
         const logoUrl = getSupplierLogo(supplierName);
         
+        // Verificar se é não reembolsável (detecta HTML entities também)
+        const rawSupplier = String(supplier || '');
+        const isNonRefundable = /não\s*reembols[aá]vel|non[- ]?refundable|nr\b|n&#227;o\s*reembols&#225;vel/i.test(supplierName + ' ' + rawSupplier);
+        const asterisk = isNonRefundable ? '<span style="color:#ff0000; font-weight:bold; font-size:18px; margin-left:3px; vertical-align:super;" title="Não reembolsável">*</span>' : '';
+        
         if (logoUrl) {
-          return `<img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" /><span style="display:none; font-size:11px;">${escapeHtml(supplierName)}</span>`;
+          return `<div class="flex items-center gap-1"><img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />${asterisk}<span style="display:none; font-size:11px;">${escapeHtml(supplierName)}</span></div>`;
         } else {
-          return `<span class="text-xs">${escapeHtml(supplierName)}</span>`;
+          return `<span class="text-xs">${escapeHtml(supplierName)}${asterisk}</span>`;
         }
       }
 
@@ -2036,12 +2041,25 @@
             console.warn('[SEM LOGO]', supplierName, '- não encontrado no mapa');
           }
           
+          // Verificar se é não reembolsável e adicionar asterisco
+          const isNonRefundable = /não\s*reembols[aá]vel|non[- ]?refundable|\bNR\b/i.test(supplierName);
+          
           // SEMPRE mostrar nome abaixo do logo
           const nameSpan = document.createElement('span');
           nameSpan.className = 'supplier-name';
           nameSpan.textContent = supplierName;
           nameSpan.title = supplierName; // Tooltip com nome completo
           div.appendChild(nameSpan);
+          
+          // Adicionar asterisco se não reembolsável
+          if (isNonRefundable) {
+            const asterisk = document.createElement('span');
+            asterisk.style.cssText = 'color:#ff0000; font-weight:bold; font-size:14px; position:absolute; top:2px; right:2px;';
+            asterisk.textContent = '*';
+            asterisk.title = 'Não reembolsável';
+            div.style.position = 'relative';
+            div.appendChild(asterisk);
+          }
           
           // Click handler para toggle seleção
           div.addEventListener('click', () => {
