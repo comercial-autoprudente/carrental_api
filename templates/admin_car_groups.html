@@ -4,10 +4,15 @@
     <meta charset="utf-8"/>
     <title>Vehicles - Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      img[alt="Profile"], img[src*="profile"], .profile-picture {
+        border-radius: 50% !important;
+      }
+    </style>
   </head>
   <body class="bg-gray-50">
     <header style="background:#009cb6;" class="w-full py-3">
-      <div class="mx-auto max-w-6xl px-4 flex items-center justify-between">
+      <div class="mx-auto max-w-full px-4 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
           <span class="text-white text-sm font-medium">Settings</span>
@@ -18,7 +23,7 @@
         </nav>
       </div>
     </header>
-    <main class="mx-auto max-w-6xl px-4 py-6">
+    <main class="mx-auto max-w-full px-4 py-6">
       <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">
           <h1 class="text-2xl font-semibold text-gray-800">Vehicles Management</h1>

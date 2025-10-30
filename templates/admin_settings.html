@@ -6,10 +6,15 @@
     <title>Admin • Price Adjustment</title>
     <link rel="icon" type="image/png" href="/static/autoprudente-favicon.png?v=2" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      img[alt="Profile"], img[src*="profile"], .profile-picture {
+        border-radius: 50% !important;
+      }
+    </style>
   </head>
   <body class="min-h-screen bg-gray-50">
     <header class="bg-[#009cb6] border-b">
-      <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <div class="mx-auto max-w-full px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
         </div>
@@ -19,7 +24,7 @@
         </nav>
       </div>
     </header>
-    <main class="mx-auto max-w-6xl px-4 py-6">
+    <main class="mx-auto max-w-full px-4 py-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold">Price Adjustment</h2>
         <div class="flex items-center gap-2">
