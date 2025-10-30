@@ -209,7 +209,7 @@
                 <span>Coluna NET (branco)</span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-30 border border-[#009cb6]"></div>
+                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-50 border border-[#009cb6]"></div>
                 <span>Coluna Real (azul)</span>
             </div>
             <div class="flex items-center gap-2">
@@ -374,10 +374,10 @@
                                 inputReal.value = real.toFixed(2);
                                 inputReal.dataset.manual = 'true';
                             }
-                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50', 'bg-[#f4ad0f]');
                             this.parentElement.classList.add('bg-red-100');
                             if (inputReal) {
-                                inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50', 'bg-[#f4ad0f]');
                                 inputReal.parentElement.classList.add('bg-red-100');
                             }
                         }
@@ -417,8 +417,8 @@
                         }
                     });
                     
-                    // Real sempre azul (mais escuro para destaque)
-                    tdReal.classList.add('bg-[#009cb6]', 'bg-opacity-30');
+                    // Real sempre azul (50% opacidade para destaque)
+                    tdReal.classList.add('bg-[#009cb6]', 'bg-opacity-50');
                     tdReal.appendChild(inputReal);
                     tr.appendChild(tdReal);
                 });
@@ -516,8 +516,8 @@
                                         inputReal.parentElement.classList.remove('bg-red-100');
                                         inputNet.parentElement.classList.remove('bg-red-100');
                                         
-                                        // Real sempre azul (mais escuro para destaque)
-                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-30');
+                                        // Real sempre azul (50% opacidade para destaque)
+                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
                                         // NET mantém branco (não adiciona cor)
                                         
                                         foundPrices = true;
@@ -655,8 +655,8 @@
                                             inputReal.parentElement.classList.remove('bg-red-100');
                                             inputNet.parentElement.classList.remove('bg-red-100');
                                             
-                                            // Real sempre azul (mais escuro para destaque)
-                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-30');
+                                            // Real sempre azul (50% opacidade para destaque)
+                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
                                             // NET mantém branco (não adiciona cor)
                                             
                                             foundPrices = true;
@@ -688,7 +688,7 @@
                                 const inputNet = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="net"]`);
                                 if (inputReal && !inputReal.value) {
                                     inputReal.parentElement.classList.add('bg-red-100');
-                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-30');
+                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                 }
                                 if (inputNet && !inputNet.value) {
                                     inputNet.parentElement.classList.add('bg-red-100');
