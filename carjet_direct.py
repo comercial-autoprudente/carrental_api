@@ -281,7 +281,7 @@ VEHICLES = {
     'mercedes e class sw auto': 'Station Wagon Auto',
     'mercedes s class auto': 'ECONOMY Auto',
     'renault austral': 'SUV',
-    'renault twingo': 'ECONOMY',
+    'renault twingo': 'MINI 5 Portas',
 }
 
 

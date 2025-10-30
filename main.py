@@ -6656,6 +6656,10 @@ async def get_vehicles_with_originals(request: Request):
     """Retorna veículos com nomes originais do scraping"""
     require_auth(request)
     try:
+        # Recarregar módulo para pegar alterações mais recentes
+        import carjet_direct
+        import importlib
+        importlib.reload(carjet_direct)
         from carjet_direct import VEHICLES
         
         # Buscar nomes originais do histórico
