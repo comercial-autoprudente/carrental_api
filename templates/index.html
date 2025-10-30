@@ -2135,15 +2135,28 @@
             div.appendChild(asterisk);
           }
           
-          // Click handler para toggle seleção
+          // Click handler para selecionar APENAS este supplier
           div.addEventListener('click', () => {
-            if (selectedSuppliers.has(supplierName)) {
-              selectedSuppliers.delete(supplierName);
-              div.classList.add('unselected');
+            const allCards = document.querySelectorAll('#suppliersFilter .supplier-checkbox');
+            
+            // Se este já é o único selecionado, selecionar todos
+            if (selectedSuppliers.size === 1 && selectedSuppliers.has(supplierName)) {
+              // Selecionar todos
+              selectedSuppliers.clear();
+              allCards.forEach(card => {
+                const name = card.dataset.supplier;
+                selectedSuppliers.add(name);
+                card.classList.remove('unselected');
+              });
             } else {
+              // Desselecionar todos e selecionar só este
+              selectedSuppliers.clear();
+              allCards.forEach(card => card.classList.add('unselected'));
+              
               selectedSuppliers.add(supplierName);
               div.classList.remove('unselected');
             }
+            
             filterBySuppliers();
           });
           
