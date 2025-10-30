@@ -552,6 +552,68 @@
         return { groups, map };
       }
 
+      function renderCategoryPreview(items) {
+        const { groups, map } = groupByCategory(items);
+        const toNum = (p) => {
+          if (typeof p === 'number' && isFinite(p)) return p;
+          const s = String(p || '').replace(/\s|\u00a0/g, '');
+          const m = s.match(/([0-9.,]+)/);
+          if (!m) return Number.POSITIVE_INFINITY;
+          let num = m[1];
+          const hasComma = num.includes(',');
+          const hasDot = num.includes('.');
+          if (hasComma && hasDot) {
+            num = num.replace(/\./g, '').replace(/,/g, '.');
+          } else if (hasComma && !hasDot) {
+            num = num.replace(/,/g, '.');
+          } else {
+            const parts = num.split('.');
+            if (parts.length > 2) num = parts.join('');
+          }
+          const v = parseFloat(num);
+          return isFinite(v) ? v : Number.POSITIVE_INFINITY;
+        };
+        
+        const previews = [];
+        groups.forEach(g => {
+          const lst = map.get(g.cat) || [];
+          if (!lst.length) return;
+          
+          // Find cheapest car in this category
+          const sorted = lst.slice().sort((a,b) => toNum(a.price) - toNum(b.price));
+          const cheapest = sorted[0];
+          if (!cheapest) return;
+          
+          const price = toNum(cheapest.price);
+          const priceFormatted = isFinite(price) ? price.toFixed(2) + ' €' : cheapest.price;
+          
+          previews.push(`
+            <div class="flex flex-col items-center p-3 bg-white border border-gray-200 hover:border-[#f4ad0f] hover:shadow-md transition-all cursor-pointer" onclick="document.getElementById('group_sec_${g.cat}')?.scrollIntoView({behavior:'smooth'})">
+              <div class="text-xs text-gray-500 mb-1 text-center font-medium">${escapeHtml(g.label.split(' - ')[1] || g.label)}</div>
+              <img src="${imageUrlFor(cheapest)}" alt="${escapeHtml(cheapest.car)}" class="h-16 w-auto object-contain mb-2" onerror="this.src='/static/car-placeholder.png'"/>
+              <div class="text-center">
+                <div class="text-lg font-bold text-[#009cb6]">${priceFormatted}</div>
+                <div class="text-xs text-gray-400">por 5 dias</div>
+              </div>
+            </div>
+          `);
+        });
+        
+        return `
+          <div class="mb-6 bg-gradient-to-r from-[#009cb6]/5 to-[#f4ad0f]/5 p-4 border-l-4 border-[#f4ad0f]">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              NOSSO CONSELHO - Reserve agora
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              ${previews.join('')}
+            </div>
+          </div>
+        `;
+      }
+
       function renderCategoryBlocks(items) {
         const { groups, map } = groupByCategory(items);
         const parts = [];
@@ -1010,6 +1072,7 @@
                 if (items.length === 0) {
                   html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
                 } else {
+                  html.push(renderCategoryPreview(items));
                   html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
                   html.push(renderCategoryBlocks(items));
                 }
@@ -1074,6 +1137,7 @@
           if (items.length === 0) {
             inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\"><p class="mb-2">⚠️ Nenhum resultado encontrado</p><\/div>`);
           } else {
+            inner.push(renderCategoryPreview(items));
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
           }
@@ -1171,6 +1235,7 @@
               <p class="text-sm">A sessão pode ter expirado. Por favor, tente novamente.</p>
             <\/div>`);
           } else {
+            inner.push(renderCategoryPreview(items));
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
           }
