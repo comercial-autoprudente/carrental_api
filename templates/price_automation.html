@@ -216,16 +216,20 @@
         <!-- Legenda -->
         <div class="mt-4 flex items-center gap-6 text-sm">
             <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-green-100 border border-green-300"></div>
-                <span>Preço encontrado automaticamente</span>
+                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-20 border border-[#009cb6]"></div>
+                <span>Preço encontrado automaticamente (azul)</span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-yellow-100 border border-yellow-300"></div>
-                <span>Preço inserido manualmente</span>
+                <div class="w-4 h-4 bg-[#f4ad0f] bg-opacity-20 border border-[#f4ad0f]"></div>
+                <span>Preço não encontrado - pesquisa alternativa (amarelo)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
+                <span>Preço inserido manualmente (vermelho)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-white border border-gray-300"></div>
-                <span>Sem preço (clique para inserir)</span>
+                <span>Sem preço</span>
             </div>
         </div>
     </main>
@@ -269,8 +273,9 @@
                         }
                         if (this.value) {
                             this.dataset.manual = 'true';
-                            this.parentElement.classList.add('bg-yellow-100');
-                            this.parentElement.classList.remove('bg-green-100');
+                            // Vermelho para manual
+                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                            this.parentElement.classList.add('bg-red-100');
                         }
                     });
                     
@@ -301,50 +306,85 @@
             progressPercent.textContent = '0%';
             progressFill.style.width = '0%';
 
-            try {
-                const response = await fetch('/api/track-by-params', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        location: location,
-                        start_date: pickupDate,
-                        start_time: '15:00',
-                        days: day,
-                        lang: 'pt',
-                        currency: 'EUR'
-                    })
-                });
-
-                progressPercent.textContent = '50%';
-                progressFill.style.width = '50%';
-
-                const data = await response.json();
+            let foundPrices = false;
+            let isAlternativeSearch = false;
+            
+            // Tentar data original primeiro
+            for (let dateOffset = 0; dateOffset <= 3; dateOffset++) {
+                const searchDate = new Date(pickupDate);
+                searchDate.setDate(searchDate.getDate() + dateOffset);
+                const searchDateStr = searchDate.toISOString().split('T')[0];
                 
-                if (data.items && data.items.length > 0) {
-                    data.items.forEach(item => {
-                        const grupo = item.group || extractGroup(item.car);
-                        if (grupos.includes(grupo)) {
-                            const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                            if (input) {
-                                const preco = parseFloat(item.price_num || 0);
-                                if (preco > 0) {
-                                    input.value = preco.toFixed(2);
-                                    input.dataset.manual = 'false';
-                                    input.parentElement.classList.add('bg-green-100');
-                                    input.parentElement.classList.remove('bg-yellow-100');
-                                }
-                            }
-                        }
-                    });
+                if (dateOffset > 0) {
+                    isAlternativeSearch = true;
+                    progressText.textContent = `A pesquisar ${day} dias (data alternativa +${dateOffset})...`;
                 }
 
-                progressText.textContent = `✅ ${day} dias concluído!`;
-                progressPercent.textContent = '100%';
-                progressFill.style.width = '100%';
-            } catch (err) {
-                console.error(`Erro ao pesquisar ${day} dias:`, err);
-                progressText.textContent = `❌ Erro ao pesquisar ${day} dias`;
+                try {
+                    const response = await fetch('/api/track-by-params', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: location,
+                            start_date: searchDateStr,
+                            start_time: '15:00',
+                            days: day,
+                            lang: 'pt',
+                            currency: 'EUR'
+                        })
+                    });
+
+                    progressPercent.textContent = `${30 + (dateOffset * 15)}%`;
+                    progressFill.style.width = `${30 + (dateOffset * 15)}%`;
+
+                    const data = await response.json();
+                    
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            const grupo = item.group || extractGroup(item.car);
+                            if (grupos.includes(grupo)) {
+                                const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
+                                if (input) {
+                                    const preco = parseFloat(item.price_num || 0);
+                                    if (preco > 0) {
+                                        input.value = preco.toFixed(2);
+                                        input.dataset.manual = 'false';
+                                        input.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                        
+                                        // Remover todas as cores
+                                        input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                        
+                                        // Azul se encontrado na data original, Amarelo se data alternativa
+                                        if (isAlternativeSearch) {
+                                            input.parentElement.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                                        } else {
+                                            input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                        }
+                                        
+                                        foundPrices = true;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Se encontrou preços, parar de tentar datas alternativas
+                        if (foundPrices) break;
+                    }
+                } catch (err) {
+                    console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
+                }
             }
+
+            if (foundPrices) {
+                progressText.textContent = isAlternativeSearch ? 
+                    `✅ ${day} dias concluído (data alternativa)` : 
+                    `✅ ${day} dias concluído!`;
+            } else {
+                progressText.textContent = `⚠️ ${day} dias - nenhum preço encontrado`;
+            }
+            
+            progressPercent.textContent = '100%';
+            progressFill.style.width = '100%';
 
             setTimeout(() => {
                 progressBar.classList.add('hidden');
@@ -375,40 +415,65 @@
                 progressPercent.textContent = `${Math.round((completed / total) * 100)}%`;
                 progressFill.style.width = `${(completed / total) * 100}%`;
 
-                try {
-                    const response = await fetch('/api/track-by-params', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: location,
-                            start_date: pickupDate,
-                            start_time: '15:00',
-                            days: day,
-                            lang: 'pt',
-                            currency: 'EUR'
-                        })
-                    });
-
-                    const data = await response.json();
+                let foundPrices = false;
+                
+                // Tentar data original e até 3 dias à frente
+                for (let dateOffset = 0; dateOffset <= 3 && !foundPrices; dateOffset++) {
+                    const searchDate = new Date(pickupDate);
+                    searchDate.setDate(searchDate.getDate() + dateOffset);
+                    const searchDateStr = searchDate.toISOString().split('T')[0];
                     
-                    if (data.items && data.items.length > 0) {
-                        data.items.forEach(item => {
-                            const grupo = item.group || extractGroup(item.car);
-                            if (grupos.includes(grupo)) {
-                                const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                                if (input && !input.value) {
-                                    const preco = parseFloat(item.price_num || 0);
-                                    if (preco > 0) {
-                                        input.value = preco.toFixed(2);
-                                        input.dataset.manual = 'false';
-                                        input.parentElement.classList.add('bg-green-100');
+                    if (dateOffset > 0) {
+                        progressText.textContent = `A pesquisar ${day} dias (data +${dateOffset})...`;
+                    }
+
+                    try {
+                        const response = await fetch('/api/track-by-params', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                location: location,
+                                start_date: searchDateStr,
+                                start_time: '15:00',
+                                days: day,
+                                lang: 'pt',
+                                currency: 'EUR'
+                            })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.items && data.items.length > 0) {
+                            data.items.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                if (grupos.includes(grupo)) {
+                                    const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
+                                    if (input && !input.value) {
+                                        const preco = parseFloat(item.price_num || 0);
+                                        if (preco > 0) {
+                                            input.value = preco.toFixed(2);
+                                            input.dataset.manual = 'false';
+                                            input.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
+                                            
+                                            // Remover cores antigas
+                                            input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                            
+                                            // Azul para data original, Amarelo para alternativa
+                                            if (dateOffset > 0) {
+                                                input.parentElement.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                                            } else {
+                                                input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                            }
+                                            
+                                            foundPrices = true;
+                                        }
                                     }
                                 }
-                            }
-                        });
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
                     }
-                } catch (err) {
-                    console.error(`Erro ao pesquisar ${day} dias:`, err);
                 }
 
                 completed++;
