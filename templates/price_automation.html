@@ -205,16 +205,16 @@
         <!-- Legenda -->
         <div class="mt-4 flex items-center gap-6 text-sm">
             <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-20 border border-[#009cb6]"></div>
-                <span>Preço encontrado automaticamente (azul)</span>
+                <div class="w-4 h-4 bg-white border border-gray-300"></div>
+                <span>Coluna NET (branco)</span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-[#f4ad0f] bg-opacity-20 border border-[#f4ad0f]"></div>
-                <span>Sem preço (amarelo)</span>
+                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-20 border border-[#009cb6]"></div>
+                <span>Coluna Real (azul)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
-                <span>Preço inserido manualmente (vermelho)</span>
+                <span>Sem preço disponível (vermelho)</span>
             </div>
         </div>
         </div>
@@ -383,7 +383,7 @@
                         }
                     });
                     
-                    tdNet.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                    // NET sempre branco (sem cor adicional, usa bgColor da coluna)
                     tdNet.appendChild(inputNet);
                     tr.appendChild(tdNet);
 
@@ -414,16 +414,11 @@
                                 inputNet.value = net.toFixed(2);
                                 inputNet.dataset.manual = 'true';
                             }
-                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
-                            this.parentElement.classList.add('bg-red-100');
-                            if (inputNet) {
-                                inputNet.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
-                                inputNet.parentElement.classList.add('bg-red-100');
-                            }
                         }
                     });
                     
-                    tdReal.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                    // Real sempre azul
+                    tdReal.classList.add('bg-[#009cb6]', 'bg-opacity-20');
                     tdReal.appendChild(inputReal);
                     tr.appendChild(tdReal);
                 });
@@ -517,13 +512,13 @@
                                         inputNet.dataset.manual = 'false';
                                         inputNet.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
                                         
-                                        // Remover todas as cores
-                                        inputReal.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
-                                        inputNet.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                        // Remover vermelho se existir
+                                        inputReal.parentElement.classList.remove('bg-red-100');
+                                        inputNet.parentElement.classList.remove('bg-red-100');
                                         
-                                        // Azul sempre que encontrar preço
+                                        // Real sempre azul (já tem por padrão)
                                         inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
-                                        inputNet.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                        // NET mantém branco (não adiciona cor)
                                         
                                         foundPrices = true;
                                     }
@@ -656,13 +651,13 @@
                                             inputNet.dataset.manual = 'false';
                                             inputNet.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
                                             
-                                            // Remover cores antigas
-                                            inputReal.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
-                                            inputNet.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                            // Remover vermelho se existir
+                                            inputReal.parentElement.classList.remove('bg-red-100');
+                                            inputNet.parentElement.classList.remove('bg-red-100');
                                             
-                                            // Azul sempre que encontrar preço
+                                            // Real sempre azul (já tem por padrão)
                                             inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
-                                            inputNet.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                            // NET mantém branco (não adiciona cor)
                                             
                                             foundPrices = true;
                                         }
@@ -682,6 +677,25 @@
                     } catch (err) {
                         console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
                     }
+                }
+
+                // Marcar células sem preço em vermelho
+                if (!foundPrices) {
+                    dias.forEach(d => {
+                        if (d === day) {
+                            grupos.forEach(g => {
+                                const inputReal = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="real"]`);
+                                const inputNet = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="net"]`);
+                                if (inputReal && !inputReal.value) {
+                                    inputReal.parentElement.classList.add('bg-red-100');
+                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20');
+                                }
+                                if (inputNet && !inputNet.value) {
+                                    inputNet.parentElement.classList.add('bg-red-100');
+                                }
+                            });
+                        }
+                    });
                 }
 
                 completed++;
