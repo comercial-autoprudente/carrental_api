@@ -213,11 +213,11 @@
           <!-- Botões -->
           <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
             <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
-            <button id="clearCacheBtn" type="button" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); history.replaceState({}, '', window.location.pathname); alert('Sessão renovada!');">
+            <button id="searchAllDaysBtn" type="button" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white hover:bg-[#009cb6] transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              Renovar Sessão
+              Search All Days
             </button>
             <!-- Fetch All temporariamente removido -->
             <button id="fetchAllDaysBtn" type="button" class="hidden px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
@@ -1396,6 +1396,59 @@
       }
       if (fetchAllBtn && !fetchAllBtn._bound) { fetchAllBtn.addEventListener('click', window.runBulkFetch); fetchAllBtn._bound = true; }
       try { const pf = document.getElementById('paramForm'); if (pf && !pf._bound) { pf.addEventListener('submit', window.runBulkFetch); pf.addEventListener('keydown', (e)=>{ if (e.key==='Enter') { e.preventDefault(); window.runBulkFetch(e); } }); pf._bound = true; } } catch(_) {}
+
+      // Search All Days - pesquisar 1,2,3,4 dias
+      const searchAllDaysBtn = document.getElementById('searchAllDaysBtn');
+      if (searchAllDaysBtn && !searchAllDaysBtn._bound) {
+        searchAllDaysBtn.addEventListener('click', async () => {
+          const locEl = document.getElementById('location');
+          const sdEl = document.getElementById('startDate');
+          const stEl = document.getElementById('startTime');
+          
+          const location = (locEl && locEl.value || '').trim();
+          const pickup_date = sdEl && sdEl.value || '';
+          const start_time = stEl && (stEl.value || '15:00') || '15:00';
+          
+          if (!location || !pickup_date) {
+            alert('⚠️ Preencha local e data primeiro');
+            return;
+          }
+          
+          const daysList = [1, 2, 3, 4];
+          searchAllDaysBtn.disabled = true;
+          searchAllDaysBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Searching...';
+          
+          for (const days of daysList) {
+            try {
+              const body = { location, start_date: pickup_date, start_time, days, lang: 'pt', currency: 'EUR' };
+              console.log(`[SEARCH ALL] ${days}d - Fetching...`);
+              
+              const resp = await fetch('/api/track-by-params', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store',
+                body: JSON.stringify(body)
+              });
+              
+              if (resp.ok) {
+                const data = await resp.json();
+                if (data.items && data.items.length > 0) {
+                  cachedResults[days] = data.items;
+                  console.log(`[SEARCH ALL] ${days}d - ${data.items.length} items cached`);
+                }
+              }
+            } catch (err) {
+              console.error(`[SEARCH ALL] ${days}d - Error:`, err);
+            }
+          }
+          
+          searchAllDaysBtn.disabled = false;
+          searchAllDaysBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Search All Days';
+          alert('✅ Preços carregados para 1, 2, 3 e 4 dias! Clique nos dias para ver.');
+        });
+        searchAllDaysBtn._bound = true;
+      }
 
       // Fetch All Days - pré-carregar todos os períodos
       const fetchAllDaysBtn = document.getElementById('fetchAllDaysBtn');
