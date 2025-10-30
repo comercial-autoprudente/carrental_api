@@ -150,26 +150,6 @@
       .suppliers-sidebar.collapsed {
         display: none;
       }
-      .toggle-suppliers-btn {
-        position: fixed;
-        left: 20px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 40;
-        background: #009cb6;
-        color: white;
-        padding: 12px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-      .toggle-suppliers-btn:hover {
-        background: #f4ad0f;
-      }
-      .toggle-suppliers-btn.hidden {
-        display: none;
-      }
       .bar { display:block; height:6px; border-radius:3px; }
       .bar-blue { background:#009cb6; width:36px; }
       .bar-yellow { background: var(--brand-yellow); width:28px; }
@@ -267,13 +247,6 @@
       });
     </script>
 
-    <!-- Botão Toggle Suppliers (fixo, escondido inicialmente) -->
-    <button id="toggleSuppliersBtn" class="toggle-suppliers-btn hidden" onclick="toggleSuppliersSidebar()" title="Filtrar por empresas">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-      </svg>
-    </button>
-
     <main class="mx-auto max-w-7xl px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -282,14 +255,9 @@
           <div class="suppliers-sidebar bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between mb-3">
               <h3 class="font-semibold text-sm text-gray-900">Filtrar por empresa</h3>
-              <div class="flex gap-2">
-                <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
-                  Todos
-                </button>
-                <button onclick="toggleSuppliersSidebar()" class="text-xs text-gray-500 hover:text-red-500" title="Fechar">
-                  ✕
-                </button>
-              </div>
+              <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
+                Todos
+              </button>
             </div>
             <div id="suppliersFilter" class="space-y-2">
               <!-- Suppliers will be loaded here -->
@@ -298,7 +266,7 @@
         </aside>
 
         <!-- Conteúdo Principal -->
-        <div class="lg:col-span-9 space-y-8">
+        <div id="mainContent" class="lg:col-span-12 space-y-8">
       
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
@@ -1840,26 +1808,26 @@
 
       // ===== SUPPLIER FILTERS =====
       const suppliers = [
-        { name: 'Europcar', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Europcar-Logo.png' },
-        { name: 'Hertz', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Hertz-Logo.png' },
-        { name: 'Avis', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Avis-Logo.png' },
-        { name: 'Budget', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Budget-Rent-a-Car-Logo.png' },
-        { name: 'Sixt', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Sixt-Logo.png' },
-        { name: 'Enterprise', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Enterprise-Rent-A-Car-Logo.png' },
-        { name: 'Alamo', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Alamo-Rent-A-Car-Logo.png' },
-        { name: 'National', logo: 'https://logos-world.net/wp-content/uploads/2021/03/National-Car-Rental-Logo.png' },
-        { name: 'Thrifty', logo: 'https://www.carlogos.org/car-logos/thrifty-car-rental-logo.png' },
-        { name: 'Dollar', logo: 'https://www.carlogos.org/car-logos/dollar-rent-a-car-logo.png' },
-        { name: 'Firefly', logo: 'https://www.carlogos.org/car-logos/firefly-car-rental-logo.png' },
-        { name: 'Goldcar', logo: 'https://www.carlogos.org/car-logos/goldcar-logo.png' },
-        { name: 'Centauro', logo: 'https://www.carlogos.org/car-logos/centauro-rent-a-car-logo.png' },
-        { name: 'Drive', logo: 'https://www.carlogos.org/car-logos/drive-on-holidays-logo.png' },
-        { name: 'Guerin', logo: 'https://www.carlogos.org/car-logos/guerin-car-rental-logo.png' },
-        { name: 'Keddy', logo: 'https://www.carlogos.org/car-logos/keddy-by-europcar-logo.png' },
-        { name: 'InterRent', logo: 'https://www.carlogos.org/car-logos/interrent-logo.png' },
-        { name: 'Record Go', logo: 'https://www.carlogos.org/car-logos/record-go-logo.png' },
-        { name: 'Flizzr', logo: 'https://www.carlogos.org/car-logos/flizzr-logo.png' },
-        { name: 'OK Rent a Car', logo: 'https://www.carlogos.org/car-logos/ok-rent-a-car-logo.png' }
+        { name: 'Europcar', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Europcar_Logo.svg/200px-Europcar_Logo.svg.png' },
+        { name: 'Hertz', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Hertz_Logo.svg/200px-Hertz_Logo.svg.png' },
+        { name: 'Avis', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Avis_logo.svg/200px-Avis_logo.svg.png' },
+        { name: 'Budget', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Budget_Rent_a_Car_logo.svg/200px-Budget_Rent_a_Car_logo.svg.png' },
+        { name: 'Sixt', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Sixt_logo.svg/200px-Sixt_logo.svg.png' },
+        { name: 'Enterprise', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Enterprise_Rent-A-Car_Logo.svg/200px-Enterprise_Rent-A-Car_Logo.svg.png' },
+        { name: 'Alamo', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Alamo_Rent_a_Car_logo.svg/200px-Alamo_Rent_a_Car_logo.svg.png' },
+        { name: 'National', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/National_Car_Rental_logo.svg/200px-National_Car_Rental_logo.svg.png' },
+        { name: 'Thrifty', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Thrifty_Car_Rental_logo.svg/200px-Thrifty_Car_Rental_logo.svg.png' },
+        { name: 'Dollar', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Dollar_Rent_A_Car_logo.svg/200px-Dollar_Rent_A_Car_logo.svg.png' },
+        { name: 'Firefly', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EFirefly%3C/text%3E%3C/svg%3E' },
+        { name: 'Goldcar', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23f4ad0f"%3EGoldcar%3C/text%3E%3C/svg%3E' },
+        { name: 'Centauro', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="14" fill="%23009cb6"%3ECentauro%3C/text%3E%3C/svg%3E' },
+        { name: 'Drive', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EDrive%3C/text%3E%3C/svg%3E' },
+        { name: 'Guerin', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EGuerin%3C/text%3E%3C/svg%3E' },
+        { name: 'Keddy', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EKeddy%3C/text%3E%3C/svg%3E' },
+        { name: 'InterRent', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="13" fill="%23009cb6"%3EInterRent%3C/text%3E%3C/svg%3E' },
+        { name: 'Record Go', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="13" fill="%23009cb6"%3ERecord Go%3C/text%3E%3C/svg%3E' },
+        { name: 'Flizzr', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EFlizzr%3C/text%3E%3C/svg%3E' },
+        { name: 'OK Rent a Car', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="12" fill="%23009cb6"%3EOK Rent%3C/text%3E%3C/svg%3E' }
       ];
 
       let selectedSuppliers = new Set();
@@ -1964,36 +1932,25 @@
         });
       }
 
-      function toggleSuppliersSidebar() {
+      function showSupplierFilters() {
         const sidebar = document.getElementById('suppliersSidebar');
-        const mainContent = sidebar.nextElementSibling;
+        const mainContent = document.getElementById('mainContent');
         
-        if (sidebar.style.display === 'none') {
+        if (sidebar && mainContent) {
           sidebar.style.display = '';
           mainContent.classList.remove('lg:col-span-12');
           mainContent.classList.add('lg:col-span-9');
-        } else {
-          sidebar.style.display = 'none';
-          mainContent.classList.remove('lg:col-span-9');
-          mainContent.classList.add('lg:col-span-12');
-        }
-      }
-
-      function showSupplierFilters() {
-        const toggleBtn = document.getElementById('toggleSuppliersBtn');
-        if (toggleBtn) {
-          toggleBtn.classList.remove('hidden');
         }
       }
 
       function hideSupplierFilters() {
-        const toggleBtn = document.getElementById('toggleSuppliersBtn');
         const sidebar = document.getElementById('suppliersSidebar');
-        if (toggleBtn) {
-          toggleBtn.classList.add('hidden');
-        }
-        if (sidebar) {
+        const mainContent = document.getElementById('mainContent');
+        
+        if (sidebar && mainContent) {
           sidebar.style.display = 'none';
+          mainContent.classList.remove('lg:col-span-9');
+          mainContent.classList.add('lg:col-span-12');
         }
       }
 
