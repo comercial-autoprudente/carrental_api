@@ -67,26 +67,6 @@
                         <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300 rounded">
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button id="btnWay2Rentals" onclick="searchAndDownload('way2rentals')" class="px-4 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar e descarregar para Way2Rentals">
-                        <svg class="w-4 h-4 download-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <svg class="w-4 h-4 loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span class="btn-text">Way2Rentals</span>
-                    </button>
-                    <button id="btnAbbycar" onclick="searchAndDownload('abbycar')" class="px-4 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar e descarregar para Abbycar">
-                        <svg class="w-4 h-4 download-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <svg class="w-4 h-4 loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                        </svg>
-                        <span class="btn-text">Abbycar</span>
-                    </button>
-                </div>
             </div>
 
             <!-- Botões individuais por dias -->
@@ -172,6 +152,27 @@
                         31d
                     </button>
                 </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2 rounded">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Pesquisar Todos
+                </button>
+            </div>
+            <div class="border-t pt-4 flex items-center justify-end gap-3">
+                <span class="text-sm text-gray-600">Descarregar Excel:</span>
+                <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
+                    <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </button>
+                <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Abbycar">
+                    <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -606,48 +607,6 @@
             return match ? match[1] : '';
         }
 
-        async function searchAndDownload(broker) {
-            const btnId = broker === 'way2rentals' ? 'btnWay2Rentals' : 'btnAbbycar';
-            const btn = document.getElementById(btnId);
-            const downloadIcon = btn.querySelector('.download-icon');
-            const loadingIcon = btn.querySelector('.loading-icon');
-            const btnText = btn.querySelector('.btn-text');
-            
-            // Mostrar loading
-            downloadIcon.classList.add('hidden');
-            loadingIcon.classList.remove('hidden');
-            btn.classList.add('bg-[#f4ad0f]');
-            btn.classList.remove('bg-[#009cb6]');
-            btn.disabled = true;
-            btnText.textContent = 'A processar...';
-            
-            try {
-                // Primeiro pesquisar todos os preços
-                await searchAllPrices();
-                
-                // Copiar C de D
-                copyGroupCFromD();
-                
-                // Aguardar um pouco
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Fazer download
-                downloadExcel(broker);
-                
-                // Sucesso
-                btnText.textContent = '✓ Concluído!';
-                await new Promise(resolve => setTimeout(resolve, 1500));
-            } finally {
-                // Restaurar botão
-                loadingIcon.classList.add('hidden');
-                downloadIcon.classList.remove('hidden');
-                btn.classList.remove('bg-[#f4ad0f]');
-                btn.classList.add('bg-[#009cb6]');
-                btn.disabled = false;
-                btnText.textContent = broker === 'way2rentals' ? 'Way2Rentals' : 'Abbycar';
-            }
-        }
-
         function copyGroupCFromD() {
             // Copiar todos os valores de D para C
             dias.forEach(day => {
@@ -674,8 +633,11 @@
         }
 
         function downloadExcel(broker) {
+            // Copiar C de D antes de descarregar
+            copyGroupCFromD();
+            
             const wb = XLSX.utils.book_new();
-            const comissao = 0.1366; // 13.66%
+            const comissao = getComissao();
             
             // Header com colunas intercaladas: Preço e NET/dia
             const header = ['Grupo'];
