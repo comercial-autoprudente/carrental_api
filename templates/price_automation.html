@@ -491,10 +491,28 @@
                     if (data.items && data.items.length > 0) {
                         console.log(`${day} dias - ${data.items.length} carros encontrados`);
                         
+                        // DEBUG: Mostrar todos os suppliers únicos
+                        const allSuppliers = [...new Set(data.items.map(item => item.supplier))];
+                        console.log(`[DEBUG] Suppliers encontrados:`, allSuppliers);
+                        
                         // FILTRAR APENAS AUTOPRUDENTE
+                        let debugCount = 0;
                         const autoprudenteItems = data.items.filter(item => {
                             const supplier = (item.supplier || '').toLowerCase();
-                            return supplier.includes('autoprudente') || supplier.includes('auto prudente');
+                            const isAutoprudente = supplier.includes('autoprudente') || 
+                                                   supplier.includes('auto prudente') ||
+                                                   supplier.includes('auto-prudente') ||
+                                                   supplier === 'aup';
+                            
+                            // DEBUG: Log de cada item
+                            if (isAutoprudente) {
+                                console.log(`[DEBUG] ✅ AUTOPRUDENTE encontrado: "${item.supplier}" - ${item.car}`);
+                            } else if (debugCount < 3) {
+                                console.log(`[DEBUG] ❌ NÃO é AUTOPRUDENTE: "${item.supplier}" - ${item.car}`);
+                                debugCount++;
+                            }
+                            
+                            return isAutoprudente;
                         });
                         
                         console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
