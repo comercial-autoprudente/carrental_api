@@ -669,8 +669,9 @@
           const expanded = gi === 0; // only first group open by default
           gi++;
           const groupHeader = renderGroupWithAlerts(g.label, lst, bestCat, priceAlerts);
+          const groupCode = g.label.split(' - ')[0].trim();
           parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId}')">${groupHeader}</div>`);
-          parts.push(`<div id="${secId}" data-accordion="group" class="${expanded ? '' : 'hidden'} accordion-content">${renderTableForItems(lst)}</div>`);
+          parts.push(`<div id="${secId}" data-accordion="group" class="${expanded ? '' : 'hidden'} accordion-content">${renderTableForItems(lst, groupCode, priceAlerts)}</div>`);
         });
         // Render any categories not in default order at the end
         map.forEach((lst, cat) => {
@@ -1085,11 +1086,18 @@
         return it.category || '';
       }
 
-      function renderCardsForItems(items) {
+      function renderCardsForItems(items, groupCode, priceAlerts) {
+        const hasGroupAlert = groupCode && priceAlerts && priceAlerts[groupCode];
+        
         return `
           <div class="grid grid-cols-1 gap-3">
-            ${(items || []).map((it, idx) => `
-              <div class="rounded-md border bg-white ${(/auto prudente/i.test(it.supplier||'')) ? 'auto-prudente' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}">
+            ${(items || []).map((it, idx) => {
+              const isAutoPrudente = /auto prudente/i.test(it.supplier||'');
+              const showAlert = hasGroupAlert && isAutoPrudente;
+              const alertIcon = showAlert ? `<svg class="inline-block w-4 h-4 ml-1 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>` : '';
+              
+              return `
+              <div class="rounded-md border bg-white ${isAutoPrudente ? 'auto-prudente' : ''}" style="${isAutoPrudente ? 'background-color: var(--brand-teal-20);' : ''}">
                 <div class="flex items-center gap-3 p-3">
                   ${imgTagFor(it, 'card')}
                   <div class="min-w-0 flex-1">
@@ -1098,15 +1106,18 @@
                     <div class="text-xs text-gray-600">${escapeHtml(displayCategory(it))}</div>
                   </div>
                   <div class="text-right">
-                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(it.price || '')}</div>
+                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(it.price || '')}${alertIcon}</div>
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>`;
       }
 
-      function renderTableForItems(items) {
+      function renderTableForItems(items, groupCode, priceAlerts) {
+        const hasGroupAlert = groupCode && priceAlerts && priceAlerts[groupCode];
+        
         return `
           <div>
             <div class="hidden md:block overflow-x-auto">
@@ -1122,8 +1133,13 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                  ${(items || []).map((it, idx) => `
-                    <tr class="${(/auto prudente/i.test(it.supplier||'')) ? '' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}">
+                  ${(items || []).map((it, idx) => {
+                    const isAutoPrudente = /auto prudente/i.test(it.supplier||'');
+                    const showAlert = hasGroupAlert && isAutoPrudente;
+                    const alertIcon = showAlert ? `<svg class="inline-block w-4 h-4 ml-1 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>` : '';
+                    
+                    return `
+                    <tr class="${isAutoPrudente ? '' : ''}" style="${isAutoPrudente ? 'background-color: var(--brand-teal-20);' : ''}">
                       <td class="px-4 py-2 text-sm text-gray-600">${idx + 1}</td>
                       <td class="px-4 py-2 text-sm">
                         ${imgTagFor(it, 'table')}
@@ -1131,13 +1147,14 @@
                       <td class="px-4 py-2 text-sm">${escapeHtml(displaySupplierName(it.supplier))}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(getCleanVehicleName(it.car) || '-')}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displayCategory(it))}</td>
-                      <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>
+                      <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}${alertIcon}</td>
                     </tr>
-                  `).join('')}
+                  `;
+                  }).join('')}
                 </tbody>
               </table>
             </div>
-            <div class="block md:hidden">${renderCardsForItems(items)}</div>
+            <div class="block md:hidden">${renderCardsForItems(items, groupCode, priceAlerts)}</div>
           </div>`;
       }
 
