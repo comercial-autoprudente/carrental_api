@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta http-equiv="Expires" content="0"/>
-    <meta name="cache-bust" content="v5-FINAL-20250129-2045"/>
+    <meta name="cache-bust" content="v3-RESTORE-COMPLEX"/>
     <title>Rental Prices v3 FULL</title>
     <link rel="icon" type="image/png" href="/static/autoprudente-favicon.png?v=2" />
     <link rel="shortcut icon" href="/static/autoprudente-favicon.png?v=2" />
@@ -127,7 +127,7 @@
           </div>
           {% endif %}
           {% if request.session and request.session.get('is_admin') %}
-          <a href="/admin/users" class="text-xs md:text-sm text-white/90 hover:text-white underline">Settings</a>
+          <a href="/admin/users" class="text-xs md:text-sm text-white/90 hover:text-white underline">⚙️ Settings</a>
           {% endif %}
           <form method="post" action="/logout">
             <button class="text-xs md:text-sm text-white/90 hover:text-white transition-colors">Logout</button>
@@ -140,11 +140,11 @@
       
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Search by Parameters</h2>
+          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Pesquisar por parâmetros</h2>
         </div>
         <form id="paramForm" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end" onsubmit="return false">
           <div class="md:col-span-3 seg">
-            <label class="sr-only">Pickup Location</label>
+            <label class="sr-only">Local de entrega</label>
             <select id="location" style="flex:1; min-width:0;">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
               <option value="Albufeira">Albufeira</option>
@@ -153,20 +153,20 @@
           <!-- Data de início (segundo campo) -->
           <div class="md:col-span-2 seg">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
-            <label class="sr-only">Start Date</label>
+            <label class="sr-only">Início (data)</label>
             <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;"/>
           </div>
           <!-- Dias (terceiro campo na mesma linha) -->
           <div class="md:col-span-7 seg" style="flex-wrap: nowrap; overflow-x: auto;">
-            <label class="sr-only">Days</label>
+            <label class="sr-only">Dias</label>
             <input id="days" type="hidden" value="7" />
             <div id="daysChips" class="flex flex-nowrap gap-1"></div>
           </div>
           <!-- Botões -->
           <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
-            <button id="fetchAllBtn" type="button" class="btn-search">Search</button>
-            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); history.replaceState({}, '', window.location.pathname); alert('Session renewed!');">
-              🔄 Renew Session
+            <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
+            <button id="clearCacheBtn" type="button" class="px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors" onclick="cachedResults = {}; document.getElementById('results').innerHTML = ''; localStorage.clear(); sessionStorage.clear(); history.replaceState({}, '', window.location.pathname); alert('Sessão renovada!');">
+              🔄 Renovar Sessão
             </button>
             <!-- Fetch All temporariamente removido -->
             <button id="fetchAllDaysBtn" type="button" class="hidden px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
@@ -175,23 +175,23 @@
             <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
           <div class="md:col-span-1 seg hidden">
-            <label class="sr-only">Start Time</label>
+            <label class="sr-only">Início (hora)</label>
             <input id="startTime" type="time" value="15:00" placeholder="15:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-2 seg hidden">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
             <span class="bar bar-yellow"></span>
-            <label class="sr-only">End Date</label>
+            <label class="sr-only">Fim (data)</label>
             <input id="endDate" type="date" placeholder="Fim" class="date-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-1 seg hidden">
-            <label class="sr-only">End Time</label>
+            <label class="sr-only">Fim (hora)</label>
             <input id="endTime" type="time" value="10:00" placeholder="10:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-3 flex items-center gap-3 md:justify-end hidden">
             <label class="hidden flex items-center gap-2 nowrap" style="padding:0;">
               <input id="samePlace" type="checkbox" class="rounded border-gray-300" checked />
-              <span class="text-sm text-gray-700">Return to same location</span>
+              <span class="text-sm text-gray-700">Devolver no mesmo local</span>
             </label>
             <select id="locationDrop" class="w-full rounded-md border-gray-300 hidden">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
@@ -215,7 +215,7 @@
           </div>
         </div>
         <div class="px-5 md:px-8">
-          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Searching over 1000 rental companies<span class="dots"></span></div>
+          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Pesquisando em mais de 1000 locadoras<span class="dots"></span></div>
           <div class="mx-auto" style="max-width: 520px;">
             <div id="movingScene" class="scene" style="margin-bottom: 0px;">
             <!-- Inline SVG landscape (mountains, clouds, trees) with transparent background -->
@@ -269,15 +269,15 @@
             <ul class="list-none space-y-1 text-sm text-gray-800 m-0 p-0">
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Best price guaranteed</span>
+                <span>O melhor preço garantido</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Fast and easy</span>
+                <span>Rápido e fácil</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>More than <strong>7.9 million</strong> customers</span>
+                <span>Mais de <strong>7,9 milhões</strong> de clientes</span>
               </li>
             </ul>
           </div>
@@ -309,96 +309,6 @@
 
     <script>
       console.log('[INIT] Versão: v2025-01-28-10-00');
-      
-      // ============================================
-      // VEHICLE NAME MAPPING - Clean Names
-      // ============================================
-      let vehicleNameMapping = {};
-      
-      async function loadVehicleMapping() {
-        try {
-          const response = await fetch('/api/vehicles/name-mapping');
-          const data = await response.json();
-          if (data.ok) {
-            vehicleNameMapping = data.mapping;
-            console.log('[NAME MAPPING] Loaded', Object.keys(vehicleNameMapping).length, 'vehicle names');
-            return true;
-          }
-          return false;
-        } catch (error) {
-          console.error('[NAME MAPPING] Error loading:', error);
-          return false;
-        }
-      }
-      
-      // Função global para recarregar mapping após editar nomes no editor
-      window.reloadVehicleMapping = async function() {
-        console.log('[NAME MAPPING] Recarregando mapeamento...');
-        const success = await loadVehicleMapping();
-        if (success) {
-          console.log('[NAME MAPPING] ✅ Mapeamento atualizado! Nova pesquisa usará nomes editados.');
-          // Mostrar notificação
-          try {
-            const notif = document.createElement('div');
-            notif.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg z-50';
-            notif.innerHTML = '✅ Nomes de veículos atualizados!';
-            document.body.appendChild(notif);
-            setTimeout(() => notif.remove(), 3000);
-          } catch(_) {}
-        }
-        return success;
-      };
-      
-      function getCleanVehicleName(originalName) {
-        if (!originalName) return '';
-        
-        console.log('[CLEAN NAME] Original:', originalName);
-        
-        // Remove common suffixes (with or without spaces!)
-        let cleaned = String(originalName)
-          // Com espaços
-          .replace(/\s+ou\s+similar(es)?/gi, '')
-          .replace(/\s+ou\s+semelhante(s)?/gi, '')
-          .replace(/\s+or\s+similar/gi, '')
-          // SEM espaços (problema atual!)
-          .replace(/ou\s*similar(es)?/gi, '')
-          .replace(/ou\s*semelhante(s)?/gi, '')
-          .replace(/or\s*similar/gi, '')
-          // Tamanhos
-          .replace(/\s*(pequeno|médio|grande|small|medium|large)/gi, '')
-          // Vírgulas e pontos extras
-          .replace(/,\s*/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim()
-          .toLowerCase();
-        
-        console.log('[CLEAN NAME] Cleaned:', cleaned);
-        
-        // Look up in mapping
-        if (vehicleNameMapping[cleaned]) {
-          const result = vehicleNameMapping[cleaned]
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(' ');
-          console.log('[CLEAN NAME] Mapped:', result);
-          return result;
-        }
-        
-        // Fallback: capitalize cleaned name
-        const result = cleaned
-          .split(' ')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(' ');
-        console.log('[CLEAN NAME] Fallback:', result);
-        return result;
-      }
-      
-      // Load mapping when DOM is ready
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadVehicleMapping);
-      } else {
-        loadVehicleMapping();
-      }
       
       // Register service worker for PWA (guarded)
       if ('serviceWorker' in navigator) {
@@ -517,13 +427,13 @@
       function groupByCategory(items) {
         // Desired order with code labels
         const groups = [
-          { cat: 'Mini 4 Doors', label: 'B1 - Mini 4 Lugares' },
-          { cat: 'Mini', label: 'B2 - Mini 5 Lugares' },
+          { cat: 'Mini 4 Doors', label: 'B1 - Mini 4 Doors' },
+          { cat: 'Mini', label: 'B2 - Mini 5 Doors' },
           { cat: 'Economy', label: 'D - Economy' },
           { cat: 'Mini Automatic', label: 'E1 - Mini Automatic' },
           { cat: 'Economy Automatic', label: 'E2 – Economy Automatic' },
           { cat: 'SUV', label: 'F – SUV' },
-          { cat: 'Cabrio', label: 'G - Cabrio' },
+          { cat: 'Premium', label: 'G - Premium' },
           { cat: 'Crossover', label: 'J1 – Crossover' },
           { cat: 'Estate/Station Wagon', label: 'J2 – Station Wagon' },
           { cat: 'SUV Automatic', label: 'L1 - SUV Automatic' },
@@ -531,7 +441,6 @@
           { cat: '7 Seater', label: 'M1 - 7 Seater' },
           { cat: '7 Seater Automatic', label: 'M2 - 7 Seater Automatic' },
           { cat: '9 Seater', label: 'N - 9 Seater' },
-          { cat: 'Luxury', label: 'X - Luxury' },
         ];
         const codeToCat = {
           'B1': 'Mini 4 Doors',
@@ -540,8 +449,7 @@
           'E1': 'Mini Automatic',
           'E2': 'Economy Automatic',
           'F': 'SUV',
-          'G': 'Cabrio',
-          'X': 'Luxury',
+          'G': 'Premium',
           'J1': 'Crossover',
           'J2': 'Estate/Station Wagon',
           'L1': 'SUV Automatic',
@@ -574,37 +482,16 @@
           return s; // fallback to raw
         };
         const map = new Map();
-        (items || []).forEach((it, idx) => {
-          // DEBUG: Log primeiros 3 items
-          if (idx < 3) {
-            console.log('[GROUP DEBUG]', idx, {
-              car: it.car,
-              category: it.category,
-              group: it.group,
-              hasGroup: !!it.group
-            });
-          }
-          
-          // USAR CAMPO 'group' DIRETO DA API (B1, B2, D, etc)
+        (items || []).forEach(it => {
+          const disp = String(displayCategory(it) || '').trim();
           let key = '';
-          if (it.group && it.group.trim()) {
-            // Usar código do grupo da API
-            const code = String(it.group).trim().toUpperCase();
-            key = codeToCat[code] || '';
+          const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
+          if (m) {
+            const code = m[1].toUpperCase();
+            key = codeToCat[code] || normalizeCat(it.category);
+          } else {
+            key = normalizeCat(disp) || normalizeCat(it.category);
           }
-          
-          // Fallback: tentar extrair da categoria se não tiver grupo
-          if (!key) {
-            const disp = String(displayCategory(it) || '').trim();
-            const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
-            if (m) {
-              const code = m[1].toUpperCase();
-              key = codeToCat[code] || normalizeCat(it.category);
-            } else {
-              key = normalizeCat(disp) || normalizeCat(it.category);
-            }
-          }
-          
           if (!key) return;
           if (!map.has(key)) map.set(key, []);
           map.get(key).push(it);
@@ -650,13 +537,6 @@
           }, Number.POSITIVE_INFINITY);
           if (isFinite(m) && m < bestVal) { bestVal = m; bestCat = cat; }
         });
-        const groupedForValidation = groups.map(g => ({
-          label: g.label,
-          items: map.get(g.cat) || []
-        }));
-        const priceAlerts = validateGroupPrices(groupedForValidation);
-        
-        // Render groups in desired order
         groups.forEach(g => {
           const lst = (map.get(g.cat) || []).slice().sort((a,b) => {
             const an = toNum(a.price);
@@ -668,10 +548,8 @@
           const secId = `group_sec_${gi}`;
           const expanded = gi === 0; // only first group open by default
           gi++;
-          const groupHeader = renderGroupWithAlerts(g.label, lst, bestCat, priceAlerts);
-          const groupCode = g.label.split(' - ')[0].trim();
-          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId}')">${groupHeader}</div>`);
-          parts.push(`<div id="${secId}" data-accordion="group" class="${expanded ? '' : 'hidden'} accordion-content">${renderTableForItems(lst, groupCode, priceAlerts)}</div>`);
+          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId}')"><span>${escapeHtml(g.label)}</span>${(bestCat===g.cat)?'<span class="lowest-badge">Preço mais baixo</span>':''}</div>`);
+          parts.push(`<div id="${secId}" data-accordion="group" class="${expanded ? '' : 'hidden'} accordion-content">${renderTableForItems(lst)}</div>`);
         });
         // Render any categories not in default order at the end
         map.forEach((lst, cat) => {
@@ -859,121 +737,7 @@
       function displaySupplierName(name) {
         const s = String(name || '').trim();
         if (!s) return '';
-        
-        // Extract code from image path if present
-        const imgMatch = s.match(/logo_([A-Z0-9]+)\.(png|jpg|avif|webp)/i);
-        if (imgMatch) {
-          const code = imgMatch[1].toUpperCase();
-          // Map image codes to supplier names
-          const imgCodeMap = {
-            // Goldcar variants
-            'GMO1': 'Goldcar', 'GMO': 'Goldcar', 'GCA': 'Goldcar',
-            // Europcar variants
-            'ECR': 'Europcar', 'EU2': 'Europcar', 'EUK': 'Europcar', 'EUP': 'Europcar', 'EUR': 'Europcar',
-            // Sixt variants
-            'SVN': 'Sixt', 'SXR': 'Sixt', 'SXT': 'Sixt', 'SIX': 'Sixt',
-            // Budget variants
-            'BGX': 'Budget', 'BDG': 'Budget', 'BUD': 'Budget',
-            // Hertz variants
-            'HER': 'Hertz', 'HRZ': 'Hertz', 'HTZ': 'Hertz',
-            // Avis variants
-            'AVS': 'Avis', 'AVI': 'Avis',
-            // Drive on Holidays variants
-            'DVM': 'Drive on Holidays', 'DOH': 'Drive on Holidays', 'DHO': 'Drive on Holidays',
-            // Other major suppliers
-            'KLA': 'Klass Wagen', 'KLW': 'Klass Wagen',
-            'AMI1': 'Amigos', 'AMI': 'Amigos', 'AMG': 'Amigos',
-            'AUP': 'Auto Prudente Rent a Car',
-            'THR': 'Thrifty', 'TFT': 'Thrifty',
-            'CEN': 'Centauro', 'CNT': 'Centauro',
-            'OKR': 'OK Mobility', 'OKM': 'OK Mobility',
-            'SUR': 'Surprice', 'SPR': 'Surprice',
-            'TAN': 'TAN', 'TAN1': 'TAN',
-            'YNO': 'YNO Rent a Car', 'YNR': 'YNO Rent a Car',
-            'ICT': 'Interrent', 'INT': 'Interrent', 'IRE': 'Interrent',
-            'FIR': 'Firefly', 'FLY': 'Firefly',
-            'KEA': 'KEA Rent', 'KEA1': 'KEA Rent',
-            'RCR': 'Rhodium', 'RHD': 'Rhodium',
-            'ALM': 'Alamo', 'ALO': 'Alamo',
-            'NAT': 'National', 'NTL': 'National',
-            'ENT': 'Enterprise', 'ETP': 'Enterprise',
-            'DOL': 'Dollar', 'DLR': 'Dollar',
-            'FRO': 'Frontline', 'FRL': 'Frontline',
-            'GRE': 'Green Motion', 'GRM': 'Green Motion', 'GMO': 'Green Motion',
-            'REC': 'Record Go', 'RCG': 'Record Go',
-            'WAY': 'Wayz', 'WYZ': 'Wayz',
-            'ADD': 'Addcar', 'ADC': 'Addcar',
-            'BRO': 'Bravacar', 'BRV': 'Bravacar',
-            'CAR': 'Carhire', 'CRH': 'Carhire',
-            'DIG': 'Digital', 'DGT': 'Digital',
-            'FLC': 'Flizzr', 'FLZ': 'Flizzr',
-            'GOS': 'Go2', 'GO2': 'Go2',
-            'KEY': 'Key n Go', 'KNG': 'Key n Go',
-            'LOC': 'Locauto', 'LCT': 'Locauto',
-            'MAS': 'Master', 'MST': 'Master',
-            'MUN': 'Mundy', 'MND': 'Mundy',
-            'RAC': 'Rack', 'RCK': 'Rack',
-            'TOP': 'TopCar', 'TPC': 'TopCar',
-            'VIS': 'Visacar', 'VSC': 'Visacar',
-            'BSD': 'Booking.com', 'BKG': 'Booking.com',
-            'CAE': 'CarRentals', 'CRE': 'CarRentals',
-            // Additional suppliers from CarJet
-            'ALA': 'Alamo', 'ACE': 'Ace Rent a Car',
-            'ADV': 'Advantage', 'AFL': 'Affordable',
-            'AGR': 'Agrauto', 'ALC': 'Alicante',
-            'ALP': 'Alphacar', 'ANT': 'Antaviana',
-            'ARA': 'Aracauto', 'ARG': 'Argest',
-            'ATL': 'Atlantic', 'AUT': 'Autoclick',
-            'AUE': 'Auto Europe', 'AUU': 'Auto Union',
-            'AUZ': 'Autozur', 'BAR': 'Barracuda',
-            'BES': 'Best Drive', 'BIG': 'Big Move',
-            'BLU': 'Blue Sky', 'BRG': 'Bravacar Gold',
-            'CAL': 'Calicar', 'CAN': 'Canarias',
-            'CRZ': 'Cruz', 'DAV': 'Drivalia',
-            'DLX': 'Deluxe', 'ECN': 'Economy',
-            'ELS': 'Elche', 'EMP': 'Emporio',
-            'ESD': 'Easirent', 'ESY': 'Easy',
-            'EXO': 'Exoticars', 'FER': 'Ferrovial',
-            'FLE': 'Fleetway', 'FOC': 'Focus',
-            'FUL': 'Full', 'GAL': 'Galicia',
-            'GRN': 'Greenrent', 'GUA': 'Guerin',
-            'HAP': 'Happy', 'HER1': 'Hertz Gold',
-            'ILG': 'Ilgatur', 'ISL': 'Islands',
-            'JOY': 'Joycars', 'JUS': 'Justigo',
-            'KOM': 'Koala', 'LAS': 'Las Palmas',
-            'LEV': 'Levo', 'MAG': 'Maggiore',
-            'MAL': 'Malaga Cars', 'MAR': 'Marbesol',
-            'MAX': 'Maximarent', 'MED': 'Mediterranean',
-            'MIR': 'Miramores', 'MOT': 'Motion',
-            'NOV': 'Nova', 'OLI': 'Oliveira',
-            'OMG': 'Omega', 'OPO': 'Oporto',
-            'ORG': 'Orange', 'OWN': 'Own',
-            'PAP': 'Paphos', 'PER': 'Perry',
-            'PLU': 'Plus', 'POL': 'Polt',
-            'PRE': 'Premier', 'PRI': 'Prime',
-            'RAD': 'Radical', 'REN': 'Rentacar',
-            'RET': 'Retcars', 'ROD': 'Rodavante',
-            'ROT': 'Rotacar', 'SAL': 'Salcars',
-            'SCO': 'Scout', 'SEN': 'Seneca',
-            'SIL': 'Silva', 'SIM': 'Simples',
-            'SOL': 'Solmovil', 'SPA': 'Spain',
-            'SPE': 'Speed', 'STA': 'Star',
-            'SUN': 'Sun', 'TEK': 'Tek',
-            'TER': 'Terra', 'TLC': 'TLC',
-            'TRA': 'Travel', 'UNI': 'Unirent',
-            'VAL': 'Valencia', 'VAN': 'Vanguard',
-            'VIP': 'VIP', 'WHI': 'White'
-          };
-          if (imgCodeMap[code]) return imgCodeMap[code];
-          
-          // Fallback: Se não encontrar, retornar código formatado
-          // Ex: "GMO1" → "GMO1 Rentals"
-          console.warn('[SUPPLIER] Unknown code:', code, 'from:', s);
-          return code + ' Rent a Car';
-        }
-        
         const up = s.toUpperCase().replace(/\s+/g, ' ').trim();
-        
         // Known code → name mappings (extendable)
         const codeMap = {
           AUP: 'Auto Prudente Rent a Car',
@@ -985,26 +749,12 @@
           SUR: 'Surprice',
           TAN: 'TAN',
           TAN1: 'TAN',
-          YNO: 'YNO Rent a Car',
+          YNO: 'YNOT',
           ICT: 'Interrent',
-          BGX: 'Budget',
-          SVN: 'Sixt',
-          GMO: 'Goldcar',
-          GMO1: 'Goldcar',
-          KLA: 'Klass Wagen',
-          AMI1: 'Amigos',
-          DVM: 'Drive on Holidays',
-          AVS: 'Avis',
-          FIR: 'Firefly',
-          KEA: 'KEA Rent',
-          RCR: 'Rhodium',
-          SXR: 'Sixt'
         };
-        
         // Direct code or code embedded in text
-        const m = up.match(/\b(AUP|THR|ECR|HER|CEN|OKR|SUR|TAN1?|YNO|ICT|BGX|SVN|GMO1?|KLA|AMI1?|DVM|AVS|FIR|KEA|RCR|SXR)\b/);
+        const m = up.match(/\b(AUP|THR|ECR|HER|CEN|OKR|SUR|TAN1?|YNO|ICT)\b/);
         if (m && codeMap[m[1]]) return codeMap[m[1]];
-        
         // Normalize common textual variants
         if (/^AUTO\s*PRUDENTE\b/.test(up)) return 'Auto Prudente Rent a Car';
         if (/^OK\s*(RENT|MOBILITY)\b/.test(up)) return 'OK Mobility';
@@ -1013,15 +763,6 @@
         if (/^HERTZ\b/.test(up)) return 'Hertz';
         if (/^THRIFTY\b/.test(up)) return 'Thrifty';
         if (/^SURPRICE\b/.test(up)) return 'Surprice';
-        if (/^GOLDCAR\b/.test(up)) return 'Goldcar';
-        if (/^SIXT\b/.test(up)) return 'Sixt';
-        if (/^BUDGET\b/.test(up)) return 'Budget';
-        if (/^KLASS\s*WAGEN\b/.test(up)) return 'Klass Wagen';
-        if (/^AMIGOS\b/.test(up)) return 'Amigos';
-        if (/^DRIVE\s*ON\s*HOLIDAYS\b/.test(up)) return 'Drive on Holidays';
-        if (/^YNO\b/.test(up)) return 'YNO Rent a Car';
-        if (/^INTERRENT\b/.test(up)) return 'Interrent';
-        
         // Fallback to original
         return s;
       }
@@ -1086,38 +827,28 @@
         return it.category || '';
       }
 
-      function renderCardsForItems(items, groupCode, priceAlerts) {
-        const hasGroupAlert = groupCode && priceAlerts && priceAlerts[groupCode];
-        
+      function renderCardsForItems(items) {
         return `
           <div class="grid grid-cols-1 gap-3">
-            ${(items || []).map((it, idx) => {
-              const isAutoPrudente = /auto prudente/i.test(it.supplier||'');
-              const showAlert = hasGroupAlert && isAutoPrudente;
-              const alertIcon = showAlert ? `<svg class="inline-block w-4 h-4 ml-1 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>` : '';
-              
-              return `
-              <div class="rounded-md border bg-white ${isAutoPrudente ? 'auto-prudente' : ''}" style="${isAutoPrudente ? 'background-color: var(--brand-teal-20);' : ''}">
+            ${(items || []).map((it, idx) => `
+              <div class="rounded-md border bg-white ${(/auto prudente/i.test(it.supplier||'')) ? 'auto-prudente' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}">
                 <div class="flex items-center gap-3 p-3">
                   ${imgTagFor(it, 'card')}
                   <div class="min-w-0 flex-1">
                     <div class="text-xs text-gray-500">${escapeHtml(displaySupplierName(it.supplier))}</div>
-                    <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml(getCleanVehicleName(it.car) || '-')}</div>
+                    <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml(it.car || '-')}</div>
                     <div class="text-xs text-gray-600">${escapeHtml(displayCategory(it))}</div>
                   </div>
                   <div class="text-right">
-                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(it.price || '')}${alertIcon}</div>
+                    <div class="text-sm font-semibold text-gray-900">${escapeHtml(it.price || '')}</div>
                   </div>
                 </div>
               </div>
-            `;
-            }).join('')}
+            `).join('')}
           </div>`;
       }
 
-      function renderTableForItems(items, groupCode, priceAlerts) {
-        const hasGroupAlert = groupCode && priceAlerts && priceAlerts[groupCode];
-        
+      function renderTableForItems(items) {
         return `
           <div>
             <div class="hidden md:block overflow-x-auto">
@@ -1133,28 +864,22 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white">
-                  ${(items || []).map((it, idx) => {
-                    const isAutoPrudente = /auto prudente/i.test(it.supplier||'');
-                    const showAlert = hasGroupAlert && isAutoPrudente;
-                    const alertIcon = showAlert ? `<svg class="inline-block w-4 h-4 ml-1 text-red-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>` : '';
-                    
-                    return `
-                    <tr class="${isAutoPrudente ? '' : ''}" style="${isAutoPrudente ? 'background-color: var(--brand-teal-20);' : ''}">
+                  ${(items || []).map((it, idx) => `
+                    <tr class="${(/auto prudente/i.test(it.supplier||'')) ? '' : ''}" style="${(/auto prudente/i.test(it.supplier||'')) ? 'background-color: var(--brand-teal-20);' : ''}">
                       <td class="px-4 py-2 text-sm text-gray-600">${idx + 1}</td>
                       <td class="px-4 py-2 text-sm">
                         ${imgTagFor(it, 'table')}
                       </td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displaySupplierName(it.supplier))}</td>
-                      <td class="px-4 py-2 text-sm">${escapeHtml(getCleanVehicleName(it.car) || '-')}</td>
+                      <td class="px-4 py-2 text-sm">${escapeHtml(it.car || '-')}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displayCategory(it))}</td>
-                      <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}${alertIcon}</td>
+                      <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>
                     </tr>
-                  `;
-                  }).join('')}
+                  `).join('')}
                 </tbody>
               </table>
             </div>
-            <div class="block md:hidden">${renderCardsForItems(items, groupCode, priceAlerts)}</div>
+            <div class="block md:hidden">${renderCardsForItems(items)}</div>
           </div>`;
       }
 
@@ -1596,7 +1321,7 @@
                 tr.innerHTML = `
                   <td class="px-4 py-2 text-sm text-gray-600">${i + 1}</td>
                   <td class="px-4 py-2 text-sm">${escapeHtml(it.supplier || '')}</td>
-                  <td class="px-4 py-2 text-sm">${escapeHtml(getCleanVehicleName(it.car) || '')}</td>
+                  <td class="px-4 py-2 text-sm">${escapeHtml(it.car || '')}</td>
                   <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>`;
                 tbody.appendChild(tr);
               }
@@ -1622,123 +1347,6 @@
 
       function escapeHtml(str) {
         return String(str).replace(/[&<>\"]+/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[s]));
-      }
-
-      // ============================================================
-      // PRICE VALIDATION SYSTEM
-      // ============================================================
-      function loadValidationRules() {
-        try {
-          const saved = localStorage.getItem('priceValidationRules');
-          return saved ? JSON.parse(saved) : [];
-        } catch (e) {
-          console.error('[VALIDATION] Error loading rules:', e);
-          return [];
-        }
-      }
-
-      function validateGroupPrices(groupedData) {
-        const rules = loadValidationRules().filter(r => r.enabled);
-        if (rules.length === 0) return {};
-
-        const alerts = {};
-        const groupPrices = {};
-
-        // Extract Auto Prudente prices for each group
-        groupedData.forEach(g => {
-          const groupCode = g.label.split(' - ')[0].trim(); // Extract "B1", "B2", etc
-          const autoPrudenteItems = g.items.filter(item => 
-            item.supplier && item.supplier.toLowerCase().includes('auto prudente')
-          );
-          
-          if (autoPrudenteItems.length > 0) {
-            // Get lowest Auto Prudente price for this group
-            const prices = autoPrudenteItems.map(item => parseFloat(item.price) || 0).filter(p => p > 0);
-            if (prices.length > 0) {
-              groupPrices[groupCode] = Math.min(...prices);
-            }
-          }
-        });
-
-        // Validate rules
-        rules.forEach(rule => {
-          const basePrice = groupPrices[rule.baseGroup];
-          
-          // Suportar tanto compareGroup (antigo) quanto compareGroups (novo)
-          const compareGroups = rule.compareGroups || (rule.compareGroup ? [rule.compareGroup] : []);
-          
-          if (!basePrice) return; // Skip if base price not available
-          
-          // Validar contra cada grupo de comparação
-          compareGroups.forEach(compareGroup => {
-            const comparePrice = groupPrices[compareGroup];
-            if (!comparePrice) return; // Skip if compare price not available
-
-            let violated = false;
-            let message = '';
-
-            switch (rule.condition) {
-              case 'must_be_greater_than':
-                if (basePrice <= comparePrice) {
-                  violated = true;
-                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≤ ${compareGroup} (€${comparePrice.toFixed(2)})`;
-                }
-                break;
-              case 'must_be_greater_or_equal':
-                if (basePrice < comparePrice) {
-                  violated = true;
-                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be < ${compareGroup} (€${comparePrice.toFixed(2)})`;
-                }
-                break;
-              case 'must_be_less_than':
-                if (basePrice >= comparePrice) {
-                  violated = true;
-                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≥ ${compareGroup} (€${comparePrice.toFixed(2)})`;
-                }
-                break;
-              case 'must_be_less_or_equal':
-                if (basePrice > comparePrice) {
-                  violated = true;
-                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be > ${compareGroup} (€${comparePrice.toFixed(2)})`;
-                }
-                break;
-              case 'must_not_exceed_percentage':
-                const maxAllowed = comparePrice * (1 + (rule.percentage || 0) / 100);
-                if (basePrice > maxAllowed) {
-                  violated = true;
-                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) exceeds ${rule.percentage}% of ${compareGroup}`;
-                }
-                break;
-            }
-
-            if (violated) {
-              if (!alerts[rule.baseGroup]) alerts[rule.baseGroup] = [];
-              alerts[rule.baseGroup].push(message);
-            }
-          });
-        });
-
-        return alerts;
-      }
-
-      function renderGroupWithAlerts(label, items, bestCat, alerts) {
-        const groupCode = label.split(' - ')[0].trim();
-        const hasAlert = alerts[groupCode] && alerts[groupCode].length > 0;
-        
-        let alertHtml = '';
-        if (hasAlert) {
-          const alertMessages = alerts[groupCode].join(' | ');
-          alertHtml = `<span class="inline-flex items-center gap-1 px-3 py-1 bg-red-500 text-white text-xs rounded-md animate-pulse" title="${escapeHtml(alertMessages)}">
-            <svg class="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-            </svg>
-            <span class="font-medium">${escapeHtml(alertMessages)}</span>
-          </span>`;
-        }
-
-        const lowestBadge = (bestCat === label.split(' - ')[1]?.trim()) ? '<span class="lowest-badge">Preço mais baixo</span>' : '';
-        
-        return `<span>${escapeHtml(label)}</span><div class="flex items-center gap-2 flex-1 justify-center">${alertHtml}</div><div class="flex items-center">${lowestBadge}</div>`;
       }
     </script>
   </body>

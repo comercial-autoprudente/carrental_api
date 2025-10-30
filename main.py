@@ -1398,9 +1398,13 @@ async def home(request: Request):
     response.headers["Expires"] = "0"
     return response
 
-@app.get("/admin")
-async def admin_root():
-    return RedirectResponse(url="/admin/users", status_code=HTTP_303_SEE_OTHER)
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_root(request: Request):
+    try:
+        require_admin(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    return templates.TemplateResponse("settings_dashboard.html", {"request": request})
 
 # --- Admin: environment summary and adjustment preview ---
 @app.get("/admin/env-summary")
