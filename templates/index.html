@@ -576,6 +576,9 @@
         
         const previews = [];
         groups.forEach(g => {
+          // Skip Luxury group (X)
+          if (g.cat === 'Luxury') return;
+          
           const lst = map.get(g.cat) || [];
           if (!lst.length) return;
           
@@ -588,7 +591,7 @@
           const priceFormatted = isFinite(price) ? price.toFixed(2) + ' €' : cheapest.price;
           
           previews.push(`
-            <div class="flex flex-col items-center p-3 bg-white border border-gray-200 hover:border-[#f4ad0f] hover:shadow-md transition-all cursor-pointer" onclick="document.getElementById('group_sec_${g.cat}')?.scrollIntoView({behavior:'smooth'})">
+            <div class="flex-shrink-0 flex flex-col items-center p-3 bg-white border border-gray-200 hover:border-[#f4ad0f] hover:shadow-md transition-all cursor-pointer w-40" onclick="document.getElementById('group_sec_${g.cat}')?.scrollIntoView({behavior:'smooth'})">
               <div class="text-xs text-gray-500 mb-1 text-center font-medium">${escapeHtml(g.label.split(' - ')[1] || g.label)}</div>
               <img src="${imageUrlFor(cheapest)}" alt="${escapeHtml(cheapest.car)}" class="h-16 w-auto object-contain mb-2" onerror="this.src='/static/car-placeholder.png'"/>
               <div class="text-center">
@@ -607,7 +610,7 @@
               </svg>
               NOSSO CONSELHO - Reserve agora
             </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div class="flex gap-3 overflow-x-auto pb-2" style="scrollbar-width: thin;">
               ${previews.join('')}
             </div>
           </div>
