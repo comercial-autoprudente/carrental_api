@@ -676,9 +676,40 @@
                         
                         if (data.items && data.items.length > 0) {
                             console.log(`${day} dias - ${data.items.length} carros encontrados`);
-                            data.items.forEach(item => {
+                            
+                            // FILTRAR APENAS AUTOPRUDENTE
+                            const autoprudenteItems = data.items.filter(item => {
+                                const supplier = (item.supplier || '').toLowerCase();
+                                return supplier.includes('autoprudente') || 
+                                       supplier.includes('auto prudente') ||
+                                       supplier.includes('auto-prudente') ||
+                                       supplier === 'aup';
+                            });
+                            
+                            console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
+                            
+                            if (autoprudenteItems.length === 0) {
+                                // Nenhum carro AUTOPRUDENTE - marcar células vermelhas
+                                console.warn(`${day} dias - AUTOPRUDENTE não tem preços disponíveis`);
+                                grupos.forEach(grupo => {
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    if (inputReal && inputNet) {
+                                        inputReal.value = '-';
+                                        inputNet.value = '-';
+                                        inputReal.parentElement.classList.add('bg-red-100');
+                                        inputNet.parentElement.classList.add('bg-red-100');
+                                        inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                    }
+                                });
+                                // Não tentar datas alternativas
+                                break;
+                            }
+                            
+                            autoprudenteItems.forEach(item => {
                                 const grupo = item.group || extractGroup(item.car);
-                                console.log(`Carro: ${item.car}, Grupo API: ${item.group}, Grupo extraído: ${grupo}, Preço: ${item.price_num}`);
+                                console.log(`AUTOPRUDENTE - Carro: ${item.car}, Grupo: ${grupo}, Preço: ${item.price_num}`);
                                 
                                 if (grupos.includes(grupo)) {
                                     const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
