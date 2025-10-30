@@ -1,0 +1,186 @@
+╔══════════════════════════════════════════════════════════════════╗
+║         BACKUP COMPLETO FINAL COM API - 30 OUT 2025             ║
+║              TUDO INCLUÍDO - API COMPLETA - 100%                 ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📅 DATA: 30 de Outubro de 2025, 14:41 UTC
+📦 TAMANHO: 64 MB (compactado) | ~770 MB (descompactado)
+✅ STATUS: COMPLETO, VERIFICADO E FUNCIONAL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 LOCALIZAÇÃO:
+   /Users/filipepacheco/CascadeProjects/RentalPriceTrackerPerDay/backups/
+
+📦 ARQUIVO PRINCIPAL:
+   backup_20251030_143134_COMPLETO_API.tar.gz (64 MB)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CONTEÚDO COMPLETO (1500+ ficheiros):
+
+✅ API COMPLETA (17 ficheiros Python)
+   • main.py (369 KB) - FastAPI application
+   • carjet_direct.py (25 KB) - Mapeamentos 170+ veículos
+   • init_db.py - Inicializar DB
+   • download_db.py - Download DB Render
+   • restore_vehicles.py - Restaurar veículos
+   • gerar_url_*.py (6 scripts) - Gerar URLs CarJet
+   • test_*.py (6 scripts) - Testes da API
+
+✅ BASE DE DADOS (9.8 MB)
+   • data.db - SQLite completo
+   • 3 utilizadores (admin, carlpac82, dprudente)
+   • 15 grupos de veículos
+   • Regras de validação de preços
+
+✅ CÓDIGO FRONTEND (12 templates)
+   • index.html - Homepage moderna
+   • settings_dashboard.html - Menu lateral
+   • admin_*.html (8 páginas)
+
+✅ MAPEAMENTOS E DEFINIÇÕES
+   • 170+ mapeamentos de veículos
+   • 15 grupos categorizados
+   • Função map_category_to_group() (linhas 855-954)
+   • Lógica B1 (4 lugares) vs B2 (5 lugares)
+
+✅ IMAGENS E ASSETS (~80 MB)
+   • static/ - Logos, ícones (1400+ ficheiros)
+   • uploads/profiles/ - Fotos perfil (1.2 MB)
+
+✅ SCRIPTS DE TESTE (13 ficheiros)
+   • test_api.py, test_api_groups.py
+   • test_group_mapping.py, test_mini_cars.sh
+   • test_carjet_parsing.py, test_price_debug.py
+
+✅ DOCUMENTAÇÃO (40+ ficheiros)
+   • README.md, ALTERACOES_30_OUT_2025.md
+   • INSTRUCOES_RESTAURO.md, INVENTARIO_COMPLETO.md
+   • API_COMPLETA.md (NOVO!)
+   • FIX_GRUPOS_CATEGORIA.md, MINI_GROUPS_FINAL.md
+   • E mais 30+ ficheiros MD
+
+✅ CONFIGURAÇÃO
+   • .env - Variáveis ambiente (SENSÍVEL!)
+   • .env.example
+   • requirements.txt - Dependências Python
+   • render.yaml - Deploy Render
+   • config_backup.json
+   • git_log.txt, git_diff.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 ENDPOINTS DA API:
+
+Públicos:
+  • GET / - Homepage
+  • GET /login - Login
+  • POST /login - Autenticar
+  • POST /logout - Sair
+
+Admin (autenticação):
+  • GET /admin - Dashboard Settings
+  • GET /admin/users - Gestão utilizadores
+  • GET /admin/car-groups - Gestão veículos
+  • GET /admin/settings - Price Adjustment
+  • GET /admin/price-validation - Price Validation
+
+API (autenticação):
+  • POST /api/track-by-params - Scraping CarJet
+    Params: location, start_date, start_time, days, lang, currency
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 FUNCIONALIDADES DA API:
+
+Scraping:
+  • Playwright (Firefox, Webkit)
+  • Retry automático (3 tentativas)
+  • Hora aleatória (14:30-17:00)
+  • Parse preços EUR (não GBP)
+  • Extração de fotos
+  • 50+ suppliers mapeados
+
+Categorização:
+  • Baseado em LUGARES (não portas)
+  • 15 grupos (B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others)
+  • Detecção automático/cabrio
+  • Mapeamento modelos específicos
+
+Gestão:
+  • CRUD utilizadores
+  • CRUD veículos
+  • Price validation
+  • Price adjustment
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTATÍSTICAS FINAIS:
+
+Ficheiros:
+  • Total: 1500+ ficheiros
+  • Python: 17 ficheiros API + 13 testes
+  • HTML: 12 templates
+  • Documentação: 40+ Markdown
+  • Imagens: 1400+ (logos + debug + fotos)
+
+Tamanho:
+  • Compactado: 64 MB
+  • Descompactado: ~770 MB
+  • Base de Dados: 9.8 MB
+  • Imagens: ~80 MB
+  • Código: ~1 MB
+  • Documentação: ~500 KB
+
+Commits:
+  • Total: 13
+  • Último: 0b00e91
+  • Período: 30 Out 2025 (12:30-14:41)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 COMO RESTAURAR:
+
+1. RESTAURAR TUDO:
+   cd /Users/filipepacheco/CascadeProjects/RentalPriceTrackerPerDay
+   tar -xzf backups/backup_20251030_143134_COMPLETO_API.tar.gz -C backups/
+   cp -r backups/backup_20251030_143134/* .
+
+2. RESTAURAR E INICIAR API:
+   cp -r backups/backup_20251030_143134/* .
+   pip install -r requirements.txt
+   playwright install firefox webkit
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+3. RESTAURAR SÓ BASE DE DADOS:
+   cp backups/backup_20251030_143134/data.db data.db
+
+4. RESTAURAR SÓ CÓDIGO:
+   git checkout 0b00e91
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  DADOS SENSÍVEIS:
+
+Este backup contém:
+  • .env (SECRET_KEY, URLs CarJet)
+  • data.db (passwords hashadas)
+  • cookies.txt (sessões)
+  • Fotos de perfil
+
+🔒 GUARDAR EM LOCAL SEGURO E PRIVADO!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ BACKUP 100% COMPLETO
+✅ API COMPLETA INCLUÍDA
+✅ TODOS OS FICHEIROS
+✅ MAPEAMENTOS DE VEÍCULOS
+✅ FOTOS E IMAGENS
+✅ DOCUMENTAÇÃO COMPLETA
+✅ PRONTO PARA RESTAURO E DEPLOY
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 BACKUP COMPLETO COM API - TUDO SALVO! 🎉

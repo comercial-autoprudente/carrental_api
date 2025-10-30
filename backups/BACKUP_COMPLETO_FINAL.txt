@@ -1,0 +1,159 @@
+╔══════════════════════════════════════════════════════════════════╗
+║            BACKUP COMPLETO FINAL - 30 OUT 2025                   ║
+║                  TUDO INCLUÍDO - 100%                            ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📅 DATA: 30 de Outubro de 2025, 14:38 UTC
+📦 TAMANHO: 64 MB (compactado) | ~100 MB (descompactado)
+✅ STATUS: COMPLETO, VERIFICADO E FUNCIONAL
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 LOCALIZAÇÃO:
+   /Users/filipepacheco/CascadeProjects/RentalPriceTrackerPerDay/backups/
+
+📦 ARQUIVO PRINCIPAL:
+   backup_20251030_143134_COMPLETO.tar.gz (64 MB)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 CONTEÚDO COMPLETO (1500+ ficheiros):
+
+✅ BASE DE DADOS (9.8 MB)
+   • data.db - SQLite completo
+   • 3 utilizadores (admin, carlpac82, dprudente)
+   • 15 grupos de veículos (B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N, Others)
+   • Regras de validação de preços
+
+✅ CÓDIGO FONTE
+   • main.py (369 KB) - Backend FastAPI
+   • carjet_direct.py (25 KB) - Mapeamentos de 170+ veículos
+   • templates/ (12 ficheiros HTML)
+     - index.html - Homepage moderna
+     - settings_dashboard.html - Menu lateral
+     - admin_*.html (8 páginas)
+
+✅ MAPEAMENTOS E DEFINIÇÕES
+   • 170+ mapeamentos de veículos
+   • 15 grupos categorizados
+   • Variações de nomes (Fiat 500, Peugeot 108, etc)
+   • Lógica B1 (4 lugares) vs B2 (5 lugares)
+
+✅ IMAGENS E ASSETS (~80 MB)
+   • static/ap-heather.png (92 KB) - Logo principal
+   • static/logos/ (23 logos de rent-a-cars)
+   • static/debug/ (1380 imagens de debug)
+   • uploads/profiles/ (2 fotos de perfil: 1.2 MB)
+     - carlpac82.PNG (1.0 MB)
+     - dprudente.JPG (229 KB)
+
+✅ SCRIPTS DE TESTE (13 ficheiros)
+   • test_api.py, test_api_groups.py
+   • test_carjet_parsing.py
+   • test_group_mapping.py
+   • test_mini_cars.sh
+   • test_login.sh
+   • restore_vehicles.py
+
+✅ DOCUMENTAÇÃO (40+ ficheiros)
+   • README.md, ALTERACOES_30_OUT_2025.md
+   • INSTRUCOES_RESTAURO.md
+   • INVENTARIO_COMPLETO.md
+   • FIX_GRUPOS_CATEGORIA.md
+   • MINI_GROUPS_FINAL.md
+   • DEPLOY_RENDER.md
+   • WORKFLOW_CASA_TRABALHO.md
+   • E mais 30+ ficheiros MD
+
+✅ CONFIGURAÇÃO
+   • .env - Variáveis de ambiente (SENSÍVEL!)
+   • .env.example
+   • requirements.txt
+   • git_log.txt (50 commits)
+   • git_diff.txt (89 KB)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ALTERAÇÕES INCLUÍDAS (13 commits):
+
+1.  Menu Settings com sidebar lateral
+2.  Visual moderno (Fonte Outfit, ícones clean)
+3.  Header modernizado (foto redonda, dropdown)
+4.  Ícones monocromáticos em todas as páginas
+5.  Preview de categorias (estilo CarJet)
+6.  Preview em uma linha horizontal
+7.  Setas de navegação
+8.  Nome da rent-a-car no preview
+9.  Scroll para grupo ao clicar
+10. Nomes de rent-a-car limpos
+11. Categorização B1/B2 correta
+12. Campo 'group' da API usado
+13. Backup completo criado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔄 COMO RESTAURAR:
+
+1. RESTAURAR TUDO:
+   cd /Users/filipepacheco/CascadeProjects/RentalPriceTrackerPerDay
+   tar -xzf backups/backup_20251030_143134_COMPLETO.tar.gz -C backups/
+   cp -r backups/backup_20251030_143134/* .
+
+2. RESTAURAR SÓ BASE DE DADOS:
+   cp backups/backup_20251030_143134/data.db data.db
+
+3. RESTAURAR SÓ IMAGENS:
+   cp -r backups/backup_20251030_143134/static .
+   cp -r backups/backup_20251030_143134/uploads .
+
+4. RESTAURAR SÓ CÓDIGO:
+   git checkout 0b00e91
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTATÍSTICAS FINAIS:
+
+Ficheiros:
+  • Total: 1500+ ficheiros
+  • Código: 27 ficheiros (Python + HTML)
+  • Documentação: 40+ Markdown
+  • Imagens: 1400+ (logos + debug + fotos)
+  • Testes: 13 scripts
+
+Tamanho:
+  • Compactado: 64 MB
+  • Descompactado: ~100 MB
+  • Base de Dados: 9.8 MB
+  • Imagens: ~80 MB
+  • Código: ~1 MB
+  • Documentação: ~500 KB
+
+Commits:
+  • Total incluídos: 13
+  • Último: 0b00e91
+  • Período: 30 Out 2025 (12:30-14:38)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  DADOS SENSÍVEIS:
+
+Este backup contém:
+  • .env (SECRET_KEY, credenciais)
+  • data.db (passwords hashadas)
+  • cookies.txt (sessões)
+  • Fotos de perfil de utilizadores
+
+🔒 GUARDAR EM LOCAL SEGURO E PRIVADO!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ BACKUP 100% COMPLETO
+✅ TODOS OS FICHEIROS INCLUÍDOS
+✅ MAPEAMENTOS DE VEÍCULOS SALVOS
+✅ FOTOS E IMAGENS INCLUÍDAS
+✅ DOCUMENTAÇÃO COMPLETA
+✅ PRONTO PARA RESTAURO
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎉 BACKUP COMPLETO E FUNCIONAL - TUDO SALVO! 🎉

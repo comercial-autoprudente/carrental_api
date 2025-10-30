@@ -1438,6 +1438,26 @@ async def price_history(request: Request):
         "current_user": current_user
     })
 
+@app.get("/price-automation", response_class=HTMLResponse)
+async def price_automation(request: Request):
+    """Página de automação de preços com upload de Excel"""
+    try:
+        require_auth(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    
+    # Get current user
+    user_id = request.session.get("user_id")
+    current_user = None
+    if user_id:
+        with get_db() as conn:
+            current_user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    
+    return templates.TemplateResponse("price_automation.html", {
+        "request": request,
+        "current_user": current_user
+    })
+
 # --- Admin: environment summary and adjustment preview ---
 @app.get("/admin/env-summary")
 async def admin_env_summary(request: Request):
@@ -6818,6 +6838,18 @@ async def admin_price_validation(request: Request):
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Erro: price_validation_rules.html não encontrado</h1>", status_code=500)
+
+@app.get("/admin/price-automation-settings", response_class=HTMLResponse)
+async def admin_price_automation_settings(request: Request):
+    """Página de parametrizações para automação de preços"""
+    require_auth(request)
+    
+    html_path = os.path.join(os.path.dirname(__file__), "templates", "price_automation_settings.html")
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Erro: price_automation_settings.html não encontrado</h1>", status_code=500)
 
 @app.get("/api/vehicles/with-originals")
 async def get_vehicles_with_originals(request: Request):
