@@ -590,13 +590,16 @@
           const price = toNum(cheapest.price);
           const priceFormatted = isFinite(price) ? price.toFixed(2) + ' €' : cheapest.price;
           
+          const supplierName = displaySupplierName(cheapest.supplier || '');
+          
           previews.push(`
             <div class="flex-shrink-0 flex flex-col items-center p-3 bg-white border border-gray-200 hover:border-[#f4ad0f] hover:shadow-md transition-all cursor-pointer w-40" onclick="document.getElementById('group_sec_${g.cat}')?.scrollIntoView({behavior:'smooth'})">
               <div class="text-xs text-gray-500 mb-1 text-center font-medium">${escapeHtml(g.label.split(' - ')[1] || g.label)}</div>
               <img src="${imageUrlFor(cheapest)}" alt="${escapeHtml(cheapest.car)}" class="h-16 w-auto object-contain mb-2" onerror="this.src='/static/car-placeholder.png'"/>
-              <div class="text-center">
+              <div class="text-center w-full">
                 <div class="text-lg font-bold text-[#009cb6]">${priceFormatted}</div>
-                <div class="text-xs text-gray-400">por 5 dias</div>
+                <div class="text-xs text-gray-400 mb-1">por 5 dias</div>
+                <div class="text-xs text-gray-600 font-medium truncate px-1" title="${escapeHtml(supplierName)}">${escapeHtml(supplierName)}</div>
               </div>
             </div>
           `);
