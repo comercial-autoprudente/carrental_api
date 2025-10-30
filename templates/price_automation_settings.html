@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Automation Settings</title>
+    <title>Price Automation Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -12,7 +12,8 @@
 </head>
 <body class="bg-gray-50 p-6">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Parametrizações de Automação de Preços</h1>
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">Price Automation Settings</h1>
+        <p class="text-gray-600 mb-6">Configure all parameters for price automation. Changes are applied in real-time.</p>
 
         <!-- Regras Globais -->
         <div class="bg-white shadow mb-6 p-6">
@@ -20,38 +21,57 @@
                 <svg class="w-5 h-5 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                 </svg>
-                Regras Globais
+                Global Settings
             </h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Comissão Broker (%)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Broker Commission (%)</label>
                     <input type="number" id="comissaoBroker" value="13.66" step="0.01" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
-                    <p class="text-xs text-gray-500 mt-1">Preço NET = Preço Final / (1 + comissão)</p>
+                    <p class="text-xs text-gray-500 mt-1">NET Price = Final Price / (1 + commission)</p>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Margem Padrão (%)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Default Margin (%)</label>
                     <input type="number" id="defaultMargin" value="15" step="0.1" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
-                    <p class="text-xs text-gray-500 mt-1">Margem aplicada quando não há regra específica</p>
+                    <p class="text-xs text-gray-500 mt-1">Applied when no specific rule exists</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Arredondamento</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rounding</label>
                     <select id="rounding" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
-                        <option value="0.01">Cêntimos (0.01€)</option>
-                        <option value="0.50">Meio Euro (0.50€)</option>
+                        <option value="0.01">Cents (0.01€)</option>
+                        <option value="0.50">Half Euro (0.50€)</option>
                         <option value="1.00" selected>Euro (1.00€)</option>
                         <option value="5.00">5 Euros (5.00€)</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Pesquisa Alternativa (dias à frente)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Alternative Search (days ahead)</label>
                     <input type="number" id="maxAlternativeDays" value="3" min="0" max="7" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
-                    <p class="text-xs text-gray-500 mt-1">Se não encontrar preços, tenta até X dias à frente (0-7)</p>
+                    <p class="text-xs text-gray-500 mt-1">If no prices found, try up to X days ahead (0-7, same month only)</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Default Location</label>
+                    <select id="defaultLocation" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
+                        <option value="Albufeira">Albufeira</option>
+                        <option value="Aeroporto de Faro">Faro Airport</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Auto-save to History</label>
+                    <select id="autoSaveHistory" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
+                        <option value="true" selected>Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Automatically save prices to history on download</p>
                 </div>
             </div>
         </div>
@@ -62,7 +82,7 @@
                 <svg class="w-5 h-5 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                 </svg>
-                Margens por Categoria
+                Margins by Category
             </h2>
             
             <div class="space-y-3">
@@ -190,14 +210,17 @@
             </div>
         </div>
 
-        <!-- Botões de Ação -->
-        <div class="flex justify-end gap-3">
-            <button onclick="resetDefaults()" class="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                Restaurar Padrões
-            </button>
-            <button onclick="saveSettings()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                Guardar Configurações
-            </button>
+        <!-- Action Buttons -->
+        <div class="flex justify-between items-center">
+            <p class="text-sm text-gray-500">💡 Changes are saved automatically</p>
+            <div class="flex gap-4">
+                <button onclick="resetDefaults()" class="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors rounded">
+                    Reset to Defaults
+                </button>
+                <button onclick="saveSettings()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors rounded">
+                    Save Settings
+                </button>
+            </div>
         </div>
     </div>
 
@@ -223,24 +246,29 @@
         }
 
         function saveSettings() {
-            // Coletar todos os valores
+            // Collect all values
             const settings = {
                 comissaoBroker: parseFloat(document.getElementById('comissaoBroker').value),
                 defaultMargin: parseFloat(document.getElementById('defaultMargin').value),
                 rounding: parseFloat(document.getElementById('rounding').value),
-                maxAlternativeDays: parseInt(document.getElementById('maxAlternativeDays').value)
+                maxAlternativeDays: parseInt(document.getElementById('maxAlternativeDays').value),
+                defaultLocation: document.getElementById('defaultLocation').value,
+                autoSaveHistory: document.getElementById('autoSaveHistory').value === 'true'
             };
 
-            // Validar
+            // Validate
             if (settings.maxAlternativeDays < 0 || settings.maxAlternativeDays > 7) {
-                alert('⚠️ Dias à frente deve estar entre 0 e 7');
+                alert('⚠️ Alternative search days must be between 0 and 7');
                 return;
             }
 
-            // Guardar localmente
+            // Save locally
             localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
 
-            // Enviar para API (opcional)
+            // Trigger event for real-time update
+            window.dispatchEvent(new CustomEvent('settingsChanged', { detail: settings }));
+
+            // Send to API (optional)
             fetch('/api/price-automation/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -248,24 +276,49 @@
             })
             .then(r => r.json())
             .then(data => {
-                alert('✅ Configurações guardadas com sucesso!');
+                showNotification('✅ Settings saved successfully!');
             })
             .catch(err => {
-                // Mesmo se API falhar, já guardou localmente
-                alert('✅ Configurações guardadas localmente!');
+                // Even if API fails, already saved locally
+                showNotification('✅ Settings saved locally!');
+            });
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded shadow-lg z-50';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+
+        // Auto-save on change
+        function setupAutoSave() {
+            const inputs = document.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                input.addEventListener('change', () => {
+                    saveSettings();
+                });
             });
         }
 
         function resetDefaults() {
-            if (confirm('Restaurar todas as configurações para os valores padrão?')) {
+            if (confirm('Reset all settings to default values?')) {
                 localStorage.removeItem('priceAutomationSettings');
                 document.getElementById('comissaoBroker').value = 13.66;
                 document.getElementById('defaultMargin').value = 15;
                 document.getElementById('rounding').value = 1.00;
                 document.getElementById('maxAlternativeDays').value = 3;
-                alert('✅ Configurações restauradas para valores padrão!');
+                document.getElementById('defaultLocation').value = 'Albufeira';
+                document.getElementById('autoSaveHistory').value = 'true';
+                saveSettings();
+                showNotification('✅ Settings reset to defaults!');
             }
         }
+
+        // Initialize
+        loadSettings();
+        setupAutoSave();
     </script>
 </body>
 </html>
