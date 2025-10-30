@@ -121,14 +121,14 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 2px;
-        padding: 6px 4px;
+        gap: 0;
+        padding: 6px;
         border: 1px solid #e5e7eb;
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s;
         background: white;
-        min-height: 50px;
+        min-height: auto;
         opacity: 1;
         box-shadow: 0 1px 0 #e5e7eb;
       }
@@ -2120,12 +2120,8 @@
           const isTAN1Sidebar = supplierName === 'Rent a Car' || /TAN1/i.test(supplierName);
           const isNonRefundable = isTAN1Sidebar || /não\s*reembols[aá]vel|non[- ]?refundable|\bNR\b/i.test(supplierName);
           
-          // SEMPRE mostrar nome abaixo do logo
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'supplier-name';
-          nameSpan.textContent = supplierName;
-          nameSpan.title = supplierName; // Tooltip com nome completo
-          div.appendChild(nameSpan);
+          // Adicionar tooltip com nome (sem mostrar texto)
+          div.title = supplierName;
           
           // Adicionar asterisco se não reembolsável
           if (isNonRefundable) {
