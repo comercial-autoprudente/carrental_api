@@ -817,6 +817,7 @@ def clean_car_name(car_name: str) -> str:
     Limpa e normaliza nomes de carros
     - Remove duplicações como "Autoautomático" → "Automático"
     - Remove "ou similar"
+    - Remove "4p" (4 portas) exceto para 7 e 9 lugares
     - Normaliza espaços
     """
     if not car_name:
@@ -831,6 +832,16 @@ def clean_car_name(car_name: str) -> str:
     # Remover "ou similar" e variantes
     name = re.sub(r'\s*ou\s+similar(es)?.*$', '', name, flags=re.IGNORECASE)
     name = re.sub(r'\s*or\s+similar.*$', '', name, flags=re.IGNORECASE)
+    
+    # Remover "4p" (4 portas) EXCETO para 7 e 9 lugares
+    # Exemplos: "Fiat 500 4p" → "Fiat 500", "Fiat Panda 4p" → "Fiat Panda"
+    # MAS: "Dacia Lodgy 7 Lugares 4p" → mantém (não remove)
+    name_lower = name.lower()
+    if '7' not in name_lower and '9' not in name_lower and 'seater' not in name_lower and 'lugares' not in name_lower:
+        # Remover "4p", "4 portas", "4 doors"
+        name = re.sub(r'\s+4p\b', '', name, flags=re.IGNORECASE)
+        name = re.sub(r'\s+4\s*portas?\b', '', name, flags=re.IGNORECASE)
+        name = re.sub(r'\s+4\s*doors?\b', '', name, flags=re.IGNORECASE)
     
     # Normalizar espaços múltiplos
     name = re.sub(r'\s+', ' ', name).strip()
