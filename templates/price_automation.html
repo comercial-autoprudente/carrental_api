@@ -278,18 +278,47 @@
 
         function downloadExcel() {
             const wb = XLSX.utils.book_new();
-            const wsData = [['Grupo', ...dias.map(d => d + 'd')]];
+            const comissao = 0.1366; // 13.66%
+            
+            // Header com colunas intercaladas: Preço e NET/dia
+            const header = ['Grupo'];
+            dias.forEach(d => {
+                header.push(`${d}d Preço`);
+                header.push(`${d}d NET/dia`);
+            });
+            const wsData = [header];
 
             grupos.forEach(grupo => {
                 const row = [grupo];
                 dias.forEach(day => {
                     const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                    row.push(input && input.value ? input.value : '');
+                    const precoCarJet = input && input.value ? parseFloat(input.value) : 0;
+                    
+                    // Coluna: Preço CarJet
+                    row.push(precoCarJet > 0 ? precoCarJet.toFixed(2) : '');
+                    
+                    // Coluna: NET por dia = (Preço - comissão) / dias
+                    if (precoCarJet > 0) {
+                        const precoNet = precoCarJet / (1 + comissao);
+                        const netPorDia = precoNet / day;
+                        row.push(netPorDia.toFixed(2));
+                    } else {
+                        row.push('');
+                    }
                 });
                 wsData.push(row);
             });
 
             const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Definir larguras das colunas
+            const colWidths = [{ wch: 10 }]; // Grupo
+            dias.forEach(() => {
+                colWidths.push({ wch: 12 }); // Preço
+                colWidths.push({ wch: 12 }); // NET/dia
+            });
+            ws['!cols'] = colWidths;
+            
             XLSX.utils.book_append_sheet(wb, ws, 'Preços CarJet');
             
             const location = document.getElementById('location').value;
