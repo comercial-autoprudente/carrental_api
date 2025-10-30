@@ -133,6 +133,39 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
             except Exception:
                 pass
             page.goto(url, wait_until="networkidle", timeout=35000)
+            
+            # ===== FILTRAR APENAS AUTOPRUDENTE =====
+            try:
+                # Aguardar filtros carregarem
+                page.wait_for_selector('#chkAUP', timeout=5000)
+                
+                # Desmarcar todos os checkboxes de suppliers primeiro
+                page.evaluate("""
+                    document.querySelectorAll('input[name="frmPrv"]').forEach(cb => {
+                        if (cb.checked) cb.click();
+                    });
+                """)
+                
+                # Aguardar um pouco
+                page.wait_for_timeout(500)
+                
+                # Marcar apenas AUTOPRUDENTE
+                aup_checkbox = page.query_selector('#chkAUP')
+                if aup_checkbox and not aup_checkbox.is_checked():
+                    aup_checkbox.click()
+                    print("[PLAYWRIGHT] Filtro AUTOPRUDENTE ativado", file=sys.stderr, flush=True)
+                    
+                    # Aguardar página recarregar com filtro
+                    page.wait_for_load_state("networkidle", timeout=10000)
+                else:
+                    print("[PLAYWRIGHT] Checkbox AUTOPRUDENTE já estava marcado", file=sys.stderr, flush=True)
+                    
+            except Exception as e:
+                print(f"[PLAYWRIGHT] Erro ao filtrar AUTOPRUDENTE: {e}", file=sys.stderr, flush=True)
+                # Continuar mesmo se falhar o filtro
+                pass
+            # ===== FIM FILTRO AUTOPRUDENTE =====
+            
             # Try clicking the primary search/submit button if the page requires it to load results
             try:
                 btn = None
@@ -1934,6 +1967,41 @@ async def get_prices(request: Request):
                         except Exception:
                             pass
                         await page.goto(url, wait_until="networkidle", timeout=35000)
+                        
+                        # ===== FILTRAR APENAS AUTOPRUDENTE =====
+                        try:
+                            # Aguardar filtros carregarem
+                            await page.wait_for_selector('#chkAUP', timeout=5000)
+                            
+                            # Desmarcar todos os checkboxes de suppliers primeiro
+                            await page.evaluate("""
+                                document.querySelectorAll('input[name="frmPrv"]').forEach(cb => {
+                                    if (cb.checked) cb.click();
+                                });
+                            """)
+                            
+                            # Aguardar um pouco
+                            await page.wait_for_timeout(500)
+                            
+                            # Marcar apenas AUTOPRUDENTE
+                            aup_checkbox = await page.query_selector('#chkAUP')
+                            if aup_checkbox:
+                                is_checked = await aup_checkbox.is_checked()
+                                if not is_checked:
+                                    await aup_checkbox.click()
+                                    print("[PLAYWRIGHT ASYNC] Filtro AUTOPRUDENTE ativado", file=sys.stderr, flush=True)
+                                    
+                                    # Aguardar página recarregar com filtro
+                                    await page.wait_for_load_state("networkidle", timeout=10000)
+                                else:
+                                    print("[PLAYWRIGHT ASYNC] Checkbox AUTOPRUDENTE já estava marcado", file=sys.stderr, flush=True)
+                                    
+                        except Exception as e:
+                            print(f"[PLAYWRIGHT ASYNC] Erro ao filtrar AUTOPRUDENTE: {e}", file=sys.stderr, flush=True)
+                            # Continuar mesmo se falhar o filtro
+                            pass
+                        # ===== FIM FILTRO AUTOPRUDENTE =====
+                        
                         # Handle consent if present
                         try:
                             for sel in [
