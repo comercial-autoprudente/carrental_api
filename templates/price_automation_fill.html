@@ -153,15 +153,24 @@
                     td.className = 'px-2 py-2 price-cell';
                     
                     const input = document.createElement('input');
-                    input.type = 'number';
-                    input.step = '0.01';
+                    input.type = 'text';
                     input.placeholder = '-';
                     input.className = 'w-full px-2 py-1 border border-gray-300 text-sm focus:ring-2 focus:ring-[#009cb6] focus:border-transparent';
                     input.dataset.grupo = grupo;
                     input.dataset.dias = day;
                     input.dataset.manual = 'false';
                     
+                    // Forçar uso de ponto (.) em vez de vírgula (,)
                     input.addEventListener('input', function() {
+                        // Substituir vírgula por ponto
+                        this.value = this.value.replace(',', '.');
+                        
+                        // Validar formato numérico
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(this.value) && this.value !== '') {
+                            this.value = this.value.slice(0, -1);
+                        }
+                        
                         if (this.value) {
                             this.dataset.manual = 'true';
                             this.parentElement.classList.add('bg-yellow-100');
@@ -225,9 +234,13 @@
                             if (grupos.includes(grupo)) {
                                 const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
                                 if (input && !input.value) {
-                                    input.value = item.price_num || '';
-                                    input.dataset.manual = 'false';
-                                    input.parentElement.classList.add('bg-green-100');
+                                    // Garantir formato com ponto (.)
+                                    const preco = parseFloat(item.price_num || 0);
+                                    if (preco > 0) {
+                                        input.value = preco.toFixed(2);
+                                        input.dataset.manual = 'false';
+                                        input.parentElement.classList.add('bg-green-100');
+                                    }
                                 }
                             }
                         });
