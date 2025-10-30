@@ -833,6 +833,10 @@ def clean_car_name(car_name: str) -> str:
     name = re.sub(r'\s*ou\s+similar(es)?.*$', '', name, flags=re.IGNORECASE)
     name = re.sub(r'\s*or\s+similar.*$', '', name, flags=re.IGNORECASE)
     
+    # Remover "Special Edition" e variantes
+    name = re.sub(r'\s+special\s+edition\b', '', name, flags=re.IGNORECASE)
+    name = re.sub(r'\s+edition\b', '', name, flags=re.IGNORECASE)
+    
     # Remover "4p" (4 portas) EXCETO para 7 e 9 lugares
     # Exemplos: "Fiat 500 4p" → "Fiat 500", "Fiat Panda 4p" → "Fiat Panda"
     # MAS: "Dacia Lodgy 7 Lugares 4p" → mantém (não remove)

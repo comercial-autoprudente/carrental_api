@@ -101,6 +101,7 @@ VEHICLES = {
     'citroen c1 auto': 'MINI Auto',
     'toyota aygo auto': 'MINI Auto',
     'peugeot 108 auto': 'MINI Auto',
+    'mitsubishi spacestar auto': 'MINI Auto',
     
     # ECONOMY
     'renault clio': 'ECONOMY',
@@ -114,8 +115,9 @@ VEHICLES = {
     'kia ceed': 'ECONOMY',
     'dacia sandero': 'ECONOMY',
     'skoda fabia': 'ECONOMY',
-    'renault twingo': 'ECONOMY',
+    'renault twingo': 'MINI 4 Portas',
     'citroen c3': 'ECONOMY',
+    'opel adam': 'MINI 4 Portas',
     
     # ECONOMY Auto
     'renault clio auto': 'ECONOMY Auto',
@@ -126,6 +128,9 @@ VEHICLES = {
     'opel corsa auto': 'ECONOMY Auto',
     'peugeot 308 auto': 'ECONOMY Auto',
     'toyota corolla auto': 'ECONOMY Auto',
+    'nissan micra auto': 'ECONOMY Auto',
+    'ford focus auto': 'ECONOMY Auto',
+    'citroen c3 auto': 'ECONOMY Auto',
     
     # SUV
     'nissan juke': 'SUV',
@@ -155,6 +160,12 @@ VEHICLES = {
     'volkswagen t-cross auto': 'SUV Auto',
     'vw t-cross auto': 'SUV Auto',
     'fiat 500x auto': 'SUV Auto',
+    'opel grandland x auto': 'SUV Auto',
+    'citroen c4 auto electric': 'SUV Auto',
+    'opel mokka auto electric': 'SUV Auto',
+    'citroen c4 auto': 'SUV Auto',
+    'renault arkana auto': 'SUV Auto',
+    'citroen c4 x auto electric': 'SUV Auto',
     
     # Crossover
     'fiat 500x': 'Crossover',
@@ -178,6 +189,14 @@ VEHICLES = {
     'audi a1': 'Luxury',
     'cupra formentor': 'Luxury',
     'ds 4': 'Luxury',
+    'bmw 1 series auto': 'Luxury',
+    'mercedes a class auto': 'Luxury',
+    'audi a3 auto': 'Luxury',
+    'bmw 2 series gran coupe auto': 'Luxury',
+    'mercedes c class auto': 'Luxury',
+    'mercedes a class automático': 'Luxury',
+    'mercedes gla auto': 'Luxury',
+    'bmw x1 auto': 'Luxury',
     
     # Station Wagon
     'renault clio sw': 'Station Wagon',
@@ -198,6 +217,7 @@ VEHICLES = {
     'peugeot 308 sw auto': 'Station Wagon Auto',
     'toyota corolla sw auto': 'Station Wagon Auto',
     'cupra leon sw auto': 'Station Wagon Auto',
+    'renault megane sedan auto': 'Station Wagon Auto',
     
     # 7 Lugares
     'peugeot 5008': '7 Lugares',
@@ -207,6 +227,7 @@ VEHICLES = {
     'renault grand scenic': '7 Lugares',
     'citroen grand picasso': '7 Lugares',
     'citroen c4 grand picasso': '7 Lugares',
+    'citroen c4 picasso': '7 Lugares',
     'dacia jogger': '7 Lugares',
     
     # 7 Lugares Auto
@@ -236,14 +257,12 @@ VEHICLES = {
     'volkswagen caravelle': '9 Lugares',
     'vw caravelle': '9 Lugares',
     'mercedes v class': '9 Lugares',
-    'citroen c4 auto': 'ECONOMY Auto',
-    'fiat 500 cabrio': 'Premium',
+    'fiat 500 cabrio': 'Cabrio',
     'ford focus': 'ECONOMY',
-    'ford focus auto': 'ECONOMY',
     'ford focus sw auto': 'Station Wagon Auto',
     'ford puma auto': 'SUV Auto',
     'kia ceed sw': 'Station Wagon',
-    'mazda mx5 cabrio auto': 'Premium',
+    'mazda mx5 cabrio auto': 'Cabrio',
     'mercedes v class auto': '9 Lugares',
     'mercedes vito auto': '9 Lugares',
     'vw polo auto': 'ECONOMY Auto',
@@ -265,20 +284,12 @@ VEHICLES = {
     'peugeot 2008 auto, electric': 'SUV Auto',
     'peugeot 308': 'ECONOMY',
     'nissan qashqai auto': 'SUV',
-    'mitsubishi spacestar auto': 'MINI Auto',
-    'mini cooper cabrio': 'Cabrio',
     'cupra formentor auto': 'SUV Auto',
-    'citroen c1 auto': 'MINI Auto',
-    'fiat 500 auto': 'MINI Auto',
-    'mercedes a class auto': 'ECONOMY Auto',
-    'mercedes c class auto': 'ECONOMY Auto',
     'mercedes c class sw auto': 'Station Wagon Auto',
-    'mercedes cle coupe auto': 'ECONOMY Auto',
-    'mercedes e class auto': 'ECONOMY Auto',
+    'mercedes cle coupe auto': 'Luxury',
+    'mercedes e class auto': 'Luxury',
     'mercedes e class sw auto': 'Station Wagon Auto',
-    'mercedes s class auto': 'ECONOMY Auto',
-    'renault austral': 'SUV',
-    'renault twingo': 'MINI 5 Portas',
+    'mercedes s class auto': 'Luxury',
 }
 
 
