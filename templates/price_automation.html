@@ -183,23 +183,51 @@
 
         <!-- Tabela de Preços -->
         <div class="bg-white shadow overflow-x-auto">
-            <table class="w-full text-sm">
+            <table class="w-full text-xs">
                 <thead class="bg-gray-50 sticky top-0">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Grupo</th>
-                        <th class="px-4 py-3 text-center font-semibold">1d</th>
-                        <th class="px-4 py-3 text-center font-semibold">2d</th>
-                        <th class="px-4 py-3 text-center font-semibold">3d</th>
-                        <th class="px-4 py-3 text-center font-semibold">4d</th>
-                        <th class="px-4 py-3 text-center font-semibold">5d</th>
-                        <th class="px-4 py-3 text-center font-semibold">6d</th>
-                        <th class="px-4 py-3 text-center font-semibold">7d</th>
-                        <th class="px-4 py-3 text-center font-semibold">8d</th>
-                        <th class="px-4 py-3 text-center font-semibold">9d</th>
-                        <th class="px-4 py-3 text-center font-semibold">14d</th>
-                        <th class="px-4 py-3 text-center font-semibold">22d</th>
-                        <th class="px-4 py-3 text-center font-semibold">28d</th>
-                        <th class="px-4 py-3 text-center font-semibold">31d</th>
+                        <th rowspan="2" class="px-2 py-3 text-left font-semibold border-r">Grupo</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">1d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">2d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">3d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">4d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">5d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">6d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">7d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">8d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">9d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">14d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">22d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">28d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">31d</th>
+                    </tr>
+                    <tr>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>
                     </tr>
                 </thead>
                 <tbody id="pricesTable">
@@ -243,6 +271,29 @@
             return 3; // Padrão
         }
 
+        function getComissao() {
+            const saved = localStorage.getItem('priceAutomationSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    return settings.comissaoBroker !== undefined ? settings.comissaoBroker / 100 : 0.1366;
+                } catch (e) {
+                    return 0.1366;
+                }
+            }
+            return 0.1366; // Padrão 13.66%
+        }
+
+        function calculateNet(real) {
+            const comissao = getComissao();
+            return real / (1 + comissao);
+        }
+
+        function calculateReal(net) {
+            const comissao = getComissao();
+            return net * (1 + comissao);
+        }
+
         // Inicializar tabela
         function initTable() {
             const tbody = document.getElementById('pricesTable');
@@ -253,23 +304,25 @@
                 tr.className = 'border-t hover:bg-gray-50';
                 
                 const tdGrupo = document.createElement('td');
-                tdGrupo.className = 'px-4 py-3 font-semibold';
+                tdGrupo.className = 'px-2 py-3 font-semibold border-r';
                 tdGrupo.textContent = grupo;
                 tr.appendChild(tdGrupo);
 
                 dias.forEach(day => {
-                    const td = document.createElement('td');
-                    td.className = 'px-2 py-2';
+                    // Coluna NET
+                    const tdNet = document.createElement('td');
+                    tdNet.className = 'px-1 py-1';
                     
-                    const input = document.createElement('input');
-                    input.type = 'text';
-                    input.placeholder = '-';
-                    input.className = 'w-full px-2 py-1 border border-gray-300 text-sm text-right focus:ring-2 focus:ring-[#009cb6]';
-                    input.dataset.grupo = grupo;
-                    input.dataset.dias = day;
-                    input.dataset.manual = 'false';
+                    const inputNet = document.createElement('input');
+                    inputNet.type = 'text';
+                    inputNet.placeholder = '-';
+                    inputNet.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6]';
+                    inputNet.dataset.grupo = grupo;
+                    inputNet.dataset.dias = day;
+                    inputNet.dataset.type = 'net';
+                    inputNet.dataset.manual = 'false';
                     
-                    input.addEventListener('input', function() {
+                    inputNet.addEventListener('input', function() {
                         this.value = this.value.replace(',', '.');
                         const regex = /^\d*\.?\d{0,2}$/;
                         if (!regex.test(this.value) && this.value !== '') {
@@ -277,17 +330,64 @@
                         }
                         if (this.value) {
                             this.dataset.manual = 'true';
-                            // Vermelho para manual
+                            const real = calculateReal(parseFloat(this.value));
+                            const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                            if (inputReal) {
+                                inputReal.value = real.toFixed(2);
+                                inputReal.dataset.manual = 'true';
+                            }
                             this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
                             this.parentElement.classList.add('bg-red-100');
+                            if (inputReal) {
+                                inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                inputReal.parentElement.classList.add('bg-red-100');
+                            }
                         }
                     });
                     
-                    // Iniciar com amarelo (sem preço)
-                    td.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                    tdNet.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                    tdNet.appendChild(inputNet);
+                    tr.appendChild(tdNet);
+
+                    // Coluna Real
+                    const tdReal = document.createElement('td');
+                    tdReal.className = 'px-1 py-1 border-r';
                     
-                    td.appendChild(input);
-                    tr.appendChild(td);
+                    const inputReal = document.createElement('input');
+                    inputReal.type = 'text';
+                    inputReal.placeholder = '-';
+                    inputReal.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6]';
+                    inputReal.dataset.grupo = grupo;
+                    inputReal.dataset.dias = day;
+                    inputReal.dataset.type = 'real';
+                    inputReal.dataset.manual = 'false';
+                    
+                    inputReal.addEventListener('input', function() {
+                        this.value = this.value.replace(',', '.');
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(this.value) && this.value !== '') {
+                            this.value = this.value.slice(0, -1);
+                        }
+                        if (this.value) {
+                            this.dataset.manual = 'true';
+                            const net = calculateNet(parseFloat(this.value));
+                            const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                            if (inputNet) {
+                                inputNet.value = net.toFixed(2);
+                                inputNet.dataset.manual = 'true';
+                            }
+                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                            this.parentElement.classList.add('bg-red-100');
+                            if (inputNet) {
+                                inputNet.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                inputNet.parentElement.classList.add('bg-red-100');
+                            }
+                        }
+                    });
+                    
+                    tdReal.classList.add('bg-[#f4ad0f]', 'bg-opacity-20');
+                    tdReal.appendChild(inputReal);
+                    tr.appendChild(tdReal);
                 });
 
                 tbody.appendChild(tr);
