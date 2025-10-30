@@ -1418,6 +1418,26 @@ async def admin_root(request: Request, section: str = None):
         "section": section or "users"
     })
 
+@app.get("/price-history", response_class=HTMLResponse)
+async def price_history(request: Request):
+    """Página de histórico e gráficos de preços"""
+    try:
+        require_auth(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    
+    # Get current user
+    user_id = request.session.get("user_id")
+    current_user = None
+    if user_id:
+        with get_db() as conn:
+            current_user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    
+    return templates.TemplateResponse("price_history.html", {
+        "request": request,
+        "current_user": current_user
+    })
+
 # --- Admin: environment summary and adjustment preview ---
 @app.get("/admin/env-summary")
 async def admin_env_summary(request: Request):
@@ -6466,6 +6486,93 @@ async def get_history(request: Request):
         for r in rows
     ]
     return JSONResponse({"ok": True, "count": len(items), "items": items})
+
+@app.get("/api/price-history")
+async def get_price_history(request: Request):
+    """API para dados de gráficos de histórico de preços"""
+    require_auth(request)
+    params = request.query_params
+    location = params.get("location", "")
+    days = params.get("days", "")
+    category = params.get("category", "")
+    
+    with _db_lock:
+        conn = sqlite3.connect(DB_PATH)
+        try:
+            # Evolução de preços ao longo do tempo (últimos 30 dias)
+            evolution_query = """
+                SELECT DATE(ts) as date, AVG(price_num) as avg_price
+                FROM price_snapshots
+                WHERE price_num IS NOT NULL AND price_num > 0
+            """
+            evolution_args = []
+            if location:
+                evolution_query += " AND location = ?"
+                evolution_args.append(location)
+            if days:
+                evolution_query += " AND days = ?"
+                evolution_args.append(int(days))
+            evolution_query += " GROUP BY DATE(ts) ORDER BY DATE(ts) DESC LIMIT 30"
+            
+            evolution_rows = conn.execute(evolution_query, tuple(evolution_args)).fetchall()
+            evolution_labels = [r[0] for r in reversed(evolution_rows)]
+            evolution_values = [round(r[1], 2) for r in reversed(evolution_rows)]
+            
+            # Comparação por localização
+            comparison_query = """
+                SELECT location, AVG(price_num) as avg_price
+                FROM price_snapshots
+                WHERE price_num IS NOT NULL AND price_num > 0
+            """
+            comparison_args = []
+            if days:
+                comparison_query += " AND days = ?"
+                comparison_args.append(int(days))
+            comparison_query += " GROUP BY location"
+            
+            comparison_rows = conn.execute(comparison_query, tuple(comparison_args)).fetchall()
+            comparison_labels = [r[0] for r in comparison_rows]
+            comparison_values = [round(r[1], 2) for r in comparison_rows]
+            
+            # Preços médios por mês do ano
+            monthly_query = """
+                SELECT CAST(strftime('%m', ts) AS INTEGER) as month, AVG(price_num) as avg_price
+                FROM price_snapshots
+                WHERE price_num IS NOT NULL AND price_num > 0
+            """
+            monthly_args = []
+            if location:
+                monthly_query += " AND location = ?"
+                monthly_args.append(location)
+            if days:
+                monthly_query += " AND days = ?"
+                monthly_args.append(int(days))
+            monthly_query += " GROUP BY month ORDER BY month"
+            
+            monthly_rows = conn.execute(monthly_query, tuple(monthly_args)).fetchall()
+            monthly_values = [0] * 12
+            for r in monthly_rows:
+                month_idx = r[0] - 1  # 1-12 -> 0-11
+                if 0 <= month_idx < 12:
+                    monthly_values[month_idx] = round(r[1], 2)
+            
+        finally:
+            conn.close()
+    
+    return JSONResponse({
+        "ok": True,
+        "evolution": {
+            "labels": evolution_labels,
+            "values": evolution_values
+        },
+        "comparison": {
+            "labels": comparison_labels,
+            "values": comparison_values
+        },
+        "monthly": {
+            "values": monthly_values
+        }
+    })
 
 # ============================================================
 # VEHICLES MANAGEMENT ENDPOINTS
