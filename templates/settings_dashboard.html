@@ -157,8 +157,8 @@
                 return;
             }
             
-            // Load content via iframe with fixed height (no auto-resize to avoid loops)
-            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; max-width: 100%; overflow: auto;"></iframe>`;
+            // Load content via iframe (fixed height, no onload to avoid loops)
+            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>`;
         }
         
         // Load Users by default on page load
