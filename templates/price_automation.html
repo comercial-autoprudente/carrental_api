@@ -154,19 +154,36 @@
                 </div>
             </div>
             
-            <!-- Botões de Download -->
-            <div class="border-t pt-4 flex items-center justify-end gap-3">
-                <span class="text-sm text-gray-600">Descarregar Excel:</span>
-                <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
-                    <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </button>
-                <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Abbycar">
-                    <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                    </svg>
-                </button>
+            <!-- Gestão de Colunas -->
+            <div class="border-t pt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600">Gerir colunas:</span>
+                    <button onclick="showAddColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Adicionar coluna">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Adicionar
+                    </button>
+                    <button onclick="showRemoveColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Remover coluna">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                        </svg>
+                        Remover
+                    </button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600">Descarregar Excel:</span>
+                    <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
+                        <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                    <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Abbycar">
+                        <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -314,8 +331,42 @@
             return net * (1 + comissao);
         }
 
+        // Recriar header da tabela
+        function rebuildTableHeader() {
+            const table = document.querySelector('.bg-white.shadow.overflow-x-auto table');
+            const thead = table.querySelector('thead');
+            
+            // Primeira linha do header (dias)
+            let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r">Grupo</th>';
+            dias.forEach(d => {
+                headerRow1 += `<th colspan="2" class="px-2 py-2 text-center font-semibold border-r">${d}d</th>`;
+            });
+            headerRow1 += `<th rowspan="2" class="px-2 py-2 text-center font-semibold bg-gray-50">
+                <button id="btnSearchAll" onclick="searchAllPrices()" class="p-2 hover:bg-gray-200 rounded transition-colors" title="Pesquisar todos os preços">
+                    <svg class="w-5 h-5 text-[#009cb6] search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <svg class="w-5 h-5 text-[#009cb6] loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                </button>
+            </th></tr>`;
+            
+            // Segunda linha do header (NET/Real)
+            let headerRow2 = '<tr>';
+            dias.forEach(() => {
+                headerRow2 += '<th class="px-1 py-1 text-center text-[10px] bg-gray-100">NET</th>';
+                headerRow2 += '<th class="px-1 py-1 text-center text-[10px] bg-gray-100 border-r">Real</th>';
+            });
+            headerRow2 += '</tr>';
+            
+            thead.innerHTML = headerRow1 + headerRow2;
+        }
+
         // Inicializar tabela
         function initTable() {
+            rebuildTableHeader();
+            
             const tbody = document.getElementById('pricesTable');
             tbody.innerHTML = '';
 
@@ -712,6 +763,78 @@
             XLSX.writeFile(wb, filename);
         }
 
+        function showAddColumnDialog() {
+            const newDays = prompt('Quantos dias deseja adicionar? (ex: 15, 45, 90)');
+            if (newDays) {
+                const daysNum = parseInt(newDays);
+                if (isNaN(daysNum) || daysNum <= 0) {
+                    alert('⚠️ Por favor insira um número válido');
+                    return;
+                }
+                if (dias.includes(daysNum)) {
+                    alert('⚠️ Esta coluna já existe');
+                    return;
+                }
+                
+                // Adicionar e ordenar
+                dias.push(daysNum);
+                dias.sort((a, b) => a - b);
+                
+                // Guardar configuração
+                localStorage.setItem('customDias', JSON.stringify(dias));
+                
+                // Recriar tabela
+                initTable();
+                alert(`✅ Coluna ${daysNum} dias adicionada!`);
+            }
+        }
+
+        function showRemoveColumnDialog() {
+            const diasStr = dias.join(', ');
+            const removeDays = prompt(`Que coluna deseja remover?\nColunas disponíveis: ${diasStr}`);
+            if (removeDays) {
+                const daysNum = parseInt(removeDays);
+                const index = dias.indexOf(daysNum);
+                
+                if (index === -1) {
+                    alert('⚠️ Coluna não encontrada');
+                    return;
+                }
+                
+                if (dias.length <= 1) {
+                    alert('⚠️ Não pode remover a última coluna');
+                    return;
+                }
+                
+                // Remover
+                dias.splice(index, 1);
+                
+                // Guardar configuração
+                localStorage.setItem('customDias', JSON.stringify(dias));
+                
+                // Recriar tabela
+                initTable();
+                alert(`✅ Coluna ${daysNum} dias removida!`);
+            }
+        }
+
+        // Carregar dias personalizados ao iniciar
+        function loadCustomDias() {
+            const saved = localStorage.getItem('customDias');
+            if (saved) {
+                try {
+                    const customDias = JSON.parse(saved);
+                    if (Array.isArray(customDias) && customDias.length > 0) {
+                        dias.length = 0;
+                        dias.push(...customDias);
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar dias personalizados:', e);
+                }
+            }
+        }
+
+        loadCustomDias();
         document.getElementById('pickupDate').valueAsDate = new Date();
         initTable();
     </script>
