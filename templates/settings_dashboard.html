@@ -157,8 +157,8 @@
                 return;
             }
             
-            // Load content via iframe with responsive width
-            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="min-height: 80vh; max-width: 100%; overflow-x: hidden;" onload="this.style.height=this.contentWindow.document.body.scrollHeight+'px'; this.contentWindow.document.body.style.transform='scale(0.95)'; this.contentWindow.document.body.style.transformOrigin='top left';"></iframe>`;
+            // Load content via iframe with fixed height (no auto-resize to avoid loops)
+            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; max-width: 100%; overflow: auto;"></iframe>`;
         }
         
         // Load Users by default on page load
