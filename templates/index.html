@@ -1000,7 +1000,15 @@
         const cat = String(it.category || '').toLowerCase();
         const transmission = String(it.transmission || it.gearbox || it.gear || it.trans || it.gear_type || it.shift || '').toLowerCase();
         const details = String(it.details || '').toLowerCase();
-        // Specific overrides first
+        
+        // B1 vs B2 - Mini 4 Doors vs Mini
+        // B1: Fiat 500 4p (4 portas)
+        if (/^fiat\s*500\s*(4p|4\s*portas|4\s*door)/i.test(car)) return 'Group B1';
+        // B2: Fiat Panda, Toyota Aygo, Fiat 500 (2 portas), Hyundai i10, etc
+        if (/^(fiat\s*panda|toyota\s*aygo|hyundai\s*i10|kia\s*picanto|peugeot\s*108|citroen\s*c1(?!\s*auto))/i.test(car)) return 'Group B2';
+        if (/^fiat\s*500\b(?!.*4p)(?!.*4\s*door)(?!.*auto)/i.test(car)) return 'Group B2';
+        
+        // Specific overrides
         if (/^peugeot\s*308\b.*\bauto(matic)?\b/.test(car)) return 'Group E2';
         if (/^fiat\s*500l\b/.test(car)) return 'Group J1';
         if (/\bkia\s*ceed\b/.test(car)) return 'Group D';
