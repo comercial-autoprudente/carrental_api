@@ -6666,6 +6666,18 @@ async def admin_vehicles_editor(request: Request):
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Erro: vehicle_editor.html não encontrado</h1>", status_code=500)
 
+@app.get("/admin/price-validation", response_class=HTMLResponse)
+async def admin_price_validation(request: Request):
+    """Página de configuração de regras de validação de preços"""
+    require_auth(request)
+    
+    html_path = os.path.join(os.path.dirname(__file__), "templates", "price_validation_rules.html")
+    try:
+        with open(html_path, 'r', encoding='utf-8') as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Erro: price_validation_rules.html não encontrado</h1>", status_code=500)
+
 @app.get("/api/vehicles/with-originals")
 async def get_vehicles_with_originals(request: Request):
     """Retorna veículos com nomes originais do scraping"""

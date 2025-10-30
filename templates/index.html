@@ -127,6 +127,7 @@
           </div>
           {% endif %}
           {% if request.session and request.session.get('is_admin') %}
+          <a href="/admin/price-validation" class="text-xs md:text-sm text-white/90 hover:text-white underline" title="Regras de Validação">⚠️ Regras</a>
           <a href="/admin/users" class="text-xs md:text-sm text-white/90 hover:text-white underline">Admin</a>
           {% endif %}
           <form method="post" action="/logout">
