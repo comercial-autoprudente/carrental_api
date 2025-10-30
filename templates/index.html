@@ -1663,51 +1663,59 @@
         // Validate rules
         rules.forEach(rule => {
           const basePrice = groupPrices[rule.baseGroup];
-          const comparePrice = groupPrices[rule.compareGroup];
+          
+          // Suportar tanto compareGroup (antigo) quanto compareGroups (novo)
+          const compareGroups = rule.compareGroups || (rule.compareGroup ? [rule.compareGroup] : []);
+          
+          if (!basePrice) return; // Skip if base price not available
+          
+          // Validar contra cada grupo de comparação
+          compareGroups.forEach(compareGroup => {
+            const comparePrice = groupPrices[compareGroup];
+            if (!comparePrice) return; // Skip if compare price not available
 
-          if (!basePrice || !comparePrice) return; // Skip if prices not available
+            let violated = false;
+            let message = '';
 
-          let violated = false;
-          let message = '';
+            switch (rule.condition) {
+              case 'must_be_greater_than':
+                if (basePrice <= comparePrice) {
+                  violated = true;
+                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≤ ${compareGroup} (€${comparePrice.toFixed(2)})`;
+                }
+                break;
+              case 'must_be_greater_or_equal':
+                if (basePrice < comparePrice) {
+                  violated = true;
+                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be < ${compareGroup} (€${comparePrice.toFixed(2)})`;
+                }
+                break;
+              case 'must_be_less_than':
+                if (basePrice >= comparePrice) {
+                  violated = true;
+                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≥ ${compareGroup} (€${comparePrice.toFixed(2)})`;
+                }
+                break;
+              case 'must_be_less_or_equal':
+                if (basePrice > comparePrice) {
+                  violated = true;
+                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be > ${compareGroup} (€${comparePrice.toFixed(2)})`;
+                }
+                break;
+              case 'must_not_exceed_percentage':
+                const maxAllowed = comparePrice * (1 + (rule.percentage || 0) / 100);
+                if (basePrice > maxAllowed) {
+                  violated = true;
+                  message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) exceeds ${rule.percentage}% of ${compareGroup}`;
+                }
+                break;
+            }
 
-          switch (rule.condition) {
-            case 'must_be_greater_than':
-              if (basePrice <= comparePrice) {
-                violated = true;
-                message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≤ ${rule.compareGroup} (€${comparePrice.toFixed(2)})`;
-              }
-              break;
-            case 'must_be_greater_or_equal':
-              if (basePrice < comparePrice) {
-                violated = true;
-                message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be < ${rule.compareGroup} (€${comparePrice.toFixed(2)})`;
-              }
-              break;
-            case 'must_be_less_than':
-              if (basePrice >= comparePrice) {
-                violated = true;
-                message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be ≥ ${rule.compareGroup} (€${comparePrice.toFixed(2)})`;
-              }
-              break;
-            case 'must_be_less_or_equal':
-              if (basePrice > comparePrice) {
-                violated = true;
-                message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) cannot be > ${rule.compareGroup} (€${comparePrice.toFixed(2)})`;
-              }
-              break;
-            case 'must_not_exceed_percentage':
-              const maxAllowed = comparePrice * (1 + (rule.percentage || 0) / 100);
-              if (basePrice > maxAllowed) {
-                violated = true;
-                message = `${rule.baseGroup} price (€${basePrice.toFixed(2)}) exceeds ${rule.percentage}% of ${rule.compareGroup}`;
-              }
-              break;
-          }
-
-          if (violated) {
-            if (!alerts[rule.baseGroup]) alerts[rule.baseGroup] = [];
-            alerts[rule.baseGroup].push(message);
-          }
+            if (violated) {
+              if (!alerts[rule.baseGroup]) alerts[rule.baseGroup] = [];
+              alerts[rule.baseGroup].push(message);
+            }
+          });
         });
 
         return alerts;

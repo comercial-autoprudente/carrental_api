@@ -100,9 +100,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Compare Group</label>
-                        <select id="newRuleCompareGroup" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="">Select...</option>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Compare Groups (hold Ctrl/Cmd for multiple)</label>
+                        <select id="newRuleCompareGroup" multiple class="w-full border border-gray-300 rounded-lg px-3 py-2 h-32">
                             <option value="B1">B1 - Mini 4 Portas</option>
                             <option value="B2">B2 - Mini 5 Portas</option>
                             <option value="D">D - Economy</option>
@@ -119,6 +118,7 @@
                             <option value="M2">M2 - 7 Lugares Auto</option>
                             <option value="N">N - 9 Lugares</option>
                         </select>
+                        <p class="text-xs text-gray-500 mt-1">Select multiple groups to compare against all of them</p>
                     </div>
                 </div>
                 <div class="mb-4" id="percentageInput" style="display: none;">
@@ -197,37 +197,39 @@
         function addRule() {
             const baseGroup = document.getElementById('newRuleBaseGroup').value;
             const condition = document.getElementById('newRuleCondition').value;
-            const compareGroup = document.getElementById('newRuleCompareGroup').value;
+            const compareSelect = document.getElementById('newRuleCompareGroup');
+            const compareGroups = Array.from(compareSelect.selectedOptions).map(opt => opt.value);
             const percentage = document.getElementById('newRulePercentage').value;
 
-            if (!baseGroup || !compareGroup) {
-                alert('Por favor, selecione ambos os grupos!');
+            if (!baseGroup || compareGroups.length === 0) {
+                alert('Please select base group and at least one compare group!');
                 return;
             }
 
-            if (baseGroup === compareGroup) {
-                alert('Os grupos devem ser diferentes!');
+            if (compareGroups.includes(baseGroup)) {
+                alert('Base group cannot be in compare groups!');
                 return;
             }
 
             const conditionTexts = {
-                'must_be_greater_than': 'deve ser MAIOR que',
-                'must_be_greater_or_equal': 'deve ser MAIOR OU IGUAL a',
-                'must_be_less_than': 'deve ser MENOR que',
-                'must_be_less_or_equal': 'deve ser MENOR OU IGUAL a',
-                'must_not_exceed_percentage': 'não pode exceder'
+                'must_be_greater_than': 'must be GREATER than',
+                'must_be_greater_or_equal': 'must be GREATER OR EQUAL to',
+                'must_be_less_than': 'must be LESS than',
+                'must_be_less_or_equal': 'must be LESS OR EQUAL to',
+                'must_not_exceed_percentage': 'cannot exceed'
             };
 
-            let description = `${baseGroup} ${conditionTexts[condition]} ${compareGroup}`;
+            const compareGroupsText = compareGroups.join(', ');
+            let description = `${baseGroup} ${conditionTexts[condition]} ${compareGroupsText}`;
             if (condition === 'must_not_exceed_percentage' && percentage) {
-                description += ` em ${percentage}%`;
+                description += ` by ${percentage}%`;
             }
 
             const rule = {
                 id: Date.now(),
                 baseGroup,
                 condition,
-                compareGroup,
+                compareGroups,  // Array de grupos
                 percentage: percentage || null,
                 enabled: true,
                 description
@@ -240,7 +242,7 @@
             // Limpar formulário
             document.getElementById('newRuleBaseGroup').value = '';
             document.getElementById('newRuleCondition').value = 'must_be_greater_than';
-            document.getElementById('newRuleCompareGroup').value = '';
+            compareSelect.selectedIndex = -1; // Limpar seleção múltipla
             document.getElementById('newRulePercentage').value = '';
             document.getElementById('percentageInput').style.display = 'none';
         }
@@ -282,8 +284,8 @@
                             </div>
                             <div class="text-sm text-gray-600">
                                 <span class="font-medium">Base:</span> ${rule.baseGroup} | 
-                                <span class="font-medium">Comparação:</span> ${rule.compareGroup}
-                                ${rule.percentage ? ` | <span class="font-medium">Limite:</span> ${rule.percentage}%` : ''}
+                                <span class="font-medium">Compare:</span> ${rule.compareGroups ? rule.compareGroups.join(', ') : rule.compareGroup}
+                                ${rule.percentage ? ` | <span class="font-medium">Limit:</span> ${rule.percentage}%` : ''}
                             </div>
                         </div>
                         <div class="flex gap-2">
