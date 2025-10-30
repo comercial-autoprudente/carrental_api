@@ -433,7 +433,7 @@
             const pickupDate = document.getElementById('pickupDate').value;
 
             if (!pickupDate) {
-                alert('⚠️ Selecione uma data primeiro');
+                showNotification('Selecione uma data primeiro', 'warning');
                 return;
             }
 
@@ -563,7 +563,7 @@
             const pickupDate = document.getElementById('pickupDate').value;
 
             if (!pickupDate) {
-                alert('⚠️ Selecione uma data primeiro');
+                showNotification('Selecione uma data primeiro', 'warning');
                 return;
             }
 
@@ -795,16 +795,34 @@
             saveToHistory();
         }
 
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-[#009cb6]' : type === 'warning' ? 'bg-[#f4ad0f]' : 'bg-red-500';
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in`;
+            
+            const icon = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕';
+            notification.innerHTML = `<span class="text-xl">${icon}</span><span>${message}</span>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
         function showAddColumnDialog() {
             const newDays = prompt('Quantos dias deseja adicionar? (ex: 15, 45, 90)');
             if (newDays) {
                 const daysNum = parseInt(newDays);
                 if (isNaN(daysNum) || daysNum <= 0) {
-                    alert('⚠️ Por favor insira um número válido');
+                    showNotification('Por favor insira um número válido', 'warning');
                     return;
                 }
                 if (dias.includes(daysNum)) {
-                    alert('⚠️ Esta coluna já existe');
+                    showNotification('Esta coluna já existe', 'warning');
                     return;
                 }
                 
@@ -817,7 +835,7 @@
                 
                 // Recriar tabela
                 initTable();
-                alert(`✅ Coluna ${daysNum} dias adicionada!`);
+                showNotification(`Coluna ${daysNum} dias adicionada!`, 'success');
             }
         }
 
@@ -829,12 +847,12 @@
                 const index = dias.indexOf(daysNum);
                 
                 if (index === -1) {
-                    alert('⚠️ Coluna não encontrada');
+                    showNotification('Coluna não encontrada', 'warning');
                     return;
                 }
                 
                 if (dias.length <= 1) {
-                    alert('⚠️ Não pode remover a última coluna');
+                    showNotification('Não pode remover a última coluna', 'warning');
                     return;
                 }
                 
@@ -846,7 +864,7 @@
                 
                 // Recriar tabela
                 initTable();
-                alert(`✅ Coluna ${daysNum} dias removida!`);
+                showNotification(`Coluna ${daysNum} dias removida!`, 'success');
             }
         }
 
