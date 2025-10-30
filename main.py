@@ -1877,6 +1877,7 @@ async def get_prices(request: Request):
         if USE_PLAYWRIGHT and _HAS_PLAYWRIGHT and isinstance(url, str) and ("carjet.com/do/list/" in url):
             try:
                 from playwright.async_api import async_playwright
+                import sys
                 async with async_playwright() as p:
                     # Try WebKit (Safari) first
                     async def run_with(browser):
@@ -2014,6 +2015,28 @@ async def get_prices(request: Request):
                             await page.wait_for_response(lambda r: 'carList.asp' in (r.url or ''), timeout=40000)
                         except Exception:
                             pass
+                        
+                        # Clicar nos checkboxes de depósito para ativar filtros e mostrar info no HTML
+                        try:
+                            print("[PLAYWRIGHT] Ativando filtros de depósito...", file=sys.stderr, flush=True)
+                            # Tentar clicar em cada checkbox de depósito
+                            for checkbox_id in ['chkDep250', 'chkDep500', 'chkFranN']:
+                                try:
+                                    checkbox = page.locator(f'#{checkbox_id}')
+                                    if await checkbox.count() > 0:
+                                        await checkbox.check(timeout=2000)
+                                        await page.wait_for_timeout(300)
+                                        print(f"[PLAYWRIGHT] ✓ Checkbox {checkbox_id} ativado", file=sys.stderr, flush=True)
+                                except Exception as e:
+                                    print(f"[PLAYWRIGHT] ✗ Erro ao ativar {checkbox_id}: {e}", file=sys.stderr, flush=True)
+                            # Aguardar atualização da página
+                            try:
+                                await page.wait_for_load_state('networkidle', timeout=5000)
+                            except Exception:
+                                pass
+                        except Exception as e:
+                            print(f"[PLAYWRIGHT] Erro geral ao ativar filtros: {e}", file=sys.stderr, flush=True)
+                        
                         html = await page.content()
                         final_url = page.url
                         await context.close()
