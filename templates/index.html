@@ -619,6 +619,7 @@
           { cat: '7 Seater', label: 'M1 - 7 Seater' },
           { cat: '7 Seater Automatic', label: 'M2 - 7 Seater Automatic' },
           { cat: '9 Seater', label: 'N - 9 Seater' },
+          { cat: 'Others', label: 'Others - Não Parametrizados' },
         ];
         const codeToCat = {
           'B1': 'Mini 4 Doors',
@@ -635,6 +636,7 @@
           'M1': '7 Seater',
           'M2': '7 Seater Automatic',
           'N': '9 Seater',
+          'Others': 'Others',
         };
         const normalizeCat = (raw) => {
           const s = String(raw || '').trim();
@@ -661,16 +663,25 @@
         };
         const map = new Map();
         (items || []).forEach(it => {
-          const disp = String(displayCategory(it) || '').trim();
           let key = '';
-          const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
-          if (m) {
-            const code = m[1].toUpperCase();
-            key = codeToCat[code] || normalizeCat(it.category);
+          
+          // PRIORIDADE 1: Usar campo 'group' da API (já mapeado no backend)
+          if (it.group) {
+            const groupCode = String(it.group).toUpperCase();
+            key = codeToCat[groupCode] || 'Others';
           } else {
-            key = normalizeCat(disp) || normalizeCat(it.category);
+            // FALLBACK: Tentar mapear pela categoria
+            const disp = String(displayCategory(it) || '').trim();
+            const m = disp.match(/^group\s*([A-Z0-9]+)\b/i);
+            if (m) {
+              const code = m[1].toUpperCase();
+              key = codeToCat[code] || normalizeCat(it.category);
+            } else {
+              key = normalizeCat(disp) || normalizeCat(it.category);
+            }
           }
-          if (!key) return;
+          
+          if (!key) key = 'Others';
           if (!map.has(key)) map.set(key, []);
           map.get(key).push(it);
         });
