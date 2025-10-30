@@ -132,17 +132,6 @@
             });
             event.currentTarget.classList.add('active');
             
-            // Show loading
-            const contentArea = document.getElementById('content-area');
-            contentArea.innerHTML = `
-                <div class="flex items-center justify-center h-64">
-                    <div class="text-center">
-                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009cb6] mx-auto mb-4"></div>
-                        <p class="text-gray-500">Loading ${section}...</p>
-                    </div>
-                </div>
-            `;
-            
             // Map sections to URLs
             const urls = {
                 'users': '/admin/users',
@@ -153,12 +142,12 @@
             
             const url = urls[section];
             if (!url) {
-                contentArea.innerHTML = '<p class="text-red-500">Section not found</p>';
+                document.getElementById('content-area').innerHTML = '<p class="text-red-500">Section not found</p>';
                 return;
             }
             
-            // Load content via iframe with fixed height (no auto-resize to avoid loops)
-            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; max-width: 100%; overflow: auto;"></iframe>`;
+            // Redirect to the page directly (no iframe)
+            window.location.href = url;
         }
         
         // Load Users by default on page load
