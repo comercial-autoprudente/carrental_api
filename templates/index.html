@@ -1030,13 +1030,13 @@
           const imgCodeMap = {
             // TODOS os 51 suppliers do CarJet (extraídos do atributo title)
             'ABB': 'Abbycar',
-            'ABB1': 'Abbycar Não reembolsável',
+            'ABB1': 'Abbycar',
             'ACE': 'Ace Rent a Car',
             'ADA': 'Ada',
             'AIR': 'Airauto',
             'ALM': 'Alamo',
             'AMI': 'Amigoautos',
-            'AMI1': 'Amigoautos Não reembolsável',
+            'AMI1': 'Amigoautos',
             'ATR': 'Autorent',
             'AUP': 'Autoprudente',
             'AUU': 'Auto Union',
@@ -1053,13 +1053,13 @@
             'ECR': 'Europcar',
             'ENT': 'Enterprise',
             'EPI': 'Epi',
-            'EU2': 'Goldcar Não reembolsável',
+            'EU2': 'Goldcar',
             'EUK': 'Goldcar Keyn Go',
             'EUR': 'Goldcar',
             'FFX': 'Firefly',
             'FLZ': 'Flizzr by Sixt',
             'GMO': 'Green Motion',
-            'GMO1': 'Green Motion Não reembolsável',
+            'GMO1': 'Green Motion',
             'GUE': 'Guerin',
             'HER': 'Hertz',
             'ICT': 'International',
@@ -1069,7 +1069,7 @@
             'MVY': 'Movyng',
             'NAT': 'National',
             'OKR': 'OK Mobility',
-            'OKR1': 'OK Mobility Não reembolsável',
+            'OKR1': 'OK Mobility',
             'PAR': 'Paa',
             'REC': 'Record',
             'RNA': 'Rentauto',
@@ -1222,12 +1222,12 @@
         const rawSupplier = String(supplier || '');
         const isTAN1 = /logo_TAN1\./i.test(rawSupplier) || supplierName === 'Rent a Car';
         const isNonRefundable = isTAN1 || /não\s*reembols[aá]vel|non[- ]?refundable|nr\b|n&#227;o\s*reembols&#225;vel/i.test(supplierName + ' ' + rawSupplier);
-        const asterisk = isNonRefundable ? '<span style="color:#ff0000; font-weight:bold; font-size:18px; margin-left:3px; vertical-align:super;" title="Não reembolsável">*</span>' : '';
+        const asterisk = isNonRefundable ? '<span style="position:absolute; top:-2px; right:-2px; color:#ff0000; font-weight:bold; font-size:16px;" title="Não reembolsável">*</span>' : '';
         
         if (logoUrl) {
-          return `<div class="flex items-center gap-1"><img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" />${asterisk}<span style="display:none; font-size:11px;">${escapeHtml(supplierName)}</span></div>`;
+          return `<div style="position:relative; display:inline-block;"><img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none';" />${asterisk}</div>`;
         } else {
-          return `<span class="text-xs">${escapeHtml(supplierName)}${asterisk}</span>`;
+          return `<span class="text-xs">${escapeHtml(supplierName)}</span>`;
         }
       }
 
@@ -1930,12 +1930,12 @@
         // G
         'GOS': 'Go2',
         'GO2': 'Go2',
-        'GMO': '/static/logos/logo_GRE.png',
-        'GMO1': '/static/logos/logo_GRE.png',  // Mesmo logo que GMO
-        'Green Motion': '/static/logos/logo_GRE.png',
-        'Green Motion Não reembolsável': '/static/logos/logo_GRE.png',
-        'GRE': '/static/logos/logo_GRE.png',
-        'GRM': '/static/logos/logo_GRE.png',
+        'GMO': '/static/logos/logo_GMO.png',
+        'GMO1': '/static/logos/logo_GMO.png',  // Mesmo logo que GMO
+        'Green Motion': '/static/logos/logo_GMO.png',
+        'Green Motion Não reembolsável': '/static/logos/logo_GMO.png',
+        'GRE': '/static/logos/logo_GMO.png',
+        'GRM': '/static/logos/logo_GMO.png',
         'GUE': '/static/logos/logo_GUE.png',
         'Guerin': '/static/logos/logo_GUE.png',
         // H
@@ -1956,6 +1956,7 @@
         'LOC': '/static/logos/logo_LOC.png',
         'Locauto': '/static/logos/logo_LOC.png',
         'LOZ': '/static/logos/logo_MIL.png',
+        'Localiza': '/static/logos/logo_MIL.png',
         'Millioncarhire': '/static/logos/logo_MIL.png',
         'Million Car Hire': '/static/logos/logo_MIL.png',
         // M
