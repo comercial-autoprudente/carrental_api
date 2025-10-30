@@ -2015,28 +2015,6 @@ async def get_prices(request: Request):
                             await page.wait_for_response(lambda r: 'carList.asp' in (r.url or ''), timeout=40000)
                         except Exception:
                             pass
-                        
-                        # Clicar nos checkboxes de depósito para ativar filtros e mostrar info no HTML
-                        try:
-                            print("[PLAYWRIGHT] Ativando filtros de depósito...", file=sys.stderr, flush=True)
-                            # Tentar clicar em cada checkbox de depósito
-                            for checkbox_id in ['chkDep250', 'chkDep500', 'chkFranN']:
-                                try:
-                                    checkbox = page.locator(f'#{checkbox_id}')
-                                    if await checkbox.count() > 0:
-                                        await checkbox.check(timeout=2000)
-                                        await page.wait_for_timeout(300)
-                                        print(f"[PLAYWRIGHT] ✓ Checkbox {checkbox_id} ativado", file=sys.stderr, flush=True)
-                                except Exception as e:
-                                    print(f"[PLAYWRIGHT] ✗ Erro ao ativar {checkbox_id}: {e}", file=sys.stderr, flush=True)
-                            # Aguardar atualização da página
-                            try:
-                                await page.wait_for_load_state('networkidle', timeout=5000)
-                            except Exception:
-                                pass
-                        except Exception as e:
-                            print(f"[PLAYWRIGHT] Erro geral ao ativar filtros: {e}", file=sys.stderr, flush=True)
-                        
                         html = await page.content()
                         final_url = page.url
                         await context.close()
@@ -4913,34 +4891,38 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             #     cards_blocked += 1
             #     continue
             
-            # Extrair informação de depósito (caução)
-            deposit_level = "High Deposit"  # Default
+            # Determinar nível de depósito baseado em padrões conhecidos de suppliers
+            deposit_level = "Medium Deposit (< 500€)"  # Default mais comum
             try:
-                card_html = str(card)
-                card_text = card.get_text(" ", strip=True).lower()
+                supplier_lower = (supplier or "").lower()
+                car_lower = (car_name or "").lower()
                 
-                # Zero franquia / Zero deposit
-                if re.search(r"zero\s*franquia|zero\s*deposit|sem\s*franquia|no\s*excess", card_text, re.I):
+                # ZERO DEPOSIT - Suppliers conhecidos com zero franquia
+                zero_deposit_suppliers = [
+                    'goldcar', 'ok mobility', 'ok rent', 'firefly', 'record',
+                    'surprice', 'centauro', 'interrent', 'rhodium', 'flizzr'
+                ]
+                if any(s in supplier_lower for s in zero_deposit_suppliers):
                     deposit_level = "Zero Deposit"
-                # Low deposit < 250€
-                elif re.search(r"inferior\s*a\s*250|less\s*than\s*250|<\s*250|250\s*€\s*max", card_text, re.I):
+                
+                # LOW DEPOSIT (< 250€) - Suppliers com depósito baixo
+                elif any(s in supplier_lower for s in ['budget', 'thrifty', 'dollar', 'alamo', 'enterprise', 'keddy']):
                     deposit_level = "Low Deposit (< 250€)"
-                # Medium deposit < 500€
-                elif re.search(r"inferior\s*a\s*500|less\s*than\s*500|<\s*500|500\s*€\s*max", card_text, re.I):
-                    deposit_level = "Medium Deposit (< 500€)"
-                # Procurar por valores específicos de depósito
-                else:
-                    deposit_match = re.search(r"deposit[:\s]*€?\s*(\d+)|caução[:\s]*€?\s*(\d+)|franquia[:\s]*€?\s*(\d+)", card_text, re.I)
-                    if deposit_match:
-                        deposit_value = int(deposit_match.group(1) or deposit_match.group(2) or deposit_match.group(3) or "9999")
-                        if deposit_value == 0:
-                            deposit_level = "Zero Deposit"
-                        elif deposit_value < 250:
-                            deposit_level = "Low Deposit (< 250€)"
-                        elif deposit_value < 500:
-                            deposit_level = "Medium Deposit (< 500€)"
-                        else:
-                            deposit_level = "High Deposit"
+                
+                # HIGH DEPOSIT - Suppliers premium ou carros de luxo
+                elif any(s in supplier_lower for s in ['sixt', 'hertz', 'avis', 'europcar', 'national']):
+                    # Carros premium/luxury = High, resto = Medium
+                    if any(x in car_lower for x in ['bmw', 'mercedes', 'audi', 'volvo', 'tesla', 'premium', 'luxury']):
+                        deposit_level = "High Deposit"
+                    else:
+                        deposit_level = "Medium Deposit (< 500€)"
+                
+                # Verificar se tem "non-refundable" ou "não reembolsável" no nome
+                if 'non-refundable' in supplier_lower or 'não reembolsável' in supplier_lower or 'nr' in supplier_lower:
+                    # Non-refundable geralmente tem depósito mais baixo
+                    if deposit_level == "High Deposit":
+                        deposit_level = "Medium Deposit (< 500€)"
+                
             except Exception:
                 pass
             
