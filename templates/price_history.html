@@ -56,22 +56,43 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Período (dias)</label>
                     <select id="filterDays" class="w-full px-3 py-2 border border-gray-300">
                         <option value="">Todos</option>
                         <option value="1">1 dia</option>
+                        <option value="2">2 dias</option>
+                        <option value="3">3 dias</option>
+                        <option value="4">4 dias</option>
+                        <option value="5">5 dias</option>
+                        <option value="6">6 dias</option>
                         <option value="7">7 dias</option>
+                        <option value="8">8 dias</option>
+                        <option value="9">9 dias</option>
                         <option value="14">14 dias</option>
+                        <option value="22">22 dias</option>
                         <option value="28">28 dias</option>
+                        <option value="31">31 dias</option>
+                        <option value="60">60 dias</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
                     <select id="filterCategory" class="w-full px-3 py-2 border border-gray-300">
                         <option value="">Todas</option>
-                        <option value="Mini">Mini</option>
-                        <option value="Economy">Economy</option>
-                        <option value="SUV">SUV</option>
+                        <option value="B1">B1 - Mini 4 Doors</option>
+                        <option value="B2">B2 - Mini</option>
+                        <option value="D">D - Economy</option>
+                        <option value="E1">E1 - Mini Automatic</option>
+                        <option value="E2">E2 - Economy Automatic</option>
+                        <option value="F">F - SUV</option>
+                        <option value="G">G - Premium</option>
+                        <option value="J1">J1 - Crossover</option>
+                        <option value="J2">J2 - Station Wagon</option>
+                        <option value="L1">L1 - SUV Automatic</option>
+                        <option value="L2">L2 - Station Wagon Automatic</option>
+                        <option value="M1">M1 - 7 Seater</option>
+                        <option value="M2">M2 - 7 Seater Automatic</option>
+                        <option value="N">N - 9 Seater</option>
                     </select>
                 </div>
                 <div class="flex items-end">
@@ -121,25 +142,49 @@
         }
 
         function renderCharts(data) {
-            // Gráfico de Evolução
+            // Gráfico de Evolução com Min, Médio, Máximo
             const ctx1 = document.getElementById('priceEvolutionChart').getContext('2d');
             if (priceEvolutionChart) priceEvolutionChart.destroy();
             priceEvolutionChart = new Chart(ctx1, {
                 type: 'line',
                 data: {
                     labels: data.evolution?.labels || [],
-                    datasets: [{
-                        label: 'Preço Médio (€)',
-                        data: data.evolution?.values || [],
-                        borderColor: '#009cb6',
-                        backgroundColor: 'rgba(0, 156, 182, 0.1)',
-                        tension: 0.4
-                    }]
+                    datasets: [
+                        {
+                            label: 'Preço Mínimo (€)',
+                            data: data.evolution?.min || [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Preço Médio (€)',
+                            data: data.evolution?.avg || [],
+                            borderColor: '#009cb6',
+                            backgroundColor: 'rgba(0, 156, 182, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Preço Máximo (€)',
+                            data: data.evolution?.max || [],
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            borderWidth: 2
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     plugins: {
                         legend: { display: true }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
                     }
                 }
             });

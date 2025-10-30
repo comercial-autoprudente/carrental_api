@@ -6499,9 +6499,12 @@ async def get_price_history(request: Request):
     with _db_lock:
         conn = sqlite3.connect(DB_PATH)
         try:
-            # Evolução de preços ao longo do tempo (últimos 30 dias)
+            # Evolução de preços ao longo do tempo (últimos 30 dias) - MIN, AVG, MAX
             evolution_query = """
-                SELECT DATE(ts) as date, AVG(price_num) as avg_price
+                SELECT DATE(ts) as date, 
+                       MIN(price_num) as min_price,
+                       AVG(price_num) as avg_price,
+                       MAX(price_num) as max_price
                 FROM price_snapshots
                 WHERE price_num IS NOT NULL AND price_num > 0
             """
@@ -6512,11 +6515,16 @@ async def get_price_history(request: Request):
             if days:
                 evolution_query += " AND days = ?"
                 evolution_args.append(int(days))
+            if category:
+                evolution_query += " AND car LIKE ?"
+                evolution_args.append(f"%{category}%")
             evolution_query += " GROUP BY DATE(ts) ORDER BY DATE(ts) DESC LIMIT 30"
             
             evolution_rows = conn.execute(evolution_query, tuple(evolution_args)).fetchall()
             evolution_labels = [r[0] for r in reversed(evolution_rows)]
-            evolution_values = [round(r[1], 2) for r in reversed(evolution_rows)]
+            evolution_min = [round(r[1], 2) if r[1] else 0 for r in reversed(evolution_rows)]
+            evolution_avg = [round(r[2], 2) if r[2] else 0 for r in reversed(evolution_rows)]
+            evolution_max = [round(r[3], 2) if r[3] else 0 for r in reversed(evolution_rows)]
             
             # Comparação por localização
             comparison_query = """
@@ -6563,7 +6571,9 @@ async def get_price_history(request: Request):
         "ok": True,
         "evolution": {
             "labels": evolution_labels,
-            "values": evolution_values
+            "min": evolution_min,
+            "avg": evolution_avg,
+            "max": evolution_max
         },
         "comparison": {
             "labels": comparison_labels,
