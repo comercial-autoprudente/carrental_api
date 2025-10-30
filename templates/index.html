@@ -855,32 +855,98 @@
       function displaySupplierName(name) {
         const s = String(name || '').trim();
         if (!s) return '';
+        
+        // Extract code from image path if present (ex: /cdn/img/prv/flat/mid/logo_SAD.png → SAD)
+        const imgMatch = s.match(/logo_([A-Z0-9]+)\.(png|jpg|avif|webp)/i);
+        if (imgMatch) {
+          const code = imgMatch[1].toUpperCase();
+          // Map image codes to supplier names
+          const imgCodeMap = {
+            'GMO1': 'Goldcar', 'GMO': 'Goldcar', 'GCA': 'Goldcar',
+            'ECR': 'Europcar', 'EU2': 'Europcar', 'EUK': 'Europcar', 'EUP': 'Europcar', 'EUR': 'Europcar',
+            'SVN': 'Sixt', 'SXR': 'Sixt', 'SXT': 'Sixt', 'SIX': 'Sixt',
+            'BGX': 'Budget', 'BDG': 'Budget', 'BUD': 'Budget',
+            'HER': 'Hertz', 'HRZ': 'Hertz', 'HTZ': 'Hertz',
+            'AVS': 'Avis', 'AVI': 'Avis',
+            'DVM': 'Drive on Holidays', 'DOH': 'Drive on Holidays', 'DHO': 'Drive on Holidays',
+            'KLA': 'Klass Wagen', 'KLW': 'Klass Wagen',
+            'AMI1': 'Amigos', 'AMI': 'Amigos', 'AMG': 'Amigos',
+            'AUP': 'Auto Prudente', 'SAD': 'Auto Prudente',
+            'THR': 'Thrifty', 'TFT': 'Thrifty',
+            'CEN': 'Centauro', 'CNT': 'Centauro',
+            'OKR': 'OK Mobility', 'OKM': 'OK Mobility',
+            'SUR': 'Surprice', 'SPR': 'Surprice',
+            'TAN': 'TAN', 'TAN1': 'TAN',
+            'YNO': 'YNO Rent a Car', 'YNR': 'YNO Rent a Car',
+            'ICT': 'Interrent', 'INT': 'Interrent', 'IRE': 'Interrent',
+            'FIR': 'Firefly', 'FLY': 'Firefly',
+            'KEA': 'KEA Rent', 'KEA1': 'KEA Rent',
+            'RCR': 'Rhodium', 'RHD': 'Rhodium',
+            'ALM': 'Alamo', 'ALO': 'Alamo',
+            'NAT': 'National', 'NTL': 'National',
+            'ENT': 'Enterprise', 'ETP': 'Enterprise',
+            'DOL': 'Dollar', 'DLR': 'Dollar',
+            'FRO': 'Frontline', 'FRL': 'Frontline',
+            'GRE': 'Green Motion', 'GRM': 'Green Motion',
+            'REC': 'Record Go', 'RCG': 'Record Go',
+            'WAY': 'Wayz', 'WYZ': 'Wayz',
+            'ADD': 'Addcar', 'ADC': 'Addcar',
+            'BRO': 'Bravacar', 'BRV': 'Bravacar',
+            'CAR': 'Carhire', 'CRH': 'Carhire',
+            'DIG': 'Digital', 'DGT': 'Digital',
+            'FLC': 'Flizzr', 'FLZ': 'Flizzr',
+            'GOS': 'Go2', 'GO2': 'Go2',
+            'KEY': 'Key n Go', 'KNG': 'Key n Go',
+            'LOC': 'Locauto', 'LCT': 'Locauto',
+            'MAS': 'Master', 'MST': 'Master',
+            'MUN': 'Mundy', 'MND': 'Mundy',
+            'RAC': 'Rack', 'RCK': 'Rack',
+            'TOP': 'TopCar', 'TPC': 'TopCar',
+            'VIS': 'Visacar', 'VSC': 'Visacar',
+            'BSD': 'Booking.com', 'BKG': 'Booking.com',
+            'CAE': 'CarRentals', 'CRE': 'CarRentals'
+          };
+          if (imgCodeMap[code]) return imgCodeMap[code];
+          
+          // Fallback: Se não encontrar, retornar código formatado
+          console.warn('[SUPPLIER] Unknown code:', code, 'from:', s);
+          return code;
+        }
+        
         const up = s.toUpperCase().replace(/\s+/g, ' ').trim();
-        // Known code → name mappings (extendable)
+        
+        // Known code → name mappings
         const codeMap = {
-          AUP: 'Auto Prudente Rent a Car',
-          THR: 'Thrifty',
-          ECR: 'Europcar',
-          HER: 'Hertz',
-          CEN: 'Centauro',
-          OKR: 'OK Mobility',
-          SUR: 'Surprice',
-          TAN: 'TAN',
-          TAN1: 'TAN',
-          YNO: 'YNOT',
-          ICT: 'Interrent',
+          AUP: 'Auto Prudente', SAD: 'Auto Prudente',
+          THR: 'Thrifty', ECR: 'Europcar', HER: 'Hertz',
+          CEN: 'Centauro', OKR: 'OK Mobility', SUR: 'Surprice',
+          TAN: 'TAN', TAN1: 'TAN', YNO: 'YNO Rent a Car',
+          ICT: 'Interrent', BGX: 'Budget', SVN: 'Sixt',
+          GMO: 'Goldcar', GMO1: 'Goldcar', KLA: 'Klass Wagen',
+          AMI1: 'Amigos', DVM: 'Drive on Holidays', AVS: 'Avis',
+          FIR: 'Firefly', KEA: 'KEA Rent', RCR: 'Rhodium', SXR: 'Sixt'
         };
+        
         // Direct code or code embedded in text
-        const m = up.match(/\b(AUP|THR|ECR|HER|CEN|OKR|SUR|TAN1?|YNO|ICT)\b/);
+        const m = up.match(/\b(AUP|SAD|THR|ECR|HER|CEN|OKR|SUR|TAN1?|YNO|ICT|BGX|SVN|GMO1?|KLA|AMI1?|DVM|AVS|FIR|KEA|RCR|SXR)\b/);
         if (m && codeMap[m[1]]) return codeMap[m[1]];
+        
         // Normalize common textual variants
-        if (/^AUTO\s*PRUDENTE\b/.test(up)) return 'Auto Prudente Rent a Car';
+        if (/^AUTO\s*PRUDENTE\b/.test(up)) return 'Auto Prudente';
         if (/^OK\s*(RENT|MOBILITY)\b/.test(up)) return 'OK Mobility';
         if (/^CENTAURO\b/.test(up)) return 'Centauro';
         if (/^EUROPCAR\b/.test(up)) return 'Europcar';
         if (/^HERTZ\b/.test(up)) return 'Hertz';
         if (/^THRIFTY\b/.test(up)) return 'Thrifty';
         if (/^SURPRICE\b/.test(up)) return 'Surprice';
+        if (/^GOLDCAR\b/.test(up)) return 'Goldcar';
+        if (/^SIXT\b/.test(up)) return 'Sixt';
+        if (/^BUDGET\b/.test(up)) return 'Budget';
+        if (/^KLASS\s*WAGEN\b/.test(up)) return 'Klass Wagen';
+        if (/^AMIGOS\b/.test(up)) return 'Amigos';
+        if (/^DRIVE\s*ON\s*HOLIDAYS\b/.test(up)) return 'Drive on Holidays';
+        if (/^INTERRENT\b/.test(up)) return 'Interrent';
+        
         // Fallback to original
         return s;
       }
