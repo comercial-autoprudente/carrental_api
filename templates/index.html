@@ -109,43 +109,58 @@
         max-height: calc(100vh - 40px);
         overflow-y: auto;
       }
+      .suppliers-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+      }
       .supplier-checkbox {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 8px;
-        padding: 6px 8px;
+        justify-content: center;
+        gap: 4px;
+        padding: 8px 4px;
         border: 1px solid #e5e7eb;
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s;
         background: white;
+        min-height: 60px;
       }
       .supplier-checkbox:hover {
         background: #f9fafb;
         border-color: #009cb6;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
       .supplier-checkbox input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         cursor: pointer;
+        margin: 0;
       }
       .supplier-checkbox input[type="checkbox"]:checked {
         accent-color: #009cb6;
       }
       .supplier-logo {
-        height: 20px;
+        height: 16px;
         width: auto;
-        max-width: 60px;
+        max-width: 50px;
         object-fit: contain;
       }
       .supplier-name {
-        font-size: 12px;
+        font-size: 9px;
         color: #374151;
-        flex: 1;
+        text-align: center;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        display: none; /* Esconder nomes, mostrar só logos */
+        max-width: 100%;
+        display: block;
+        line-height: 1.2;
       }
       .suppliers-sidebar.collapsed {
         display: none;
@@ -259,7 +274,7 @@
                 Todos
               </button>
             </div>
-            <div id="suppliersFilter" class="space-y-2">
+            <div id="suppliersFilter" class="suppliers-grid">
               <!-- Suppliers will be loaded here -->
             </div>
           </div>
@@ -1962,12 +1977,13 @@
         container.innerHTML = '';
         selectedSuppliers.clear();
         
-        // Extrair suppliers únicos dos resultados
+        // Extrair suppliers únicos dos resultados e ORDENAR ALFABETICAMENTE
         currentSuppliers = extractSuppliersFromItems(items);
-        console.log('[SUPPLIERS] Encontrados:', currentSuppliers.length, currentSuppliers);
+        currentSuppliers.sort((a, b) => a.localeCompare(b, 'pt-PT'));
+        console.log('[SUPPLIERS] Encontrados (ordenados):', currentSuppliers.length, currentSuppliers);
         
         if (currentSuppliers.length === 0) {
-          container.innerHTML = '<p class="text-xs text-gray-500 p-2">Nenhum supplier encontrado</p>';
+          container.innerHTML = '<p class="text-xs text-gray-500 p-2 col-span-3">Nenhum supplier encontrado</p>';
           return;
         }
         
@@ -1983,6 +1999,8 @@
           
           const logoUrl = getSupplierLogo(supplierName);
           
+          div.appendChild(checkbox);
+          
           if (logoUrl) {
             const logo = document.createElement('img');
             logo.src = logoUrl;
@@ -1992,17 +2010,15 @@
               console.warn('[LOGO] Falhou ao carregar:', logoUrl, 'para', supplierName);
               logo.style.display = 'none';
             };
-            div.appendChild(checkbox);
             div.appendChild(logo);
-          } else {
-            // Sem logo: mostrar só checkbox e nome
-            const nameSpan = document.createElement('span');
-            nameSpan.className = 'supplier-name';
-            nameSpan.style.display = 'inline'; // Forçar mostrar nome quando não há logo
-            nameSpan.textContent = supplierName;
-            div.appendChild(checkbox);
-            div.appendChild(nameSpan);
           }
+          
+          // SEMPRE mostrar nome abaixo do logo
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'supplier-name';
+          nameSpan.textContent = supplierName;
+          nameSpan.title = supplierName; // Tooltip com nome completo
+          div.appendChild(nameSpan);
           
           container.appendChild(div);
           selectedSuppliers.add(supplierName);
