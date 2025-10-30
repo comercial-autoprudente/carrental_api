@@ -514,6 +514,8 @@
                                     inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                 }
                             });
+                            // PARAR AQUI - Não tentar datas alternativas se AUTOPRUDENTE não tem preços
+                            break;
                         } else {
                             // Processar apenas carros AUTOPRUDENTE
                             autoprudenteItems.forEach(item => {
@@ -553,12 +555,12 @@
                                     console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
                                 }
                             });
-                        }
-                        
-                        // Copiar D para C automaticamente após preencher
-                        if (foundPrices) {
-                            copyGroupCFromDForDay(day);
-                            break; // Parar de tentar datas alternativas
+                            
+                            // Copiar D para C automaticamente após preencher
+                            if (foundPrices) {
+                                copyGroupCFromDForDay(day);
+                                break; // Parar de tentar datas alternativas
+                            }
                         }
                     } else {
                         console.warn(`${day} dias - Nenhum item retornado pela API`);
