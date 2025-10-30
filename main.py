@@ -6507,6 +6507,48 @@ async def get_history(request: Request):
     ]
     return JSONResponse({"ok": True, "count": len(items), "items": items})
 
+@app.post("/api/price-automation/upload")
+async def upload_price_automation(request: Request, file: UploadFile = File(...)):
+    """Upload e processamento de ficheiro Excel para automação de preços"""
+    require_auth(request)
+    
+    try:
+        # Ler conteúdo do ficheiro
+        contents = await file.read()
+        
+        # Processar Excel
+        import pandas as pd
+        import io
+        
+        df = pd.read_excel(io.BytesIO(contents))
+        
+        # Converter para lista de dicionários
+        data = []
+        for _, row in df.iterrows():
+            data.append({
+                'categoria': str(row.get('Categoria', '')),
+                'localizacao': str(row.get('Localização', row.get('Localizacao', ''))),
+                'dias': int(row.get('Dias', 0)),
+                'preco_base': float(row.get('Preço Base', row.get('Preco Base', 0))),
+                'margem': float(row.get('Margem (%)', row.get('Margem', 0))),
+                'preco_final': float(row.get('Preço Final', row.get('Preco Final', 0)))
+            })
+        
+        return JSONResponse({
+            "ok": True,
+            "message": f"Ficheiro processado: {len(data)} linhas",
+            "filename": file.filename,
+            "data": data
+        })
+        
+    except Exception as e:
+        import traceback
+        return JSONResponse({
+            "ok": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }, status_code=400)
+
 @app.get("/api/price-history")
 async def get_price_history(request: Request):
     """API para dados de gráficos de histórico de preços"""
