@@ -1179,9 +1179,17 @@
           const cacheKey = getCacheKey(location, pickup_date, d);
           const isCached = location && pickup_date && cachedResults[cacheKey];
           
-          btn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isSelected ? 'bg-[#f4ad0f] text-white border-[#f4ad0f]' : (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10'));
-          btn.innerHTML = d + 'd' + (isCached ? (isSelected ? ' <span style="color: #fff; font-weight: 700;">✓</span>' : ' <span style="color: #009cb6; font-weight: 700;">✓</span>') : '');
-          btn.title = isCached ? 'Pré-carregado (instantâneo)' : 'Clique para carregar';
+          // Azul quando tem cache, Amarelo quando selecionado ou hover
+          if (isSelected) {
+            btn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
+          } else if (isCached) {
+            btn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-[#009cb6] text-white border-[#009cb6] hover:bg-[#f4ad0f] hover:border-[#f4ad0f]';
+          } else {
+            btn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f] hover:text-white hover:border-[#f4ad0f]';
+          }
+          
+          btn.innerHTML = d + 'd';
+          btn.title = isCached ? 'Download feito (instantâneo)' : 'Clique para carregar';
           btn.addEventListener('click', async (e) => { 
             e.preventDefault();
             e.stopPropagation();
@@ -1205,11 +1213,14 @@
                 const dayValue = daysList[idx];
                 const isCached = cachedResults[getCacheKey(loc, date, dayValue)];
                 if (dayValue === d) {
-                  chipBtn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
-                  chipBtn.innerHTML = d + 'd' + (isCached ? ' <span style="color: #fff; font-weight: 700;">✓</span>' : '');
+                  chipBtn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-[#f4ad0f] text-white border-[#f4ad0f]';
+                  chipBtn.innerHTML = dayValue + 'd';
+                } else if (isCached) {
+                  chipBtn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-[#009cb6] text-white border-[#009cb6] hover:bg-[#f4ad0f] hover:border-[#f4ad0f]';
+                  chipBtn.innerHTML = dayValue + 'd';
                 } else {
-                  chipBtn.className = 'px-2.5 py-1 rounded-md border text-xs font-medium transition-colors ' + (isCached ? 'bg-white text-[#009cb6] border-gray-300 hover:bg-[#f4ad0f]/10' : 'bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f]/10');
-                  chipBtn.innerHTML = dayValue + 'd' + (isCached ? ' <span style="color: #009cb6; font-weight: 700;">✓</span>' : '');
+                  chipBtn.className = 'px-2.5 py-1 border text-xs font-medium transition-colors bg-white text-gray-700 border-gray-300 hover:bg-[#f4ad0f] hover:text-white hover:border-[#f4ad0f]';
+                  chipBtn.innerHTML = dayValue + 'd';
                 }
               });
             }
