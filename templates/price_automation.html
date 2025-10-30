@@ -68,17 +68,11 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2 rounded">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        Pesquisar Todos
-                    </button>
-                    <button onclick="downloadExcel()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2 rounded" title="Descarregar Excel Completo">
+                    <button onclick="searchAndDownload()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2 rounded" title="Pesquisar todos os preços e descarregar Excel">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Descarregar Completo
+                        Descarregar Preços
                     </button>
                 </div>
             </div>
@@ -498,6 +492,16 @@
         function extractGroup(carName) {
             const match = carName.match(/Group\s+([A-Z]\d?)/i);
             return match ? match[1] : '';
+        }
+
+        async function searchAndDownload() {
+            // Primeiro pesquisar todos os preços
+            await searchAllPrices();
+            
+            // Depois fazer download
+            setTimeout(() => {
+                downloadExcel();
+            }, 1000);
         }
 
         function downloadExcel() {
