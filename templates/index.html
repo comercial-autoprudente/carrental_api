@@ -1960,13 +1960,20 @@
 
       function extractSuppliersFromItems(items) {
         const suppliersSet = new Set();
-        (items || []).forEach(item => {
-          const supplier = displaySupplierName(item.supplier || '');
+        console.log('[EXTRACT SUPPLIERS] Total items:', items?.length || 0);
+        (items || []).forEach((item, idx) => {
+          const rawSupplier = item.supplier || '';
+          const supplier = displaySupplierName(rawSupplier);
           if (supplier) {
             suppliersSet.add(supplier);
+            if (idx < 5) {
+              console.log(`[SUPPLIER ${idx}] Raw: "${rawSupplier}" → Display: "${supplier}"`);
+            }
           }
         });
-        return Array.from(suppliersSet).sort();
+        const sorted = Array.from(suppliersSet).sort((a, b) => a.localeCompare(b, 'pt-PT'));
+        console.log('[EXTRACT SUPPLIERS] Únicos encontrados:', sorted.length, sorted);
+        return sorted;
       }
 
       function initSupplierFilters(items) {
@@ -1987,7 +1994,7 @@
           return;
         }
         
-        currentSuppliers.forEach(supplierName => {
+        currentSuppliers.forEach((supplierName, idx) => {
           const div = document.createElement('label');
           div.className = 'supplier-checkbox';
           
@@ -1999,6 +2006,10 @@
           
           const logoUrl = getSupplierLogo(supplierName);
           
+          if (idx < 5) {
+            console.log(`[INIT FILTER ${idx}] Supplier: "${supplierName}" → Logo: ${logoUrl ? logoUrl : 'SEM LOGO'}`);
+          }
+          
           div.appendChild(checkbox);
           
           if (logoUrl) {
@@ -2006,11 +2017,16 @@
             logo.src = logoUrl;
             logo.alt = supplierName;
             logo.className = 'supplier-logo';
+            logo.onload = () => {
+              if (idx < 5) console.log(`[LOGO OK] ${supplierName}: ${logoUrl}`);
+            };
             logo.onerror = () => {
-              console.warn('[LOGO] Falhou ao carregar:', logoUrl, 'para', supplierName);
+              console.warn('[LOGO ERRO] Falhou ao carregar:', logoUrl, 'para', supplierName);
               logo.style.display = 'none';
             };
             div.appendChild(logo);
+          } else {
+            console.warn('[SEM LOGO]', supplierName, '- não encontrado no mapa');
           }
           
           // SEMPRE mostrar nome abaixo do logo
