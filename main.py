@@ -424,6 +424,32 @@ async def admin_export_db(request: Request):
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+@app.get("/admin/export-vehicles-json")
+async def admin_export_vehicles_json(request: Request):
+    """Export vehicles as JSON"""
+    try:
+        require_admin(request)
+    except HTTPException:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        vehicles = []
+        with _db_lock:
+            con = _db_connect()
+            try:
+                cur = con.execute("SELECT id, brand, model, code, category, doors, seats, transmission, luggage, photo_url, enabled FROM car_groups")
+                for r in cur.fetchall():
+                    vehicles.append({
+                        "id": r[0], "brand": r[1], "model": r[2], "code": r[3],
+                        "category": r[4], "doors": r[5], "seats": r[6],
+                        "transmission": r[7], "luggage": r[8], "photo_url": r[9], "enabled": r[10]
+                    })
+            finally:
+                con.close()
+        return JSONResponse({"vehicles": vehicles, "count": len(vehicles)})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
 @app.post("/admin/test-email", response_class=HTMLResponse)
 async def admin_test_email_send(request: Request, to: str = Form("")):
     try:
