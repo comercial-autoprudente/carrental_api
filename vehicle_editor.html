@@ -1274,21 +1274,25 @@
                     // Recarregar foto usando a função loadVehiclePhoto
                     await loadVehiclePhoto(currentVehicleName);
                     
-                    // FORÇAR reload de TODAS as imagens na tabela
-                    // Encontrar todas as imagens do veículo atual e forçar reload
-                    const allImages = document.querySelectorAll(`img[src*="${encodeURIComponent(currentVehicleName)}"]`);
+                    // FORÇAR reload de TODAS as imagens na tabela do veículo atual
                     const newTimestamp = Date.now();
+                    
+                    // Método 1: Buscar por src que contém o nome do veículo
+                    const encodedName = encodeURIComponent(currentVehicleName);
+                    const allImages = document.querySelectorAll(`img[src*="/api/vehicles/"]`);
                     allImages.forEach(img => {
-                        const baseUrl = img.src.split('?')[0];
-                        img.src = baseUrl + '?t=' + newTimestamp;
-                        console.log('[UPLOAD] Force reloading image:', img.src);
+                        if (img.src.includes(encodedName)) {
+                            const baseUrl = img.src.split('?')[0];
+                            img.src = baseUrl + '?t=' + newTimestamp;
+                            console.log('[UPLOAD] Force reloading image:', img.src);
+                        }
                     });
                     
-                    // Re-renderizar tabela após um delay
+                    // Aguardar um pouco e re-renderizar tabela com novo timestamp global
                     setTimeout(() => {
                         renderTable();
-                        console.log('[UPLOAD] Table re-rendered');
-                    }, 100);
+                        console.log('[UPLOAD] Table re-rendered with new timestamp');
+                    }, 200);
                     
                     console.log('[UPLOAD] Preview and table updated');
                 } else {
