@@ -4889,6 +4889,38 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             # if car_name and _is_blocked_model(car_name):
             #     cards_blocked += 1
             #     continue
+            
+            # Extrair informação de depósito (caução)
+            deposit_level = "High Deposit"  # Default
+            try:
+                card_html = str(card)
+                card_text = card.get_text(" ", strip=True).lower()
+                
+                # Zero franquia / Zero deposit
+                if re.search(r"zero\s*franquia|zero\s*deposit|sem\s*franquia|no\s*excess", card_text, re.I):
+                    deposit_level = "Zero Deposit"
+                # Low deposit < 250€
+                elif re.search(r"inferior\s*a\s*250|less\s*than\s*250|<\s*250|250\s*€\s*max", card_text, re.I):
+                    deposit_level = "Low Deposit (< 250€)"
+                # Medium deposit < 500€
+                elif re.search(r"inferior\s*a\s*500|less\s*than\s*500|<\s*500|500\s*€\s*max", card_text, re.I):
+                    deposit_level = "Medium Deposit (< 500€)"
+                # Procurar por valores específicos de depósito
+                else:
+                    deposit_match = re.search(r"deposit[:\s]*€?\s*(\d+)|caução[:\s]*€?\s*(\d+)|franquia[:\s]*€?\s*(\d+)", card_text, re.I)
+                    if deposit_match:
+                        deposit_value = int(deposit_match.group(1) or deposit_match.group(2) or deposit_match.group(3) or "9999")
+                        if deposit_value == 0:
+                            deposit_level = "Zero Deposit"
+                        elif deposit_value < 250:
+                            deposit_level = "Low Deposit (< 250€)"
+                        elif deposit_value < 500:
+                            deposit_level = "Medium Deposit (< 500€)"
+                        else:
+                            deposit_level = "High Deposit"
+            except Exception:
+                pass
+            
             # Mapear categoria para código de grupo
             group_code = map_category_to_group(category, car_name)
             items.append({
@@ -4902,6 +4934,7 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                 "transmission": transmission_label,
                 "photo": photo,
                 "link": link,
+                "deposit": deposit_level,
             })
             idx += 1
         print(f"[PARSE] Stats: price={cards_with_price}, name={cards_with_name}, blocked={cards_blocked}, items={len(items)}")
