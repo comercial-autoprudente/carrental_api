@@ -171,12 +171,12 @@ VEHICLES = {
     'mazda cx-3': 'Crossover',
     'mitsubishi asx': 'Crossover',
     
-    # Premium
-    'mini cooper': 'Premium',
-    'mini countryman': 'Premium',
-    'audi a1': 'Premium',
-    'cupra formentor': 'Premium',
-    'ds 4': 'Premium',
+    # Luxury (X)
+    'mini cooper': 'Luxury',
+    'mini countryman': 'Luxury',
+    'audi a1': 'Luxury',
+    'cupra formentor': 'Luxury',
+    'ds 4': 'Luxury',
     
     # Station Wagon
     'renault clio sw': 'Station Wagon',
@@ -361,7 +361,7 @@ def detect_category_from_car(car_name: str, transmission: str = '') -> str:
     if 'kia' in car and 'ceed' in car:
         return 'ECONOMY'
     if 'mini' in car and 'countryman' in car:
-        return 'Premium'
+        return 'Luxury'
     if 'caddy' in car and auto:
         return '7 Lugares Auto'
     if 'peugeot' in car and 'rifter' in car:
@@ -392,7 +392,7 @@ def detect_category_from_car(car_name: str, transmission: str = '') -> str:
         return 'SUV'
     
     if 'mini' in car and 'cooper' in car:
-        return 'Premium'
+        return 'Luxury'
     
     if any(x in car for x in ['crossover', 'aircross', '500x', 't-cross', 'taigo', 'arona']):
         return 'SUV Auto' if auto else 'Crossover'
