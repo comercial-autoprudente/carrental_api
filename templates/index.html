@@ -102,6 +102,50 @@
           font-size: 16px;
         }
       }
+      /* Supplier filters sidebar */
+      .suppliers-sidebar {
+        position: sticky;
+        top: 20px;
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+      }
+      .supplier-checkbox {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+      }
+      .supplier-checkbox:hover {
+        background: #f9fafb;
+        border-color: #009cb6;
+      }
+      .supplier-checkbox input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .supplier-checkbox input[type="checkbox"]:checked {
+        accent-color: #009cb6;
+      }
+      .supplier-logo {
+        height: 20px;
+        width: auto;
+        max-width: 60px;
+        object-fit: contain;
+      }
+      .supplier-name {
+        font-size: 12px;
+        color: #374151;
+        flex: 1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .bar { display:block; height:6px; border-radius:3px; }
       .bar-blue { background:#009cb6; width:36px; }
       .bar-yellow { background: var(--brand-yellow); width:28px; }
@@ -199,7 +243,26 @@
       });
     </script>
 
-    <main class="mx-auto max-w-6xl px-4 py-6 space-y-8">
+    <main class="mx-auto max-w-7xl px-4 py-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Sidebar de Filtros (Suppliers) -->
+        <aside class="lg:col-span-3">
+          <div class="suppliers-sidebar bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold text-sm text-gray-900">Empresas de aluguer de carros</h3>
+              <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
+                Todos
+              </button>
+            </div>
+            <div id="suppliersFilter" class="space-y-2">
+              <!-- Suppliers will be loaded here -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <div class="lg:col-span-9 space-y-8">
       
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
@@ -269,6 +332,8 @@
         <div id="results" class="mt-4"></div>
       </section>
       
+        </div><!-- Fim conteúdo principal -->
+      </div><!-- Fim grid -->
     </main>
 
     <!-- Loading modal -->
@@ -1730,6 +1795,137 @@
       function escapeHtml(str) {
         return String(str).replace(/[&<>\"]+/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[s]));
       }
+
+      // ===== SUPPLIER FILTERS =====
+      const suppliers = [
+        { name: 'Europcar', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Europcar-Logo.png' },
+        { name: 'Hertz', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Hertz-Logo.png' },
+        { name: 'Avis', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Avis-Logo.png' },
+        { name: 'Budget', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Budget-Rent-a-Car-Logo.png' },
+        { name: 'Sixt', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Sixt-Logo.png' },
+        { name: 'Enterprise', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Enterprise-Rent-A-Car-Logo.png' },
+        { name: 'Alamo', logo: 'https://logos-world.net/wp-content/uploads/2021/03/Alamo-Rent-A-Car-Logo.png' },
+        { name: 'National', logo: 'https://logos-world.net/wp-content/uploads/2021/03/National-Car-Rental-Logo.png' },
+        { name: 'Thrifty', logo: 'https://www.carlogos.org/car-logos/thrifty-car-rental-logo.png' },
+        { name: 'Dollar', logo: 'https://www.carlogos.org/car-logos/dollar-rent-a-car-logo.png' },
+        { name: 'Firefly', logo: 'https://www.carlogos.org/car-logos/firefly-car-rental-logo.png' },
+        { name: 'Goldcar', logo: 'https://www.carlogos.org/car-logos/goldcar-logo.png' },
+        { name: 'Centauro', logo: 'https://www.carlogos.org/car-logos/centauro-rent-a-car-logo.png' },
+        { name: 'Drive', logo: 'https://www.carlogos.org/car-logos/drive-on-holidays-logo.png' },
+        { name: 'Guerin', logo: 'https://www.carlogos.org/car-logos/guerin-car-rental-logo.png' },
+        { name: 'Keddy', logo: 'https://www.carlogos.org/car-logos/keddy-by-europcar-logo.png' },
+        { name: 'InterRent', logo: 'https://www.carlogos.org/car-logos/interrent-logo.png' },
+        { name: 'Record Go', logo: 'https://www.carlogos.org/car-logos/record-go-logo.png' },
+        { name: 'Flizzr', logo: 'https://www.carlogos.org/car-logos/flizzr-logo.png' },
+        { name: 'OK Rent a Car', logo: 'https://www.carlogos.org/car-logos/ok-rent-a-car-logo.png' }
+      ];
+
+      let selectedSuppliers = new Set();
+
+      function initSupplierFilters() {
+        const container = document.getElementById('suppliersFilter');
+        if (!container) return;
+
+        suppliers.forEach(supplier => {
+          const div = document.createElement('label');
+          div.className = 'supplier-checkbox';
+          
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = supplier.name;
+          checkbox.checked = true;
+          checkbox.onchange = () => filterBySuppliers();
+          
+          const logo = document.createElement('img');
+          logo.src = supplier.logo;
+          logo.alt = supplier.name;
+          logo.className = 'supplier-logo';
+          logo.onerror = () => {
+            logo.style.display = 'none';
+            nameSpan.style.marginLeft = '0';
+          };
+          
+          const nameSpan = document.createElement('span');
+          nameSpan.className = 'supplier-name';
+          nameSpan.textContent = supplier.name;
+          
+          div.appendChild(checkbox);
+          div.appendChild(logo);
+          div.appendChild(nameSpan);
+          container.appendChild(div);
+          
+          selectedSuppliers.add(supplier.name);
+        });
+      }
+
+      function toggleAllSuppliers() {
+        const checkboxes = document.querySelectorAll('#suppliersFilter input[type="checkbox"]');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(cb => {
+          cb.checked = !allChecked;
+        });
+        
+        filterBySuppliers();
+      }
+
+      function filterBySuppliers() {
+        const checkboxes = document.querySelectorAll('#suppliersFilter input[type="checkbox"]');
+        selectedSuppliers.clear();
+        
+        checkboxes.forEach(cb => {
+          if (cb.checked) {
+            selectedSuppliers.add(cb.value);
+          }
+        });
+        
+        // Re-render results with filter
+        const resultsContainer = document.getElementById('results');
+        if (resultsContainer && resultsContainer.innerHTML) {
+          // Trigger re-render of current results
+          applySupplierFilter();
+        }
+      }
+
+      function applySupplierFilter() {
+        // Hide/show car cards based on selected suppliers
+        const cards = document.querySelectorAll('[data-supplier]');
+        cards.forEach(card => {
+          const supplier = card.getAttribute('data-supplier');
+          if (selectedSuppliers.size === 0 || selectedSuppliers.has(supplier)) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        
+        // Update group counts
+        updateGroupCounts();
+      }
+
+      function updateGroupCounts() {
+        // Update the count of visible cars in each group
+        const groups = document.querySelectorAll('[data-group-container]');
+        groups.forEach(group => {
+          const visibleCards = group.querySelectorAll('[data-supplier]:not([style*="display: none"])');
+          const countEl = group.querySelector('[data-group-count]');
+          if (countEl) {
+            countEl.textContent = `(${visibleCards.length})`;
+          }
+          
+          // Hide group if no visible cards
+          if (visibleCards.length === 0) {
+            group.style.display = 'none';
+          } else {
+            group.style.display = '';
+          }
+        });
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        initSupplierFilters();
+      });
     </script>
   </body>
 </html>
