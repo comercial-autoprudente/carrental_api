@@ -1196,6 +1196,17 @@
         return it.category || '';
       }
 
+      function renderSupplierLogo(supplier) {
+        const supplierName = displaySupplierName(supplier);
+        const logoUrl = getSupplierLogo(supplierName);
+        
+        if (logoUrl) {
+          return `<img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';" /><span style="display:none; font-size:11px;">${escapeHtml(supplierName)}</span>`;
+        } else {
+          return `<span class="text-xs">${escapeHtml(supplierName)}</span>`;
+        }
+      }
+
       function renderCardsForItems(items) {
         return `
           <div class="grid grid-cols-1 gap-3">
@@ -1204,7 +1215,7 @@
                 <div class="flex items-center gap-3 p-3">
                   ${imgTagFor(it, 'card')}
                   <div class="min-w-0 flex-1">
-                    <div class="text-xs text-gray-500">${escapeHtml(displaySupplierName(it.supplier))}</div>
+                    <div class="text-xs text-gray-500 flex items-center">${renderSupplierLogo(it.supplier)}</div>
                     <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml(it.car || '-')}</div>
                     <div class="text-xs text-gray-600">${escapeHtml(displayCategory(it))}</div>
                   </div>
@@ -1239,7 +1250,7 @@
                       <td class="px-4 py-2 text-sm">
                         ${imgTagFor(it, 'table')}
                       </td>
-                      <td class="px-4 py-2 text-sm">${escapeHtml(displaySupplierName(it.supplier))}</td>
+                      <td class="px-4 py-2 text-sm">${renderSupplierLogo(it.supplier)}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(it.car || '-')}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displayCategory(it))}</td>
                       <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>
