@@ -138,27 +138,42 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
             try:
                 # Aguardar filtros carregarem
                 page.wait_for_selector('#chkAUP', timeout=5000)
+                print("[PLAYWRIGHT] Checkbox AUTOPRUDENTE encontrado", file=sys.stderr, flush=True)
+                
+                # IMPORTANTE: Aceitar cookies primeiro se aparecer
+                try:
+                    cookies_btn = page.query_selector('#didomi-notice-agree-button, button:has-text("Aceitar")')
+                    if cookies_btn and cookies_btn.is_visible():
+                        cookies_btn.click()
+                        print("[PLAYWRIGHT] Cookies aceites", file=sys.stderr, flush=True)
+                        page.wait_for_timeout(1000)
+                except Exception:
+                    pass
                 
                 # Desmarcar todos os checkboxes de suppliers primeiro
+                print("[PLAYWRIGHT] Desmarcando todos os suppliers...", file=sys.stderr, flush=True)
                 page.evaluate("""
-                    document.querySelectorAll('input[name="frmPrv"]').forEach(cb => {
-                        if (cb.checked) cb.click();
-                    });
+                    const checkboxes = document.querySelectorAll('input[name="frmPrv"]:checked');
+                    checkboxes.forEach(cb => cb.click());
                 """)
                 
                 # Aguardar um pouco
-                page.wait_for_timeout(500)
+                page.wait_for_timeout(1000)
                 
                 # Marcar apenas AUTOPRUDENTE
-                aup_checkbox = page.query_selector('#chkAUP')
-                if aup_checkbox and not aup_checkbox.is_checked():
-                    aup_checkbox.click()
-                    print("[PLAYWRIGHT] Filtro AUTOPRUDENTE ativado", file=sys.stderr, flush=True)
-                    
-                    # Aguardar página recarregar com filtro
-                    page.wait_for_load_state("networkidle", timeout=10000)
-                else:
-                    print("[PLAYWRIGHT] Checkbox AUTOPRUDENTE já estava marcado", file=sys.stderr, flush=True)
+                print("[PLAYWRIGHT] Marcando apenas AUTOPRUDENTE...", file=sys.stderr, flush=True)
+                page.evaluate("""
+                    const aupCheckbox = document.querySelector('#chkAUP');
+                    if (aupCheckbox && !aupCheckbox.checked) {
+                        aupCheckbox.click();
+                    }
+                """)
+                
+                print("[PLAYWRIGHT] Filtro AUTOPRUDENTE ativado", file=sys.stderr, flush=True)
+                
+                # Aguardar página recarregar com filtro
+                page.wait_for_load_state("networkidle", timeout=15000)
+                page.wait_for_timeout(2000)
                     
             except Exception as e:
                 print(f"[PLAYWRIGHT] Erro ao filtrar AUTOPRUDENTE: {e}", file=sys.stderr, flush=True)
@@ -219,25 +234,23 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                 # === PREÇO TOTAL (CARJET ESPECÍFICO) ===
                 price_text = ""
                 try:
-                    # Prioridade 1: .nfoPriceDest (preço total destaque)
-                    price_el = h.query_selector(".nfoPriceDest")
+                    # Prioridade 1: .pr-euros (preço em euros - TESTADO E FUNCIONA)
+                    price_el = h.query_selector(".pr-euros")
                     if price_el:
                         price_text = (price_el.inner_text() or "").strip()
-                        print(f"[PLAYWRIGHT] Preço .nfoPriceDest: {price_text}", file=sys.stderr, flush=True)
                     
-                    # Prioridade 2: .pr-euros (preço em euros)
+                    # Prioridade 2: .price.pr-euros (alternativa)
                     if not price_text:
-                        price_el = h.query_selector(".pr-euros, .price.pr-euros")
+                        price_el = h.query_selector(".price.pr-euros")
                         if price_el:
                             price_text = (price_el.inner_text() or "").strip()
-                            print(f"[PLAYWRIGHT] Preço .pr-euros: {price_text}", file=sys.stderr, flush=True)
                     
-                    # Prioridade 3: Procurar "Preço por X dias" no texto
+                    # Prioridade 3: Procurar "Preço por X dias: XX,XX €" no texto
                     if not price_text:
-                        m = re.search(r"preço\s*por\s*\d+\s*dias[^\n€]*?([0-9]+[,\.][0-9]{2})\s*€", card_text, re.I)
+                        # Procurar padrão: "Preço por 5 dias:\n8,80 €"
+                        m = re.search(r"preço\s*por\s*\d+\s*dias:\s*([0-9]+[,\.][0-9]{2})\s*€", card_text, re.I)
                         if m:
                             price_text = m.group(1) + " €"
-                            print(f"[PLAYWRIGHT] Preço regex: {price_text}", file=sys.stderr, flush=True)
                     
                     # Limpar preço
                     if price_text:
@@ -253,14 +266,14 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                 # === NOME DO CARRO (CARJET ESPECÍFICO) ===
                 car = ""
                 try:
-                    # Prioridade 1: .titleCar
-                    name_el = h.query_selector(".titleCar")
+                    # Prioridade 1: h2 (TESTADO E FUNCIONA)
+                    name_el = h.query_selector("h2")
                     if name_el:
                         car = (name_el.inner_text() or "").strip()
                     
                     # Fallback: outros seletores
                     if not car:
-                        name_el = h.query_selector(".veh-name, .vehicle-name, .model, .title, h3, h2")
+                        name_el = h.query_selector(".titleCar, .veh-name, .vehicle-name, .model, .title, h3")
                         if name_el:
                             car = (name_el.inner_text() or "").strip()
                 except Exception:
