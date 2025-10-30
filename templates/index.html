@@ -123,27 +123,26 @@
         justify-content: center;
         gap: 4px;
         padding: 8px 4px;
-        border: 1px solid #e5e7eb;
+        border: 2px solid #009cb6;
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s;
         background: white;
         min-height: 60px;
+        opacity: 1;
       }
       .supplier-checkbox:hover {
-        background: #f9fafb;
-        border-color: #009cb6;
+        background: #f0f9fb;
         transform: translateY(-2px);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 6px rgba(0,156,182,0.3);
       }
-      .supplier-checkbox input[type="checkbox"] {
-        width: 14px;
-        height: 14px;
-        cursor: pointer;
-        margin: 0;
+      .supplier-checkbox.unselected {
+        opacity: 0.3;
+        border-color: #e5e7eb;
+        background: #f9fafb;
       }
-      .supplier-checkbox input[type="checkbox"]:checked {
-        accent-color: #009cb6;
+      .supplier-checkbox.unselected:hover {
+        opacity: 0.5;
       }
       .supplier-logo {
         height: 16px;
@@ -2005,22 +2004,15 @@
         }
         
         currentSuppliers.forEach((supplierName, idx) => {
-          const div = document.createElement('label');
+          const div = document.createElement('div');
           div.className = 'supplier-checkbox';
-          
-          const checkbox = document.createElement('input');
-          checkbox.type = 'checkbox';
-          checkbox.value = supplierName;
-          checkbox.checked = true;
-          checkbox.onchange = () => filterBySuppliers();
+          div.dataset.supplier = supplierName;
           
           const logoUrl = getSupplierLogo(supplierName);
           
           if (idx < 5) {
             console.log(`[INIT FILTER ${idx}] Supplier: "${supplierName}" → Logo: ${logoUrl ? logoUrl : 'SEM LOGO'}`);
           }
-          
-          div.appendChild(checkbox);
           
           if (logoUrl) {
             const logo = document.createElement('img');
@@ -2046,6 +2038,18 @@
           nameSpan.title = supplierName; // Tooltip com nome completo
           div.appendChild(nameSpan);
           
+          // Click handler para toggle seleção
+          div.addEventListener('click', () => {
+            if (selectedSuppliers.has(supplierName)) {
+              selectedSuppliers.delete(supplierName);
+              div.classList.add('unselected');
+            } else {
+              selectedSuppliers.add(supplierName);
+              div.classList.remove('unselected');
+            }
+            filterBySuppliers();
+          });
+          
           container.appendChild(div);
           selectedSuppliers.add(supplierName);
         });
@@ -2054,26 +2058,26 @@
       }
 
       function toggleAllSuppliers() {
-        const checkboxes = document.querySelectorAll('#suppliersFilter input[type="checkbox"]');
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        const supplierCards = document.querySelectorAll('#suppliersFilter .supplier-checkbox');
+        const allSelected = Array.from(supplierCards).every(card => !card.classList.contains('unselected'));
         
-        checkboxes.forEach(cb => {
-          cb.checked = !allChecked;
+        supplierCards.forEach(card => {
+          const supplierName = card.dataset.supplier;
+          if (allSelected) {
+            // Desselecionar todos
+            card.classList.add('unselected');
+            selectedSuppliers.delete(supplierName);
+          } else {
+            // Selecionar todos
+            card.classList.remove('unselected');
+            selectedSuppliers.add(supplierName);
+          }
         });
         
         filterBySuppliers();
       }
 
       function filterBySuppliers() {
-        const checkboxes = document.querySelectorAll('#suppliersFilter input[type="checkbox"]');
-        selectedSuppliers.clear();
-        
-        checkboxes.forEach(cb => {
-          if (cb.checked) {
-            selectedSuppliers.add(cb.value);
-          }
-        });
-        
         // Re-render results with filter
         const resultsContainer = document.getElementById('results');
         if (resultsContainer && resultsContainer.innerHTML) {
