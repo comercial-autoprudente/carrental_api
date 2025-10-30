@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Regras de Validação de Preços - Auto Prudente</title>
+    <title>Admin • Price Validation</title>
+    <link rel="icon" type="image/png" href="/static/autoprudente-favicon.png?v=2" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -22,18 +23,27 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
-        <!-- Header -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">⚠️ Regras de Validação de Preços</h1>
-                    <p class="text-gray-600 mt-2">Configure alertas para discrepâncias de preços da Auto Prudente</p>
-                </div>
-                <a href="/" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
-                    ← Voltar
-                </a>
+<body class="min-h-screen bg-gray-50">
+    <header class="bg-[#009cb6] border-b">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/"><img src="/static/ap-heather.png" alt="Car Rental Tracker" class="h-12 w-auto" /></a>
+                <span class="text-white text-sm font-medium">Settings</span>
+            </div>
+            <nav class="flex items-center gap-3 text-white text-sm">
+                <a href="/" class="hover:underline">Home</a>
+                <form method="post" action="/logout"><button class="hover:underline">Logout</button></form>
+            </nav>
+        </div>
+    </header>
+    <main class="mx-auto max-w-6xl px-4 py-6">
+        <!-- Header with Admin Menu -->
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold">Price Validation</h2>
+            <div class="flex items-center gap-2">
+                <a href="/admin/users" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Users</a>
+                <a href="/admin/car-groups" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Vehicles</a>
+                <a href="/admin/settings" class="px-3 py-2 rounded border border-[#009cb6] text-[#009cb6] text-sm bg-white hover:bg-[#f6b511] hover:border-[#f6b511] hover:text-white transition-colors">Price Adjustment</a>
             </div>
         </div>
 
@@ -41,14 +51,14 @@
         <div class="bg-white rounded-lg shadow-md mb-6">
             <div class="border-b border-gray-200">
                 <nav class="flex -mb-px">
-                    <button onclick="switchTab('rules')" id="tab-rules" class="tab-btn active px-6 py-3 border-b-2 border-yellow-500 text-yellow-600 font-medium">
-                        📋 Regras de Grupos
+                    <button onclick="switchTab('rules')" id="tab-rules" class="tab-btn active px-6 py-3 border-b-2 border-[#f4ad0f] text-[#f4ad0f] font-medium">
+                        📋 Group Rules
                     </button>
                     <button onclick="switchTab('alerts')" id="tab-alerts" class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
-                        🚨 Alertas Ativos
+                        🚨 Active Alerts
                     </button>
                     <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
-                        📊 Histórico
+                        📊 History
                     </button>
                 </nav>
             </div>
@@ -57,12 +67,12 @@
         <!-- Tab: Regras de Grupos -->
         <div id="content-rules" class="tab-content">
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">➕ Adicionar Nova Regra</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">➥ Add New Rule</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Grupo Base</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Base Group</label>
                         <select id="newRuleBaseGroup" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="">Selecione...</option>
+                            <option value="">Select...</option>
                             <option value="B1">B1 - Mini 4 Portas</option>
                             <option value="B2">B2 - Mini 5 Portas</option>
                             <option value="D">D - Economy</option>
@@ -81,19 +91,19 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Condição</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                         <select id="newRuleCondition" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="must_be_greater_than">Deve ser MAIOR que</option>
-                            <option value="must_be_greater_or_equal">Deve ser MAIOR OU IGUAL a</option>
-                            <option value="must_be_less_than">Deve ser MENOR que</option>
-                            <option value="must_be_less_or_equal">Deve ser MENOR OU IGUAL a</option>
-                            <option value="must_not_exceed_percentage">Não pode exceder % de</option>
+                            <option value="must_be_greater_than">Must be GREATER than</option>
+                            <option value="must_be_greater_or_equal">Must be GREATER OR EQUAL to</option>
+                            <option value="must_be_less_than">Must be LESS than</option>
+                            <option value="must_be_less_or_equal">Must be LESS OR EQUAL to</option>
+                            <option value="must_not_exceed_percentage">Cannot exceed % of</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Grupo Comparação</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Compare Group</label>
                         <select id="newRuleCompareGroup" class="w-full border border-gray-300 rounded-lg px-3 py-2">
-                            <option value="">Selecione...</option>
+                            <option value="">Select...</option>
                             <option value="B1">B1 - Mini 4 Portas</option>
                             <option value="B2">B2 - Mini 5 Portas</option>
                             <option value="D">D - Economy</option>
