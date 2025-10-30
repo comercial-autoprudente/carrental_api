@@ -490,8 +490,11 @@
                     const data = await response.json();
                     
                     if (data.items && data.items.length > 0) {
+                        console.log(`${day} dias - ${data.items.length} carros encontrados`);
                         data.items.forEach(item => {
                             const grupo = item.group || extractGroup(item.car);
+                            console.log(`Carro: ${item.car}, Grupo API: ${item.group}, Grupo extraído: ${grupo}, Preço: ${item.price_num}`);
+                            
                             if (grupos.includes(grupo)) {
                                 const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
                                 const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
@@ -521,11 +524,18 @@
                                         foundPrices = true;
                                     }
                                 }
+                            } else {
+                                console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
                             }
                         });
                         
-                        // Se encontrou preços, parar de tentar datas alternativas
-                        if (foundPrices) break;
+                        // Copiar D para C automaticamente após preencher
+                        if (foundPrices) {
+                            copyGroupCFromDForDay(day);
+                            break; // Parar de tentar datas alternativas
+                        }
+                    } else {
+                        console.warn(`${day} dias - Nenhum item retornado pela API`);
                     }
                 } catch (err) {
                     console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
@@ -619,8 +629,11 @@
                         const data = await response.json();
                         
                         if (data.items && data.items.length > 0) {
+                            console.log(`${day} dias - ${data.items.length} carros encontrados`);
                             data.items.forEach(item => {
                                 const grupo = item.group || extractGroup(item.car);
+                                console.log(`Carro: ${item.car}, Grupo API: ${item.group}, Grupo extraído: ${grupo}, Preço: ${item.price_num}`);
+                                
                                 if (grupos.includes(grupo)) {
                                     const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
                                     const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
@@ -650,8 +663,17 @@
                                             foundPrices = true;
                                         }
                                     }
+                                } else {
+                                    console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
                                 }
                             });
+                            
+                            // Copiar D para C automaticamente após preencher
+                            if (foundPrices) {
+                                copyGroupCFromDForDay(day);
+                            }
+                        } else {
+                            console.warn(`${day} dias - Nenhum item retornado pela API`);
                         }
                     } catch (err) {
                         console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
@@ -680,28 +702,29 @@
             return match ? match[1] : '';
         }
 
+        function copyGroupCFromDForDay(day) {
+            // Copiar valores de D para C para um dia específico
+            const dNet = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="net"]`);
+            const cNet = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="net"]`);
+            if (dNet && cNet && dNet.value) {
+                cNet.value = dNet.value;
+                cNet.dataset.manual = dNet.dataset.manual;
+                cNet.parentElement.className = dNet.parentElement.className;
+            }
+            
+            const dReal = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="real"]`);
+            const cReal = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="real"]`);
+            if (dReal && cReal && dReal.value) {
+                cReal.value = dReal.value;
+                cReal.dataset.manual = dReal.dataset.manual;
+                cReal.parentElement.className = dReal.parentElement.className;
+            }
+        }
+
         function copyGroupCFromD() {
             // Copiar todos os valores de D para C
             dias.forEach(day => {
-                // NET
-                const dNet = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="net"]`);
-                const cNet = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="net"]`);
-                if (dNet && cNet && dNet.value) {
-                    cNet.value = dNet.value;
-                    cNet.dataset.manual = dNet.dataset.manual;
-                    // Copiar cores
-                    cNet.parentElement.className = dNet.parentElement.className;
-                }
-                
-                // Real
-                const dReal = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="real"]`);
-                const cReal = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="real"]`);
-                if (dReal && cReal && dReal.value) {
-                    cReal.value = dReal.value;
-                    cReal.dataset.manual = dReal.dataset.manual;
-                    // Copiar cores
-                    cReal.parentElement.className = dReal.parentElement.className;
-                }
+                copyGroupCFromDForDay(day);
             });
         }
 
