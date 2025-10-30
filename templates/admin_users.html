@@ -11,6 +11,14 @@
         border-radius: 50% !important;
       }
     </style>
+    <script>
+      if (window.location.search.includes("iframe=1")) {
+        document.addEventListener("DOMContentLoaded", function() {
+          const header = document.querySelector("header");
+          if (header) header.style.display = "none";
+        });
+      }
+    </script>
   </head>
   <body class="min-h-screen bg-gray-50">
     <header class="bg-[#009cb6] border-b">

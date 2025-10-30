@@ -9,6 +9,14 @@
         border-radius: 50% !important;
       }
     </style>
+    <script>
+      if (window.location.search.includes("iframe=1")) {
+        document.addEventListener("DOMContentLoaded", function() {
+          const header = document.querySelector("header");
+          if (header) header.style.display = "none";
+        });
+      }
+    </script>
   </head>
   <body class="bg-gray-50">
     <header style="background:#009cb6;" class="w-full py-3">

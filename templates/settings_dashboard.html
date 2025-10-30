@@ -112,9 +112,9 @@
             <main class="flex-1 min-w-0">
                 <div id="content-area" class="bg-white rounded-lg shadow-sm p-6">
                     {% if section == 'profile' and current_user %}
-                    <iframe src="/admin/users/{{ current_user['id'] }}/edit" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
+                    <iframe src="/admin/users/{{ current_user['id'] }}/edit?iframe=1" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
                     {% else %}
-                    <iframe src="/admin/users" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
+                    <iframe src="/admin/users?iframe=1" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
                     {% endif %}
                 </div>
             </main>
@@ -144,10 +144,10 @@
             
             // Map sections to URLs
             const urls = {
-                'users': '/admin/users',
-                'vehicles': '/admin/car-groups',
-                'price-adjustment': '/admin/settings',
-                'price-validation': '/admin/price-validation'
+                'users': '/admin/users?iframe=1',
+                'vehicles': '/admin/car-groups?iframe=1',
+                'price-adjustment': '/admin/settings?iframe=1',
+                'price-validation': '/admin/price-validation?iframe=1'
             };
             
             const url = urls[section];
