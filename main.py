@@ -399,13 +399,30 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
 
 # --- Admin: Test email ---
-@app.get("/admin/test-email", response_class=HTMLResponse)
-async def admin_test_email_page(request: Request):
+@app.get("/admin/price-validation", response_class=HTMLResponse)
+async def admin_price_validation(request: Request):
     try:
         require_admin(request)
     except HTTPException:
         return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse("admin_test_email.html", {"request": request, "error": None, "ok": False})
+    return templates.TemplateResponse("price_validation_rules.html", {"request": request})
+
+@app.get("/admin/export-db")
+async def admin_export_db(request: Request):
+    """Temporary endpoint to export database"""
+    try:
+        require_admin(request)
+    except HTTPException:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    
+    try:
+        return FileResponse(
+            path=str(DB_PATH),
+            filename="data_backup.db",
+            media_type="application/octet-stream"
+        )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.post("/admin/test-email", response_class=HTMLResponse)
 async def admin_test_email_send(request: Request, to: str = Form("")):
