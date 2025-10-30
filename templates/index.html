@@ -1865,10 +1865,6 @@
         'Abbycar Não reembolsável': '/static/logos/logo_ABB.png.avif',
         'ACE': '/static/logos/logo_ACE.png',
         'Ace Rent a Car': '/static/logos/logo_ACE.png',
-        'ADA': '/static/logos/logo_ADA.png',
-        'Ada': '/static/logos/logo_ADA.png',
-        'Ada Rent a Car': '/static/logos/logo_ADA.png',
-        'Ada Car Rental': '/static/logos/logo_ADA.png',
         'AIR': '/static/logos/logo_AIR.png',
         'ALM': '/static/logos/logo_ALM.png.avif',
         'Alamo': '/static/logos/logo_ALM.png.avif',
@@ -2074,14 +2070,20 @@
         // Extrair suppliers únicos dos resultados e ORDENAR ALFABETICAMENTE
         currentSuppliers = extractSuppliersFromItems(items);
         currentSuppliers.sort((a, b) => a.localeCompare(b, 'pt-PT'));
-        console.log('[SUPPLIERS] Encontrados (ordenados):', currentSuppliers.length, currentSuppliers);
         
-        if (currentSuppliers.length === 0) {
+        // Filtrar suppliers que não queremos na sidebar (mas mantemos nos resultados)
+        const excludedFromSidebar = ['Carnect', 'Car Nect', 'Car-Nect', 'Ada', 'Ada Rent a Car', 'Ada Car Rental'];
+        const filteredSuppliers = currentSuppliers.filter(s => !excludedFromSidebar.includes(s));
+        
+        console.log('[SUPPLIERS] Encontrados (ordenados):', currentSuppliers.length, currentSuppliers);
+        console.log('[SUPPLIERS] Excluídos da sidebar:', currentSuppliers.length - filteredSuppliers.length);
+        
+        if (filteredSuppliers.length === 0) {
           container.innerHTML = '<p class="text-xs text-gray-500 p-2 col-span-3">Nenhum supplier encontrado</p>';
           return;
         }
         
-        currentSuppliers.forEach((supplierName, idx) => {
+        filteredSuppliers.forEach((supplierName, idx) => {
           const div = document.createElement('div');
           div.className = 'supplier-checkbox';
           div.dataset.supplier = supplierName;
