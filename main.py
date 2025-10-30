@@ -205,69 +205,101 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
             except Exception:
                 pass
 
-            # Query all cards
-            handles = page.query_selector_all("section.newcarlist article, .newcarlist article, article.car, li.result, li.car, .car-item, .result-row")
+            # Query all cards - SELETORES ESPECÍFICOS CARJET
+            handles = page.query_selector_all("section.newcarlist article")
             idx = 0
+            print(f"[PLAYWRIGHT] Encontrados {len(handles)} artigos", file=sys.stderr, flush=True)
+            
             for h in handles:
                 try:
                     card_text = (h.inner_text() or "").strip()
                 except Exception:
                     card_text = ""
-                # Extract total price near "Preço por <N> dias" if present
+                
+                # === PREÇO TOTAL (CARJET ESPECÍFICO) ===
                 price_text = ""
                 try:
-                    # Exact block text often includes this phrase; capture the nearest euro amount after it
-                    m = re.search(r"preço\s*por\s*\d+\s*dias[^\n€]*([€\s]*[0-9][0-9\.,]+)\s*€?", card_text, re.I)
-                    if m:
-                        amt = m.group(1)
-                        if "€" not in amt:
-                            price_text = (amt.strip() + " €").strip()
-                        else:
-                            price_text = amt.strip()
-                except Exception:
+                    # Prioridade 1: .nfoPriceDest (preço total destaque)
+                    price_el = h.query_selector(".nfoPriceDest")
+                    if price_el:
+                        price_text = (price_el.inner_text() or "").strip()
+                        print(f"[PLAYWRIGHT] Preço .nfoPriceDest: {price_text}", file=sys.stderr, flush=True)
+                    
+                    # Prioridade 2: .pr-euros (preço em euros)
+                    if not price_text:
+                        price_el = h.query_selector(".pr-euros, .price.pr-euros")
+                        if price_el:
+                            price_text = (price_el.inner_text() or "").strip()
+                            print(f"[PLAYWRIGHT] Preço .pr-euros: {price_text}", file=sys.stderr, flush=True)
+                    
+                    # Prioridade 3: Procurar "Preço por X dias" no texto
+                    if not price_text:
+                        m = re.search(r"preço\s*por\s*\d+\s*dias[^\n€]*?([0-9]+[,\.][0-9]{2})\s*€", card_text, re.I)
+                        if m:
+                            price_text = m.group(1) + " €"
+                            print(f"[PLAYWRIGHT] Preço regex: {price_text}", file=sys.stderr, flush=True)
+                    
+                    # Limpar preço
+                    if price_text:
+                        # Remover tudo exceto números, vírgula, ponto e €
+                        price_text = re.sub(r'[^\d,\.€\s]', '', price_text).strip()
+                        if '€' not in price_text:
+                            price_text += ' €'
+                        
+                except Exception as e:
+                    print(f"[PLAYWRIGHT] Erro ao extrair preço: {e}", file=sys.stderr, flush=True)
                     price_text = ""
-                # Fallback: choose highest amount in the card (avoid per-day by favoring larger value)
-                if not price_text:
-                    try:
-                        euros = re.findall(r"[€\s]*([0-9][0-9\.,\s]*)", card_text)
-                        best = None
-                        best_v = float("-inf")
-                        for t in euros:
-                            v = _parse_amount(t)
-                            if v is None:
-                                continue
-                            if v > best_v:
-                                best_v = v
-                                best = t
-                        if best is not None:
-                            price_text = f"{best} €"
-                    except Exception:
-                        pass
-                # car name
+                
+                # === NOME DO CARRO (CARJET ESPECÍFICO) ===
                 car = ""
                 try:
-                    name_el = h.query_selector(".veh-name, .vehicle-name, .model, .titleCar, .title, h3, h2")
+                    # Prioridade 1: .titleCar
+                    name_el = h.query_selector(".titleCar")
                     if name_el:
                         car = (name_el.inner_text() or "").strip()
+                    
+                    # Fallback: outros seletores
+                    if not car:
+                        name_el = h.query_selector(".veh-name, .vehicle-name, .model, .title, h3, h2")
+                        if name_el:
+                            car = (name_el.inner_text() or "").strip()
                 except Exception:
                     pass
-                # supplier
+                
+                # === SUPPLIER (CARJET ESPECÍFICO) ===
                 supplier = ""
                 try:
-                    # Try logo alt text
-                    im = h.query_selector("img[alt*='logo'], img[alt*='Logo'], img[src*='logo_']")
+                    # Prioridade 1: Logo do supplier
+                    im = h.query_selector("img[src*='/prv/'], img[src*='logo_']")
                     if im:
-                        supplier = (im.get_attribute("alt") or "").strip()
+                        src = im.get_attribute("src") or ""
+                        # Extrair código do supplier da URL: /logo_AUP.png → AUP
+                        match = re.search(r'logo_([A-Z0-9]+)', src)
+                        if match:
+                            supplier = match.group(1)
+                        else:
+                            supplier = (im.get_attribute("alt") or "").strip()
+                    
+                    # Fallback: texto do supplier
                     if not supplier:
-                        sup_el = h.query_selector(".supplier, .vendor, .partner, [class*='supplier'], [class*='vendor']")
+                        sup_el = h.query_selector(".supplier, .vendor, .partner, [class*='supplier']")
                         supplier = (sup_el.inner_text() or "").strip() if sup_el else ""
                 except Exception:
                     pass
-                # category (best effort)
+                
+                # === CATEGORIA/GRUPO (CARJET ESPECÍFICO) ===
                 category = ""
                 try:
-                    cat_el = h.query_selector(".category, .group, .vehicle-category, [class*='category'], [class*='group']")
-                    category = (cat_el.inner_text() or "").strip() if cat_el else ""
+                    # Prioridade 1: .category
+                    cat_el = h.query_selector(".category, .grupo, [class*='category'], [class*='grupo']")
+                    if cat_el:
+                        category = (cat_el.inner_text() or "").strip()
+                    
+                    # Prioridade 2: Extrair do texto (ex: "Grupo B1")
+                    if not category:
+                        match = re.search(r'grupo\s+([A-Z][0-9]?)', card_text, re.I)
+                        if match:
+                            category = match.group(1)
                 except Exception:
                     pass
                 # link
@@ -285,6 +317,15 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                 if price_text:
                     # Mapear categoria para código de grupo
                     group_code = map_category_to_group(category, car)
+                    
+                    # Log detalhado
+                    print(f"[PLAYWRIGHT] Carro #{idx+1}:", file=sys.stderr, flush=True)
+                    print(f"  Nome: {car}", file=sys.stderr, flush=True)
+                    print(f"  Supplier: {supplier}", file=sys.stderr, flush=True)
+                    print(f"  Preço: {price_text}", file=sys.stderr, flush=True)
+                    print(f"  Categoria: {category}", file=sys.stderr, flush=True)
+                    print(f"  Grupo: {group_code}", file=sys.stderr, flush=True)
+                    
                     items.append({
                         "id": idx,
                         "car": car,
@@ -298,6 +339,8 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                         "link": link or url,
                     })
                     idx += 1
+                else:
+                    print(f"[PLAYWRIGHT] ⚠️  Carro sem preço ignorado: {car}", file=sys.stderr, flush=True)
             # If no items collected via card scanning, try parsing the full rendered HTML
             try:
                 if not items:
