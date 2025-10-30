@@ -1399,12 +1399,24 @@ async def home(request: Request):
     return response
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_root(request: Request):
+async def admin_root(request: Request, section: str = None):
     try:
         require_admin(request)
     except HTTPException:
         return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
-    return templates.TemplateResponse("settings_dashboard.html", {"request": request})
+    
+    # Get current user
+    user_id = request.session.get("user_id")
+    current_user = None
+    if user_id:
+        with get_db() as conn:
+            current_user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    
+    return templates.TemplateResponse("settings_dashboard.html", {
+        "request": request,
+        "current_user": current_user,
+        "section": section or "users"
+    })
 
 # --- Admin: environment summary and adjustment preview ---
 @app.get("/admin/env-summary")

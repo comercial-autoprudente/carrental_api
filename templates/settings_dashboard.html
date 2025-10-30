@@ -111,9 +111,8 @@
             <!-- Main Content Area -->
             <main class="flex-1 min-w-0">
                 <div id="content-area" class="bg-white rounded-lg shadow-sm p-6">
-                    {% set section = request.query_params.get('section', 'users') %}
-                    {% if section == 'profile' %}
-                    <iframe src="/admin/users/{{ current_user.id }}/edit" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
+                    {% if section == 'profile' and current_user %}
+                    <iframe src="/admin/users/{{ current_user['id'] }}/edit" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
                     {% else %}
                     <iframe src="/admin/users" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
                     {% endif %}
