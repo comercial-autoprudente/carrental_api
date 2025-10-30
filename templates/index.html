@@ -803,7 +803,7 @@
           const secId = `group_sec_${gi}`;
           const expanded = gi === 0; // only first group open by default
           gi++;
-          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId}')"><span>${escapeHtml(g.label)}</span>${(bestCat===g.cat)?'<span class="lowest-badge">Preço mais baixo</span>':''}</div>`);
+          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId}')"><span>${escapeHtml(g.label)} <span class="ml-2 opacity-80">(${lst.length} ${lst.length === 1 ? 'viatura' : 'viaturas'})</span></span>${(bestCat===g.cat)?'<span class="lowest-badge">Preço mais baixo</span>':''}</div>`);
           parts.push(`<div id="${secId}" data-accordion="group" class="${expanded ? '' : 'hidden'} accordion-content">${renderTableForItems(lst)}</div>`);
         });
         // Render any categories not in default order at the end
@@ -813,7 +813,7 @@
           const sorted = lst.slice().sort((a,b) => toNum(a.price) - toNum(b.price));
           const secId2 = `group_sec_${gi}`;
           gi++;
-          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId2}')"><span>${escapeHtml(cat)}</span>${(bestCat===cat)?'<span class=\"lowest-badge\">Preço mais baixo</span>':''}</div>`);
+          parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title flex items-center justify-between" onclick="toggleSection('${secId2}')"><span>${escapeHtml(cat)} <span class="ml-2 opacity-80">(${sorted.length} ${sorted.length === 1 ? 'viatura' : 'viaturas'})</span></span>${(bestCat===cat)?'<span class=\"lowest-badge\">Preço mais baixo</span>':''}</div>`);
           parts.push(`<div id="${secId2}" data-accordion="group" class="hidden accordion-content">${renderTableForItems(sorted)}</div>`);
         });
         // Add an 'Other' group for items that didn't match any bucket
@@ -825,7 +825,7 @@
             const sorted = leftovers.slice().sort((a,b) => toNum(a.price) - toNum(b.price));
             const secId3 = `group_sec_${gi}`;
             gi++;
-            parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title" onclick="toggleSection('${secId3}')">Other</div>`);
+            parts.push(`<div class="mt-3 px-4 py-2 text-xs font-semibold rounded text-white cursor-pointer group-title" onclick="toggleSection('${secId3}')">Other <span class="ml-2 opacity-80">(${sorted.length} ${sorted.length === 1 ? 'viatura' : 'viaturas'})</span></div>`);
             parts.push(`<div id="${secId3}" data-accordion="group" class="hidden accordion-content">${renderTableForItems(sorted)}</div>`);
           }
         } catch (_) { /* no-op */ }
@@ -1333,7 +1333,7 @@
                 section.className = 'rounded-md border';
                 
                 const html = [];
-                html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
+                html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-green-600 font-semibold ml-2">(${items.length} ${items.length === 1 ? 'viatura' : 'viaturas'})</span> <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
                 
                 if (items.length === 0) {
                   html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
@@ -1400,7 +1400,7 @@
           const section = document.createElement('div');
           section.className = 'rounded-md border';
           const inner = [];
-          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-')} day(s) — ${escapeHtml(data.location || '-')} <span class=\"text-blue-600 ml-2\">⚡ Cache</span><\/div>`);
+          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-')} day(s) — ${escapeHtml(data.location || '-')} <span class=\"text-green-600 font-semibold ml-2\">(${items.length} ${items.length === 1 ? 'viatura' : 'viaturas'})</span> <span class=\"text-blue-600 ml-2\">⚡ Cache</span><\/div>`);
           
           if (items.length === 0) {
             inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\"><p class="mb-2">⚠️ Nenhum resultado encontrado</p><\/div>`);
@@ -1497,7 +1497,7 @@
             inner.push(`<div class=\"px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 text-sm\">${escapeHtml(data.warning)}<\/div>`);
           }
           
-          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-') } day(s) — ${escapeHtml(data.location || '-')}<\/div>`);
+          inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-') } day(s) — ${escapeHtml(data.location || '-')} <span class=\"text-green-600 font-semibold ml-2\">(${items.length} ${items.length === 1 ? 'viatura' : 'viaturas'})</span><\/div>`);
           
           if (items.length === 0) {
             inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\">
