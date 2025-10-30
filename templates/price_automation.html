@@ -509,6 +509,21 @@
                         
                         console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
                         
+                        // DEBUG: Mostrar distribuição por grupo
+                        const gruposCom = {};
+                        autoprudenteItems.forEach(item => {
+                            const grupo = item.group || extractGroup(item.car);
+                            if (!gruposCom[grupo]) gruposCom[grupo] = 0;
+                            gruposCom[grupo]++;
+                        });
+                        console.log(`[DEBUG ${day}d] Grupos com AUTOPRUDENTE:`, gruposCom);
+                        
+                        // Verificar quais grupos NÃO têm carros
+                        const gruposSem = grupos.filter(g => !gruposCom[g]);
+                        if (gruposSem.length > 0) {
+                            console.warn(`[DEBUG ${day}d] Grupos SEM AUTOPRUDENTE:`, gruposSem);
+                        }
+                        
                         if (autoprudenteItems.length === 0) {
                             // Nenhum carro AUTOPRUDENTE encontrado - marcar todas células como vermelhas
                             console.warn(`${day} dias - AUTOPRUDENTE não tem preços disponíveis`);
@@ -679,6 +694,21 @@
                             });
                             
                             console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
+                            
+                            // DEBUG: Mostrar distribuição por grupo
+                            const gruposCom = {};
+                            autoprudenteItems.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                if (!gruposCom[grupo]) gruposCom[grupo] = 0;
+                                gruposCom[grupo]++;
+                            });
+                            console.log(`[DEBUG ${day}d] Grupos com AUTOPRUDENTE:`, gruposCom);
+                            
+                            // Verificar quais grupos NÃO têm carros
+                            const gruposSem = grupos.filter(g => !gruposCom[g]);
+                            if (gruposSem.length > 0) {
+                                console.warn(`[DEBUG ${day}d] Grupos SEM AUTOPRUDENTE:`, gruposSem);
+                            }
                             
                             if (autoprudenteItems.length === 0) {
                                 // Nenhum carro AUTOPRUDENTE - marcar células vermelhas
