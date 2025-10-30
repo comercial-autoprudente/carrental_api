@@ -1327,7 +1327,7 @@
                   html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
                   html.push(renderCategoryBlocks(items));
                   // Mostrar filtros de suppliers após resultados
-                  showSupplierFilters();
+                  showSupplierFilters(items);
                 }
                 
                 section.innerHTML = html.join('');
@@ -1394,7 +1394,7 @@
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
             // Mostrar filtros de suppliers após resultados
-            showSupplierFilters();
+            showSupplierFilters(items);
           }
           
           section.innerHTML = inner.join('');
@@ -1494,7 +1494,7 @@
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
             // Mostrar filtros de suppliers após resultados
-            showSupplierFilters();
+            showSupplierFilters(items);
           }
           
           section.innerHTML = inner.join('');
@@ -1807,65 +1807,137 @@
       }
 
       // ===== SUPPLIER FILTERS =====
-      const suppliers = [
-        { name: 'Europcar', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Europcar_Logo.svg/200px-Europcar_Logo.svg.png' },
-        { name: 'Hertz', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Hertz_Logo.svg/200px-Hertz_Logo.svg.png' },
-        { name: 'Avis', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Avis_logo.svg/200px-Avis_logo.svg.png' },
-        { name: 'Budget', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Budget_Rent_a_Car_logo.svg/200px-Budget_Rent_a_Car_logo.svg.png' },
-        { name: 'Sixt', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Sixt_logo.svg/200px-Sixt_logo.svg.png' },
-        { name: 'Enterprise', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Enterprise_Rent-A-Car_Logo.svg/200px-Enterprise_Rent-A-Car_Logo.svg.png' },
-        { name: 'Alamo', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Alamo_Rent_a_Car_logo.svg/200px-Alamo_Rent_a_Car_logo.svg.png' },
-        { name: 'National', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/National_Car_Rental_logo.svg/200px-National_Car_Rental_logo.svg.png' },
-        { name: 'Thrifty', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Thrifty_Car_Rental_logo.svg/200px-Thrifty_Car_Rental_logo.svg.png' },
-        { name: 'Dollar', logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Dollar_Rent_A_Car_logo.svg/200px-Dollar_Rent_A_Car_logo.svg.png' },
-        { name: 'Firefly', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EFirefly%3C/text%3E%3C/svg%3E' },
-        { name: 'Goldcar', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23f4ad0f"%3EGoldcar%3C/text%3E%3C/svg%3E' },
-        { name: 'Centauro', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="14" fill="%23009cb6"%3ECentauro%3C/text%3E%3C/svg%3E' },
-        { name: 'Drive', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EDrive%3C/text%3E%3C/svg%3E' },
-        { name: 'Guerin', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EGuerin%3C/text%3E%3C/svg%3E' },
-        { name: 'Keddy', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EKeddy%3C/text%3E%3C/svg%3E' },
-        { name: 'InterRent', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="13" fill="%23009cb6"%3EInterRent%3C/text%3E%3C/svg%3E' },
-        { name: 'Record Go', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="13" fill="%23009cb6"%3ERecord Go%3C/text%3E%3C/svg%3E' },
-        { name: 'Flizzr', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="16" fill="%23009cb6"%3EFlizzr%3C/text%3E%3C/svg%3E' },
-        { name: 'OK Rent a Car', logo: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"%3E%3Ctext x="5" y="20" font-family="Arial" font-size="12" fill="%23009cb6"%3EOK Rent%3C/text%3E%3C/svg%3E' }
-      ];
+      // Mapa de códigos/nomes para logos locais
+      const supplierLogoMap = {
+        // Logos locais disponíveis
+        'AUP': '/static/logos/logo_AUP.png',
+        'Auto Prudente': '/static/logos/logo_AUP.png',
+        'THR': '/static/logos/logo_THR.png.avif',
+        'Thrifty': '/static/logos/logo_THR.png.avif',
+        'ECR': '/static/logos/logo_ECR.png.avif',
+        'Europcar': '/static/logos/logo_ECR.png.avif',
+        'EUR': '/static/logos/logo_EUR.png',
+        'HER': '/static/logos/logo_HER.png',
+        'Hertz': '/static/logos/logo_HER.png',
+        'CEN': '/static/logos/logo_CEN.png.avif',
+        'Centauro': '/static/logos/logo_CEN.png.avif',
+        'OKR': '/static/logos/logo_OKR.png',
+        'OK Mobility': '/static/logos/logo_OKR.png',
+        'OK Rent a Car': '/static/logos/logo_OKR.png',
+        'SUR': '/static/logos/logo_SUR.png',
+        'Surprice': '/static/logos/logo_SUR.png',
+        'TAN': '/static/logos/logo_TAN.png',
+        'TAN1': '/static/logos/logo_TAN1.png',
+        'YNO': '/static/logos/logo_YNO.png.avif',
+        'YNO Rent a Car': '/static/logos/logo_YNO.png.avif',
+        'ICT': '/static/logos/logo_ICT.png',
+        'Interrent': '/static/logos/logo_ICT.png',
+        'InterRent': '/static/logos/logo_ICT.png',
+        'BGX': '/static/logos/logo_BGX.png.avif',
+        'Budget': '/static/logos/logo_BGX.png.avif',
+        'AMI': '/static/logos/logo_AMI.png',
+        'Amigos': '/static/logos/logo_AMI.png',
+        'DOH': '/static/logos/logo_DOH.png.avif',
+        'Drive on Holidays': '/static/logos/logo_DOH.png.avif',
+        'Drive': '/static/logos/logo_DOH.png.avif',
+        'FLZ': '/static/logos/logo_FLZ.png.avif',
+        'Flizzr': '/static/logos/logo_FLZ.png.avif',
+        'KED': '/static/logos/logo_KED.png.avif',
+        'Keddy': '/static/logos/logo_KED.png.avif',
+        'ALM': '/static/logos/logo_ALM.png.avif',
+        'Alamo': '/static/logos/logo_ALM.png.avif',
+        'ABB': '/static/logos/logo_ABB.png.avif',
+        'Abby Car': '/static/logos/logo_ABB.png.avif',
+        'D4F': '/static/logos/logo_D4F.png.avif'
+      };
 
       let selectedSuppliers = new Set();
+      let currentSuppliers = []; // Suppliers extraídos dos resultados
 
-      function initSupplierFilters() {
+      function getSupplierLogo(supplierName) {
+        // Tentar match direto
+        if (supplierLogoMap[supplierName]) {
+          return supplierLogoMap[supplierName];
+        }
+        
+        // Tentar match parcial (case insensitive)
+        const nameLower = supplierName.toLowerCase();
+        for (const [key, logo] of Object.entries(supplierLogoMap)) {
+          if (key.toLowerCase() === nameLower || nameLower.includes(key.toLowerCase())) {
+            return logo;
+          }
+        }
+        
+        // Fallback: sem logo
+        return null;
+      }
+
+      function extractSuppliersFromItems(items) {
+        const suppliersSet = new Set();
+        (items || []).forEach(item => {
+          const supplier = displaySupplierName(item.supplier || '');
+          if (supplier) {
+            suppliersSet.add(supplier);
+          }
+        });
+        return Array.from(suppliersSet).sort();
+      }
+
+      function initSupplierFilters(items) {
         const container = document.getElementById('suppliersFilter');
         if (!container) return;
-
-        suppliers.forEach(supplier => {
+        
+        // Limpar filtros existentes
+        container.innerHTML = '';
+        selectedSuppliers.clear();
+        
+        // Extrair suppliers únicos dos resultados
+        currentSuppliers = extractSuppliersFromItems(items);
+        console.log('[SUPPLIERS] Encontrados:', currentSuppliers.length, currentSuppliers);
+        
+        if (currentSuppliers.length === 0) {
+          container.innerHTML = '<p class="text-xs text-gray-500 p-2">Nenhum supplier encontrado</p>';
+          return;
+        }
+        
+        currentSuppliers.forEach(supplierName => {
           const div = document.createElement('label');
           div.className = 'supplier-checkbox';
           
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
-          checkbox.value = supplier.name;
+          checkbox.value = supplierName;
           checkbox.checked = true;
           checkbox.onchange = () => filterBySuppliers();
           
-          const logo = document.createElement('img');
-          logo.src = supplier.logo;
-          logo.alt = supplier.name;
-          logo.className = 'supplier-logo';
-          logo.onerror = () => {
-            logo.style.display = 'none';
-            nameSpan.style.marginLeft = '0';
-          };
+          const logoUrl = getSupplierLogo(supplierName);
           
-          const nameSpan = document.createElement('span');
-          nameSpan.className = 'supplier-name';
-          nameSpan.textContent = supplier.name;
+          if (logoUrl) {
+            const logo = document.createElement('img');
+            logo.src = logoUrl;
+            logo.alt = supplierName;
+            logo.className = 'supplier-logo';
+            logo.onerror = () => {
+              console.warn('[LOGO] Falhou ao carregar:', logoUrl, 'para', supplierName);
+              logo.style.display = 'none';
+            };
+            div.appendChild(checkbox);
+            div.appendChild(logo);
+          } else {
+            // Sem logo: mostrar só checkbox e nome
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'supplier-name';
+            nameSpan.style.display = 'inline'; // Forçar mostrar nome quando não há logo
+            nameSpan.textContent = supplierName;
+            div.appendChild(checkbox);
+            div.appendChild(nameSpan);
+          }
           
-          div.appendChild(checkbox);
-          div.appendChild(logo);
-          div.appendChild(nameSpan);
           container.appendChild(div);
-          
-          selectedSuppliers.add(supplier.name);
+          selectedSuppliers.add(supplierName);
         });
+        
+        console.log('[SUPPLIERS] Filtros criados:', currentSuppliers.length);
       }
 
       function toggleAllSuppliers() {
@@ -1932,7 +2004,7 @@
         });
       }
 
-      function showSupplierFilters() {
+      function showSupplierFilters(items) {
         const sidebar = document.getElementById('suppliersSidebar');
         const mainContent = document.getElementById('mainContent');
         
@@ -1940,6 +2012,11 @@
           sidebar.style.display = '';
           mainContent.classList.remove('lg:col-span-12');
           mainContent.classList.add('lg:col-span-9');
+          
+          // Inicializar filtros com os items dos resultados
+          if (items && items.length > 0) {
+            initSupplierFilters(items);
+          }
         }
       }
 
@@ -1953,11 +2030,6 @@
           mainContent.classList.add('lg:col-span-12');
         }
       }
-
-      // Initialize on page load
-      document.addEventListener('DOMContentLoaded', () => {
-        initSupplierFilters();
-      });
     </script>
   </body>
 </html>
