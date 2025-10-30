@@ -1,0 +1,50 @@
+e5cd870 fix: usar campo 'group' da API em vez de mapear localmente - restaurar mapeamento B1/B2 correto
+b1a83b1 fix: adicionar regras específicas para diferenciar B1 (Fiat 500 4p) de B2 (Mini)
+648b1a6 feat: clicar no preview abre e faz scroll até o grupo correspondente
+4ad1849 feat: adicionar nome da rent-a-car no preview de cada viatura
+dfce16b feat: remover título do preview e adicionar setas de navegação para scroll
+a84bac1 fix: corrigir displaySupplierName para extrair código do logo e mapear para nome limpo
+71eef83 feat: preview de categorias em uma linha horizontal com scroll, remover grupo Luxury
+1dff5e2 design: aplicar ícones monocromáticos modernos em TODAS as páginas admin (Home, Logout)
+ec1617a fix: substituir emojis por ícones SVG monocromáticos clean no header Settings
+aa1b47c feat: adicionar preview de categorias estilo CarJet com foto e preço mais baixo
+85da026 feat: modernizar header - foto perfil redonda com dropdown menu, ícones clean sem emoji
+163e21c design: modernizar visual - fonte Outfit, ícones stroke clean, sem border-radius
+8e2c72f fix: corrigir link Settings para /admin (menu lateral)
+bb77a39 feat: criar Settings com menu lateral à esquerda e conteúdo dinâmico à direita
+c346e86 feat: adicionar sistema completo de backup com script automático
+3a806fb feat: adicionar suporte para validação de múltiplos grupos simultaneamente
+342bead feat: adicionar ícone de alerta visual junto ao preço da Auto Prudente quando há violação
+0e7a245 feat: sistema de alertas visuais com mensagens melhoradas e posicionamento central
+49e675c fix: renomear Admin para Settings e remover texto junto ao logotipo
+65d216f feat: mover Price Validation para menu Admin e traduzir para inglês
+e2e3c12 feat: adicionar sistema de validação de preços com regras configuráveis
+2147d6e feat: adicionar mapeamentos completos BMW/Mercedes/Audi para Luxury e outros ajustes
+b020838 feat: normalizar nomes removendo 4p exceto para 7 e 9 lugares
+b04ffb3 fix: melhorar reload de miniaturas após upload de foto
+b1a6cc2 fix: adicionar mini countryman auto ao grupo Luxury (X)
+2b1a381 fix: forçar reload do módulo carjet_direct ao listar veículos
+5be9158 fix: alterar categoria Premium para Luxury (categoria correta)
+886326e fix: retornar campo group no endpoint de salvamento de veículos
+7f1d447 feat: adicionar Mercedes e Renault ao mapeamento de veículos
+0282637 fix: remover X - Premium duplicado, manter apenas X - Luxury
+dccdb77 feat: mover grupo X - Luxury para o final da lista na UI
+197f2f3 fix: atualizar grupos G (Cabrio) e X (Luxury) na UI principal
+9c92322 feat: criar categoria Cabrio e mapear para grupo G
+975ce12 feat: adicionar categoria Luxury e grupo X - Luxury
+5ad27ec fix: evitar que sedan seja categorizado como Station Wagon
+89d6975 fix: forçar reload agressivo de imagens após upload
+4ef2246 fix: corrigir preview de foto após upload com logs de debug
+b775fe4 feat: adicionar fiat 500 auto e fiat 500 4p
+7d0a573 fix: não compartilhar fotos entre modelos normais e Station Wagon (SW)
+f54bebd feat: compartilhar fotos entre variações do mesmo modelo e corrigir preview após upload
+9d65b64 feat: melhorar upload de fotos e preencher URL automaticamente
+7dc7866 feat: adicionar 36 novos veículos ao dicionário VEHICLES
+4372df2 feat: traduzir página inicial para inglês
+210ecf9 fix: corrigir inserção de veículos no lugar correto do dicionário VEHICLES
+75ec44b feat: atualizar carjet_direct.py automaticamente ao salvar veículo
+2f93b50 feat: salvar veículos automaticamente no backend com checkbox Automatic
+2c0994c feat: fechar modal automaticamente e recarregar após adicionar veículo
+f3b84bd fix: corrigir saveEdit para uncategorized e remover botões duplicados do modal
+405e365 feat: remover botão Exportar VEHICLES e traduzir todo UI para inglês
+3727597 fix: remover autenticação do endpoint de fotos para permitir carregamento via img tags
