@@ -996,17 +996,28 @@
       }
 
       function displayCategory(it) {
+        // PRIORIDADE 1: Usar campo 'group' da API (já mapeado no backend)
+        if (it.group) {
+          return `Group ${it.group}`;
+        }
+        
+        // FALLBACK: Se não tiver 'group', tentar mapear localmente
         const car = String(it.car || '').toLowerCase();
         const cat = String(it.category || '').toLowerCase();
         const transmission = String(it.transmission || it.gearbox || it.gear || it.trans || it.gear_type || it.shift || '').toLowerCase();
         const details = String(it.details || '').toLowerCase();
         
-        // B1 vs B2 - Mini 4 Doors vs Mini
-        // B1: Fiat 500 4p (4 portas)
-        if (/^fiat\s*500\s*(4p|4\s*portas|4\s*door)/i.test(car)) return 'Group B1';
-        // B2: Fiat Panda, Toyota Aygo, Fiat 500 (2 portas), Hyundai i10, etc
-        if (/^(fiat\s*panda|toyota\s*aygo|hyundai\s*i10|kia\s*picanto|peugeot\s*108|citroen\s*c1(?!\s*auto))/i.test(car)) return 'Group B2';
-        if (/^fiat\s*500\b(?!.*4p)(?!.*4\s*door)(?!.*auto)/i.test(car)) return 'Group B2';
+        // B1 vs B2 - Mini 4 Lugares vs Mini 5 Lugares
+        // B1: Fiat 500, Peugeot 108, C1, VW Up, Kia Picanto, Toyota Aygo (4 lugares)
+        if (/^(fiat\s*500|peugeot\s*108|citroen\s*c1|citroën\s*c1|vw\s*up|volkswagen\s*up|kia\s*picanto|toyota\s*aygo)\b(?!.*x)(?!.*cabrio)/i.test(car)) {
+          // Se é automático → E1
+          if (/auto|automatic|automático|automatico/i.test(car + ' ' + cat + ' ' + transmission)) {
+            return 'Group E1';
+          }
+          return 'Group B1';
+        }
+        // B2: Fiat Panda, Hyundai i10, etc (5 lugares)
+        if (/^(fiat\s*panda|hyundai\s*i10)/i.test(car)) return 'Group B2';
         
         // Specific overrides
         if (/^peugeot\s*308\b.*\bauto(matic)?\b/.test(car)) return 'Group E2';
