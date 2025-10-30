@@ -2197,19 +2197,15 @@
       }
 
       function applySupplierFilter() {
-        // Hide/show car cards based on selected suppliers
+        // NÃO filtrar carros - mostrar sempre TODOS os 524 carros
+        // Os suppliers na sidebar são apenas para referência visual
         const cards = document.querySelectorAll('[data-supplier]');
         cards.forEach(card => {
-          const supplier = card.getAttribute('data-supplier');
-          if (selectedSuppliers.size === 0 || selectedSuppliers.has(supplier)) {
-            card.style.display = '';
-          } else {
-            card.style.display = 'none';
-          }
+          card.style.display = ''; // Sempre visível
         });
         
-        // Update group counts
-        updateGroupCounts();
+        // Não atualizar contadores (manter originais)
+        console.log('[FILTER] Mostrando todos os carros (sem filtro)');
       }
 
       function updateGroupCounts() {
