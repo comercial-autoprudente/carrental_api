@@ -145,6 +145,30 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        display: none; /* Esconder nomes, mostrar só logos */
+      }
+      .suppliers-sidebar.collapsed {
+        display: none;
+      }
+      .toggle-suppliers-btn {
+        position: fixed;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 40;
+        background: #009cb6;
+        color: white;
+        padding: 12px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .toggle-suppliers-btn:hover {
+        background: #f4ad0f;
+      }
+      .toggle-suppliers-btn.hidden {
+        display: none;
       }
       .bar { display:block; height:6px; border-radius:3px; }
       .bar-blue { background:#009cb6; width:36px; }
@@ -243,17 +267,29 @@
       });
     </script>
 
+    <!-- Botão Toggle Suppliers (fixo, escondido inicialmente) -->
+    <button id="toggleSuppliersBtn" class="toggle-suppliers-btn hidden" onclick="toggleSuppliersSidebar()" title="Filtrar por empresas">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+      </svg>
+    </button>
+
     <main class="mx-auto max-w-7xl px-4 py-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        <!-- Sidebar de Filtros (Suppliers) -->
-        <aside class="lg:col-span-3">
+        <!-- Sidebar de Filtros (Suppliers) - Escondida inicialmente -->
+        <aside id="suppliersSidebar" class="lg:col-span-3" style="display: none;">
           <div class="suppliers-sidebar bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold text-sm text-gray-900">Empresas de aluguer de carros</h3>
-              <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
-                Todos
-              </button>
+              <h3 class="font-semibold text-sm text-gray-900">Filtrar por empresa</h3>
+              <div class="flex gap-2">
+                <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
+                  Todos
+                </button>
+                <button onclick="toggleSuppliersSidebar()" class="text-xs text-gray-500 hover:text-red-500" title="Fechar">
+                  ✕
+                </button>
+              </div>
             </div>
             <div id="suppliersFilter" class="space-y-2">
               <!-- Suppliers will be loaded here -->
@@ -1322,6 +1358,8 @@
                   html.push(renderCategoryPreview(items));
                   html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
                   html.push(renderCategoryBlocks(items));
+                  // Mostrar filtros de suppliers após resultados
+                  showSupplierFilters();
                 }
                 
                 section.innerHTML = html.join('');
@@ -1387,6 +1425,8 @@
             inner.push(renderCategoryPreview(items));
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
+            // Mostrar filtros de suppliers após resultados
+            showSupplierFilters();
           }
           
           section.innerHTML = inner.join('');
@@ -1485,6 +1525,8 @@
             inner.push(renderCategoryPreview(items));
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
             inner.push(renderCategoryBlocks(items));
+            // Mostrar filtros de suppliers após resultados
+            showSupplierFilters();
           }
           
           section.innerHTML = inner.join('');
@@ -1920,6 +1962,39 @@
             group.style.display = '';
           }
         });
+      }
+
+      function toggleSuppliersSidebar() {
+        const sidebar = document.getElementById('suppliersSidebar');
+        const mainContent = sidebar.nextElementSibling;
+        
+        if (sidebar.style.display === 'none') {
+          sidebar.style.display = '';
+          mainContent.classList.remove('lg:col-span-12');
+          mainContent.classList.add('lg:col-span-9');
+        } else {
+          sidebar.style.display = 'none';
+          mainContent.classList.remove('lg:col-span-9');
+          mainContent.classList.add('lg:col-span-12');
+        }
+      }
+
+      function showSupplierFilters() {
+        const toggleBtn = document.getElementById('toggleSuppliersBtn');
+        if (toggleBtn) {
+          toggleBtn.classList.remove('hidden');
+        }
+      }
+
+      function hideSupplierFilters() {
+        const toggleBtn = document.getElementById('toggleSuppliersBtn');
+        const sidebar = document.getElementById('suppliersSidebar');
+        if (toggleBtn) {
+          toggleBtn.classList.add('hidden');
+        }
+        if (sidebar) {
+          sidebar.style.display = 'none';
+        }
       }
 
       // Initialize on page load
