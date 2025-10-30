@@ -6515,9 +6515,10 @@ async def get_price_history(request: Request):
             if days:
                 evolution_query += " AND days = ?"
                 evolution_args.append(int(days))
-            if category:
-                evolution_query += " AND car LIKE ?"
-                evolution_args.append(f"%{category}%")
+            # Nota: categoria não está na tabela, filtrar por car name como aproximação
+            # if category:
+            #     evolution_query += " AND car LIKE ?"
+            #     evolution_args.append(f"%{category}%")
             evolution_query += " GROUP BY DATE(ts) ORDER BY DATE(ts) DESC LIMIT 30"
             
             evolution_rows = conn.execute(evolution_query, tuple(evolution_args)).fetchall()
@@ -6526,21 +6527,28 @@ async def get_price_history(request: Request):
             evolution_avg = [round(r[2], 2) if r[2] else 0 for r in reversed(evolution_rows)]
             evolution_max = [round(r[3], 2) if r[3] else 0 for r in reversed(evolution_rows)]
             
-            # Comparação por localização
+            # Comparação por localização (sempre Faro vs Albufeira)
             comparison_query = """
                 SELECT location, AVG(price_num) as avg_price
                 FROM price_snapshots
                 WHERE price_num IS NOT NULL AND price_num > 0
+                  AND location IN ('Aeroporto de Faro', 'Albufeira')
             """
             comparison_args = []
             if days:
                 comparison_query += " AND days = ?"
                 comparison_args.append(int(days))
-            comparison_query += " GROUP BY location"
+            comparison_query += " GROUP BY location ORDER BY location"
             
             comparison_rows = conn.execute(comparison_query, tuple(comparison_args)).fetchall()
-            comparison_labels = [r[0] for r in comparison_rows]
-            comparison_values = [round(r[1], 2) for r in comparison_rows]
+            
+            # Garantir que sempre temos Faro e Albufeira (mesmo sem dados)
+            comparison_dict = {r[0]: round(r[1], 2) for r in comparison_rows}
+            comparison_labels = ['Albufeira', 'Aeroporto de Faro']
+            comparison_values = [
+                comparison_dict.get('Albufeira', 0),
+                comparison_dict.get('Aeroporto de Faro', 0)
+            ]
             
             # Preços médios por mês do ano
             monthly_query = """
