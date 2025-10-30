@@ -493,19 +493,30 @@
                         data.items.forEach(item => {
                             const grupo = item.group || extractGroup(item.car);
                             if (grupos.includes(grupo)) {
-                                const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                                if (input) {
-                                    const preco = parseFloat(item.price_num || 0);
-                                    if (preco > 0) {
-                                        input.value = preco.toFixed(2);
-                                        input.dataset.manual = 'false';
-                                        input.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                
+                                if (inputReal && inputNet) {
+                                    const precoReal = parseFloat(item.price_num || 0);
+                                    if (precoReal > 0) {
+                                        // Preço Real total
+                                        inputReal.value = precoReal.toFixed(2);
+                                        inputReal.dataset.manual = 'false';
+                                        inputReal.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                        
+                                        // Preço NET total
+                                        const precoNet = calculateNet(precoReal);
+                                        inputNet.value = precoNet.toFixed(2);
+                                        inputNet.dataset.manual = 'false';
+                                        inputNet.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
                                         
                                         // Remover todas as cores
-                                        input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                        inputReal.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                        inputNet.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
                                         
-                                        // Azul sempre que encontrar preço (original ou alternativa)
-                                        input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                        // Azul sempre que encontrar preço
+                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                        inputNet.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
                                         
                                         foundPrices = true;
                                     }
@@ -611,19 +622,30 @@
                             data.items.forEach(item => {
                                 const grupo = item.group || extractGroup(item.car);
                                 if (grupos.includes(grupo)) {
-                                    const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                                    if (input && !input.value) {
-                                        const preco = parseFloat(item.price_num || 0);
-                                        if (preco > 0) {
-                                            input.value = preco.toFixed(2);
-                                            input.dataset.manual = 'false';
-                                            input.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    if (inputReal && inputNet && !inputReal.value) {
+                                        const precoReal = parseFloat(item.price_num || 0);
+                                        if (precoReal > 0) {
+                                            // Preço Real total
+                                            inputReal.value = precoReal.toFixed(2);
+                                            inputReal.dataset.manual = 'false';
+                                            inputReal.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
+                                            
+                                            // Preço NET total
+                                            const precoNet = calculateNet(precoReal);
+                                            inputNet.value = precoNet.toFixed(2);
+                                            inputNet.dataset.manual = 'false';
+                                            inputNet.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
                                             
                                             // Remover cores antigas
-                                            input.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                            inputReal.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
+                                            inputNet.parentElement.classList.remove('bg-red-100', 'bg-[#009cb6]', 'bg-opacity-20', 'bg-[#f4ad0f]');
                                             
                                             // Azul sempre que encontrar preço
-                                            input.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
+                                            inputNet.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-20');
                                             
                                             foundPrices = true;
                                         }
