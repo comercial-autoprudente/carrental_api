@@ -45,221 +45,262 @@
         </div>
     </header>
 
-    <main class="mx-auto max-w-6xl px-4 py-6">
+    <main class="mx-auto max-w-7xl px-4 py-6">
         <div class="mb-6">
-            <h1 class="text-2xl font-bold text-gray-900 mb-2">Automação de Preços</h1>
-            <p class="text-gray-600">Upload de ficheiro Excel com regras de preços</p>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Automação de Preços - Auto Prudente Rent a Car</h1>
+            <p class="text-gray-600">Preencha os preços do CarJet para comparação e análise de competitividade</p>
         </div>
 
-        <!-- Instruções -->
-        <div class="bg-blue-50 border border-blue-200 p-4 mb-6">
-            <h2 class="font-semibold text-blue-900 mb-2">📋 Como preencher o Excel:</h2>
-            <div class="text-sm text-blue-800 space-y-1">
-                <p><strong>Colunas obrigatórias:</strong></p>
-                <ul class="list-disc list-inside ml-4">
-                    <li><strong>Categoria:</strong> B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N</li>
-                    <li><strong>Localização:</strong> Faro ou Albufeira</li>
-                    <li><strong>Dias:</strong> 1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31, 60</li>
-                    <li><strong>Preço Base:</strong> Valor em euros (ex: 45.50)</li>
-                    <li><strong>Margem (%):</strong> Percentagem de margem (ex: 15)</li>
-                    <li><strong>Preço Final:</strong> Calculado automaticamente ou manual</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Upload Area -->
-        <div class="bg-white p-6 shadow mb-6">
-            <div id="dropArea" class="drag-drop-area p-12 text-center cursor-pointer">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                </svg>
-                <p class="text-lg font-medium text-gray-700 mb-2">Arraste o ficheiro Excel aqui</p>
-                <p class="text-sm text-gray-500 mb-4">ou clique para selecionar</p>
-                <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
-                <button onclick="document.getElementById('fileInput').click()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                    Selecionar Ficheiro
-                </button>
-            </div>
-            <div id="fileInfo" class="mt-4 hidden">
-                <div class="flex items-center justify-between p-4 bg-gray-50 border">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <div>
-                            <p class="font-medium" id="fileName"></p>
-                            <p class="text-sm text-gray-500" id="fileSize"></p>
-                        </div>
+        <!-- Controles -->
+        <div class="bg-white shadow mb-6 p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Localização</label>
+                        <select id="location" class="px-3 py-2 border border-gray-300">
+                            <option value="Aeroporto de Faro">Aeroporto de Faro</option>
+                            <option value="Albufeira" selected>Albufeira</option>
+                        </select>
                     </div>
-                    <button onclick="uploadFile()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                        Upload
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                        <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300">
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            Pesquisar Todos
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="downloadExcel()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2" title="Descarregar Excel">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Descarregar
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Preview dos Dados -->
-        <div id="previewSection" class="bg-white p-6 shadow hidden">
-            <h2 class="text-lg font-semibold mb-4">Preview dos Dados</h2>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Categoria</th>
-                            <th class="px-4 py-2 text-left">Localização</th>
-                            <th class="px-4 py-2 text-left">Dias</th>
-                            <th class="px-4 py-2 text-right">Preço Base</th>
-                            <th class="px-4 py-2 text-right">Margem (%)</th>
-                            <th class="px-4 py-2 text-right">Preço Final</th>
-                        </tr>
-                    </thead>
-                    <tbody id="previewTable">
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4 flex justify-end gap-3">
-                <button onclick="cancelUpload()" class="px-6 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
-                    Cancelar
-                </button>
-                <button onclick="confirmUpload()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                    Confirmar e Guardar
-                </button>
+        <!-- Progresso -->
+        <div id="progressBar" class="bg-white shadow mb-6 p-4 hidden">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 animate-spin text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span id="progressText">A pesquisar...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2">
+                        <div id="progressFill" class="bg-[#009cb6] h-2 transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Preencher Preços CarJet -->
-        <div class="bg-white p-6 shadow mb-6">
-            <h2 class="text-lg font-semibold mb-4">🔍 Preencher Preços do CarJet</h2>
-            <p class="text-gray-600 mb-4">Pesquise automaticamente os preços do CarJet para todos os grupos e dias</p>
-            <a href="/price-automation/fill" class="inline-flex items-center gap-2 px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-                Abrir Ferramenta de Preenchimento
-            </a>
+        <!-- Tabela de Preços -->
+        <div class="bg-white shadow overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-semibold">Grupo</th>
+                        <th class="px-4 py-3 text-center font-semibold">1d</th>
+                        <th class="px-4 py-3 text-center font-semibold">2d</th>
+                        <th class="px-4 py-3 text-center font-semibold">3d</th>
+                        <th class="px-4 py-3 text-center font-semibold">4d</th>
+                        <th class="px-4 py-3 text-center font-semibold">5d</th>
+                        <th class="px-4 py-3 text-center font-semibold">6d</th>
+                        <th class="px-4 py-3 text-center font-semibold">7d</th>
+                        <th class="px-4 py-3 text-center font-semibold">8d</th>
+                        <th class="px-4 py-3 text-center font-semibold">9d</th>
+                        <th class="px-4 py-3 text-center font-semibold">14d</th>
+                        <th class="px-4 py-3 text-center font-semibold">22d</th>
+                        <th class="px-4 py-3 text-center font-semibold">28d</th>
+                        <th class="px-4 py-3 text-center font-semibold">31d</th>
+                    </tr>
+                </thead>
+                <tbody id="pricesTable">
+                </tbody>
+            </table>
         </div>
 
-        <!-- Template Excel para Download -->
-        <div class="bg-white p-6 shadow">
-            <h2 class="text-lg font-semibold mb-4">📥 Template Excel</h2>
-            <p class="text-gray-600 mb-4">Descarregue o template para preencher com as suas regras de preços</p>
-            <a href="/api/price-automation/template" download class="inline-flex items-center gap-2 px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Descarregar Template
-            </a>
+        <!-- Legenda -->
+        <div class="mt-4 flex items-center gap-6 text-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-green-100 border border-green-300"></div>
+                <span>Preço encontrado automaticamente</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-yellow-100 border border-yellow-300"></div>
+                <span>Preço inserido manualmente</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-white border border-gray-300"></div>
+                <span>Sem preço (clique para inserir)</span>
+            </div>
         </div>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        let selectedFile = null;
+        const grupos = ['B1', 'B2', 'C', 'D', 'E1', 'E2', 'F', 'G', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
+        const dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31];
 
-        // Drag and drop
-        const dropArea = document.getElementById('dropArea');
-        const fileInput = document.getElementById('fileInput');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
-        });
-
-        dropArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        }
-
-        fileInput.addEventListener('change', function() {
-            handleFiles(this.files);
-        });
-
-        function handleFiles(files) {
-            if (files.length > 0) {
-                selectedFile = files[0];
-                document.getElementById('fileName').textContent = selectedFile.name;
-                document.getElementById('fileSize').textContent = formatBytes(selectedFile.size);
-                document.getElementById('fileInfo').classList.remove('hidden');
-            }
-        }
-
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-        }
-
-        async function uploadFile() {
-            if (!selectedFile) return;
-
-            const formData = new FormData();
-            formData.append('file', selectedFile);
-
-            try {
-                const response = await fetch('/api/price-automation/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const data = await response.json();
-                if (data.ok) {
-                    showPreview(data.data);
-                } else {
-                    alert('Erro: ' + data.error);
-                }
-            } catch (err) {
-                alert('Erro ao fazer upload: ' + err.message);
-            }
-        }
-
-        function showPreview(data) {
-            const tbody = document.getElementById('previewTable');
+        // Inicializar tabela
+        function initTable() {
+            const tbody = document.getElementById('pricesTable');
             tbody.innerHTML = '';
 
-            data.forEach(row => {
+            grupos.forEach(grupo => {
                 const tr = document.createElement('tr');
                 tr.className = 'border-t hover:bg-gray-50';
-                tr.innerHTML = `
-                    <td class="px-4 py-2">${row.categoria}</td>
-                    <td class="px-4 py-2">${row.localizacao}</td>
-                    <td class="px-4 py-2">${row.dias}</td>
-                    <td class="px-4 py-2 text-right">${row.preco_base}€</td>
-                    <td class="px-4 py-2 text-right">${row.margem}%</td>
-                    <td class="px-4 py-2 text-right font-semibold">${row.preco_final}€</td>
-                `;
+                
+                const tdGrupo = document.createElement('td');
+                tdGrupo.className = 'px-4 py-3 font-semibold';
+                tdGrupo.textContent = grupo;
+                tr.appendChild(tdGrupo);
+
+                dias.forEach(day => {
+                    const td = document.createElement('td');
+                    td.className = 'px-2 py-2';
+                    
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.placeholder = '-';
+                    input.className = 'w-full px-2 py-1 border border-gray-300 text-sm text-right focus:ring-2 focus:ring-[#009cb6]';
+                    input.dataset.grupo = grupo;
+                    input.dataset.dias = day;
+                    input.dataset.manual = 'false';
+                    
+                    input.addEventListener('input', function() {
+                        this.value = this.value.replace(',', '.');
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(this.value) && this.value !== '') {
+                            this.value = this.value.slice(0, -1);
+                        }
+                        if (this.value) {
+                            this.dataset.manual = 'true';
+                            this.parentElement.classList.add('bg-yellow-100');
+                            this.parentElement.classList.remove('bg-green-100');
+                        }
+                    });
+                    
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                });
+
                 tbody.appendChild(tr);
             });
-
-            document.getElementById('previewSection').classList.remove('hidden');
         }
 
-        function cancelUpload() {
-            document.getElementById('previewSection').classList.add('hidden');
-            document.getElementById('fileInfo').classList.add('hidden');
-            selectedFile = null;
+        async function searchAllPrices() {
+            const location = document.getElementById('location').value;
+            const pickupDate = document.getElementById('pickupDate').value;
+
+            if (!pickupDate) {
+                alert('⚠️ Selecione uma data primeiro');
+                return;
+            }
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.classList.remove('hidden');
+
+            const total = dias.length;
+            let completed = 0;
+
+            for (const day of dias) {
+                progressText.textContent = `A pesquisar ${day} dias...`;
+                progressPercent.textContent = `${Math.round((completed / total) * 100)}%`;
+                progressFill.style.width = `${(completed / total) * 100}%`;
+
+                try {
+                    const response = await fetch('/api/track-by-params', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: location,
+                            start_date: pickupDate,
+                            start_time: '15:00',
+                            days: day,
+                            lang: 'pt',
+                            currency: 'EUR'
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            const grupo = item.group || extractGroup(item.car);
+                            if (grupos.includes(grupo)) {
+                                const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
+                                if (input && !input.value) {
+                                    const preco = parseFloat(item.price_num || 0);
+                                    if (preco > 0) {
+                                        input.value = preco.toFixed(2);
+                                        input.dataset.manual = 'false';
+                                        input.parentElement.classList.add('bg-green-100');
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.error(`Erro ao pesquisar ${day} dias:`, err);
+                }
+
+                completed++;
+            }
+
+            progressText.textContent = '✅ Pesquisa concluída!';
+            progressPercent.textContent = '100%';
+            progressFill.style.width = '100%';
+
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+            }, 2000);
         }
 
-        async function confirmUpload() {
-            // Implementar salvamento
-            alert('Dados guardados com sucesso!');
-            cancelUpload();
+        function extractGroup(carName) {
+            const match = carName.match(/Group\s+([A-Z]\d?)/i);
+            return match ? match[1] : '';
         }
+
+        function downloadExcel() {
+            const wb = XLSX.utils.book_new();
+            const wsData = [['Grupo', ...dias.map(d => d + 'd')]];
+
+            grupos.forEach(grupo => {
+                const row = [grupo];
+                dias.forEach(day => {
+                    const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
+                    row.push(input && input.value ? input.value : '');
+                });
+                wsData.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            XLSX.utils.book_append_sheet(wb, ws, 'Preços CarJet');
+            
+            const location = document.getElementById('location').value;
+            const date = document.getElementById('pickupDate').value || 'sem-data';
+            const filename = `AutoPrudente_${location.replace(/\s+/g, '_')}_${date}.xlsx`;
+            
+            XLSX.writeFile(wb, filename);
+        }
+
+        document.getElementById('pickupDate').valueAsDate = new Date();
+        initTable();
     </script>
 </body>
 </html>
