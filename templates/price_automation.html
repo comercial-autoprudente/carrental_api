@@ -68,11 +68,17 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="searchAndDownload()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2 rounded" title="Pesquisar todos os preços e descarregar Excel">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button onclick="searchAndDownload('way2rentals')" class="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar e descarregar para Way2Rentals">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
-                        Descarregar Preços
+                        Way2Rentals
+                    </button>
+                    <button onclick="searchAndDownload('abbycar')" class="px-4 py-2 bg-purple-600 text-white hover:bg-purple-700 transition-colors flex items-center gap-2 rounded text-sm" title="Pesquisar e descarregar para Abbycar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Abbycar
                     </button>
                 </div>
             </div>
@@ -594,17 +600,45 @@
             return match ? match[1] : '';
         }
 
-        async function searchAndDownload() {
+        async function searchAndDownload(broker) {
             // Primeiro pesquisar todos os preços
             await searchAllPrices();
             
+            // Copiar C de D
+            copyGroupCFromD();
+            
             // Depois fazer download
             setTimeout(() => {
-                downloadExcel();
+                downloadExcel(broker);
             }, 1000);
         }
 
-        function downloadExcel() {
+        function copyGroupCFromD() {
+            // Copiar todos os valores de D para C
+            dias.forEach(day => {
+                // NET
+                const dNet = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="net"]`);
+                const cNet = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="net"]`);
+                if (dNet && cNet && dNet.value) {
+                    cNet.value = dNet.value;
+                    cNet.dataset.manual = dNet.dataset.manual;
+                    // Copiar cores
+                    cNet.parentElement.className = dNet.parentElement.className;
+                }
+                
+                // Real
+                const dReal = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="real"]`);
+                const cReal = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="real"]`);
+                if (dReal && cReal && dReal.value) {
+                    cReal.value = dReal.value;
+                    cReal.dataset.manual = dReal.dataset.manual;
+                    // Copiar cores
+                    cReal.parentElement.className = dReal.parentElement.className;
+                }
+            });
+        }
+
+        function downloadExcel(broker) {
             const wb = XLSX.utils.book_new();
             const comissao = 0.1366; // 13.66%
             
@@ -619,15 +653,18 @@
             grupos.forEach(grupo => {
                 const row = [grupo];
                 dias.forEach(day => {
-                    const input = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"]`);
-                    const precoCarJet = input && input.value ? parseFloat(input.value) : 0;
+                    // Pegar valores de NET e Real
+                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
                     
-                    // Coluna: Preço CarJet
-                    row.push(precoCarJet > 0 ? precoCarJet.toFixed(2) : '');
+                    const precoNet = inputNet && inputNet.value ? parseFloat(inputNet.value) : 0;
+                    const precoReal = inputReal && inputReal.value ? parseFloat(inputReal.value) : 0;
                     
-                    // Coluna: NET por dia = (Preço - comissão) / dias
-                    if (precoCarJet > 0) {
-                        const precoNet = precoCarJet / (1 + comissao);
+                    // Coluna: Preço Real
+                    row.push(precoReal > 0 ? precoReal.toFixed(2) : '');
+                    
+                    // Coluna: NET por dia
+                    if (precoNet > 0) {
                         const netPorDia = precoNet / day;
                         row.push(netPorDia.toFixed(2));
                     } else {
@@ -642,7 +679,7 @@
             // Definir larguras das colunas
             const colWidths = [{ wch: 10 }]; // Grupo
             dias.forEach(() => {
-                colWidths.push({ wch: 12 }); // Preço
+                colWidths.push({ wch: 12 }); // Preço Real
                 colWidths.push({ wch: 12 }); // NET/dia
             });
             ws['!cols'] = colWidths;
@@ -651,7 +688,8 @@
             
             const location = document.getElementById('location').value;
             const date = document.getElementById('pickupDate').value || 'sem-data';
-            const filename = `AutoPrudente_${location.replace(/\s+/g, '_')}_${date}.xlsx`;
+            const brokerName = broker === 'way2rentals' ? 'Way2Rentals' : broker === 'abbycar' ? 'Abbycar' : 'AutoPrudente';
+            const filename = `${brokerName}_${location.replace(/\s+/g, '_')}_${date}.xlsx`;
             
             XLSX.writeFile(wb, filename);
         }
