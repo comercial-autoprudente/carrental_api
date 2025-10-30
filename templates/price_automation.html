@@ -102,6 +102,12 @@
                     </button>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button onclick="manualSaveToHistory()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Guardar no histórico">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                        Guardar
+                    </button>
                     <span class="text-sm text-gray-600">Descarregar Excel:</span>
                     <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
                         <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -692,6 +698,10 @@
             searchIcon.classList.remove('hidden');
             btn.disabled = false;
 
+            // Guardar automaticamente no histórico após pesquisa
+            saveToHistory();
+            console.log('Preços guardados no histórico automaticamente');
+
             setTimeout(() => {
                 progressBar.classList.add('hidden');
             }, 2000);
@@ -988,6 +998,8 @@
             const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
             
             const prices = {};
+            let priceCount = 0;
+            
             grupos.forEach(grupo => {
                 dias.forEach(day => {
                     const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
@@ -998,6 +1010,7 @@
                             net: inputNet.value || '',
                             real: inputReal.value || ''
                         };
+                        priceCount++;
                     }
                 });
             });
@@ -1006,10 +1019,22 @@
                 date: now.toISOString(),
                 grupos: grupos,
                 dias: [...dias],
-                prices: prices
+                prices: prices,
+                priceCount: priceCount
             };
             
             localStorage.setItem(`priceHistory_${monthKey}`, JSON.stringify(historyData));
+            console.log(`Histórico guardado: ${monthKey} com ${priceCount} preços`);
+            return priceCount;
+        }
+
+        function manualSaveToHistory() {
+            const count = saveToHistory();
+            if (count > 0) {
+                alert(`✅ ${count} preços guardados no histórico!`);
+            } else {
+                alert('⚠️ Nenhum preço para guardar. Faça uma pesquisa primeiro.');
+            }
         }
 
         loadCustomDias();
