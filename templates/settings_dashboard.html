@@ -111,12 +111,8 @@
             <!-- Main Content Area -->
             <main class="flex-1 min-w-0">
                 <div id="content-area" class="bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex items-center justify-center h-64">
-                        <div class="text-center">
-                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#009cb6] mx-auto mb-4"></div>
-                            <p class="text-gray-500">Loading...</p>
-                        </div>
-                    </div>
+                    <!-- Load Users by default directly in HTML -->
+                    <iframe src="/admin/users" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>
                 </div>
             </main>
         </div>
@@ -161,10 +157,7 @@
             contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>`;
         }
         
-        // Load Users by default on page load
-        window.addEventListener('DOMContentLoaded', () => {
-            loadSection('users');
-        });
+        // Users already loaded in HTML, no need for DOMContentLoaded
     </script>
 </body>
 </html>
