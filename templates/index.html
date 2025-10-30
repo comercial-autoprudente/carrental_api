@@ -2099,22 +2099,52 @@
       }
 
       function updateGroupCounts() {
-        // Update the count of visible cars in each group
-        const groups = document.querySelectorAll('[data-group-container]');
-        groups.forEach(group => {
-          const visibleCards = group.querySelectorAll('[data-supplier]:not([style*="display: none"])');
-          const countEl = group.querySelector('[data-group-count]');
-          if (countEl) {
-            countEl.textContent = `(${visibleCards.length})`;
+        // Contar total de viaturas visíveis
+        let totalVisible = 0;
+        
+        // Atualizar contadores dos grupos e contar total
+        const groupTitles = document.querySelectorAll('.group-title');
+        groupTitles.forEach(title => {
+          // Encontrar o conteúdo do grupo (próximo elemento)
+          const groupContent = title.nextElementSibling;
+          if (!groupContent) return;
+          
+          // Contar viaturas visíveis neste grupo
+          const visibleCards = groupContent.querySelectorAll('[data-supplier]:not([style*="display: none"])');
+          const visibleCount = visibleCards.length;
+          totalVisible += visibleCount;
+          
+          // Atualizar contador no título do grupo
+          const titleSpan = title.querySelector('span:first-child');
+          if (titleSpan) {
+            // Remover contador antigo
+            const oldCounter = titleSpan.querySelector('.opacity-80');
+            if (oldCounter) oldCounter.remove();
+            
+            // Adicionar novo contador
+            const counterSpan = document.createElement('span');
+            counterSpan.className = 'ml-2 opacity-80';
+            counterSpan.textContent = `(${visibleCount} ${visibleCount === 1 ? 'viatura' : 'viaturas'})`;
+            titleSpan.appendChild(counterSpan);
           }
           
-          // Hide group if no visible cards
-          if (visibleCards.length === 0) {
-            group.style.display = 'none';
+          // Esconder grupo se não tiver viaturas visíveis
+          if (visibleCount === 0) {
+            title.style.display = 'none';
+            groupContent.style.display = 'none';
           } else {
-            group.style.display = '';
+            title.style.display = '';
+            groupContent.style.display = '';
           }
         });
+        
+        // Atualizar contador total no cabeçalho
+        const headerCounters = document.querySelectorAll('.px-4.py-2.bg-gray-50 .text-green-600');
+        headerCounters.forEach(counter => {
+          counter.textContent = `(${totalVisible} ${totalVisible === 1 ? 'viatura' : 'viaturas'})`;
+        });
+        
+        console.log('[UPDATE COUNTS] Total visível:', totalVisible);
       }
 
       function showSupplierFilters(items) {
