@@ -1458,6 +1458,26 @@ async def price_automation(request: Request):
         "current_user": current_user
     })
 
+@app.get("/price-automation/fill", response_class=HTMLResponse)
+async def price_automation_fill(request: Request):
+    """Página para preencher preços do CarJet automaticamente"""
+    try:
+        require_auth(request)
+    except HTTPException:
+        return RedirectResponse(url="/login", status_code=HTTP_303_SEE_OTHER)
+    
+    # Get current user
+    user_id = request.session.get("user_id")
+    current_user = None
+    if user_id:
+        with get_db() as conn:
+            current_user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    
+    return templates.TemplateResponse("price_automation_fill.html", {
+        "request": request,
+        "current_user": current_user
+    })
+
 # --- Admin: environment summary and adjustment preview ---
 @app.get("/admin/env-summary")
 async def admin_env_summary(request: Request):
