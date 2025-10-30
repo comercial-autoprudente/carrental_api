@@ -127,7 +127,7 @@
           </div>
           {% endif %}
           {% if request.session and request.session.get('is_admin') %}
-          <a href="/admin/users" class="text-xs md:text-sm text-white/90 hover:text-white underline">⚙️ Settings</a>
+          <a href="/admin" class="text-xs md:text-sm text-white/90 hover:text-white underline">⚙️ Settings</a>
           {% endif %}
           <form method="post" action="/logout">
             <button class="text-xs md:text-sm text-white/90 hover:text-white transition-colors">Logout</button>
