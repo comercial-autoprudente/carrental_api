@@ -455,6 +455,14 @@
             for (let dateOffset = 0; dateOffset <= maxDays; dateOffset++) {
                 const searchDate = new Date(pickupDate);
                 searchDate.setDate(searchDate.getDate() + dateOffset);
+                
+                // Verificar se mudou de mês
+                const originalDate = new Date(pickupDate);
+                if (searchDate.getMonth() !== originalDate.getMonth()) {
+                    // Parar se mudou de mês
+                    break;
+                }
+                
                 const searchDateStr = searchDate.toISOString().split('T')[0];
                 
                 if (dateOffset > 0) {
@@ -569,6 +577,14 @@
                 for (let dateOffset = 0; dateOffset <= maxDays && !foundPrices; dateOffset++) {
                     const searchDate = new Date(pickupDate);
                     searchDate.setDate(searchDate.getDate() + dateOffset);
+                    
+                    // Verificar se mudou de mês
+                    const originalDate = new Date(pickupDate);
+                    if (searchDate.getMonth() !== originalDate.getMonth()) {
+                        // Parar se mudou de mês
+                        break;
+                    }
+                    
                     const searchDateStr = searchDate.toISOString().split('T')[0];
                     
                     if (dateOffset > 0) {
