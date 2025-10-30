@@ -239,6 +239,20 @@
         const grupos = ['B1', 'B2', 'C', 'D', 'E1', 'E2', 'F', 'G', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
         const dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31];
 
+        // Carregar configurações
+        function getMaxAlternativeDays() {
+            const saved = localStorage.getItem('priceAutomationSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    return settings.maxAlternativeDays !== undefined ? settings.maxAlternativeDays : 3;
+                } catch (e) {
+                    return 3;
+                }
+            }
+            return 3; // Padrão
+        }
+
         // Inicializar tabela
         function initTable() {
             const tbody = document.getElementById('pricesTable');
@@ -308,9 +322,10 @@
 
             let foundPrices = false;
             let isAlternativeSearch = false;
+            const maxDays = getMaxAlternativeDays();
             
             // Tentar data original primeiro
-            for (let dateOffset = 0; dateOffset <= 3; dateOffset++) {
+            for (let dateOffset = 0; dateOffset <= maxDays; dateOffset++) {
                 const searchDate = new Date(pickupDate);
                 searchDate.setDate(searchDate.getDate() + dateOffset);
                 const searchDateStr = searchDate.toISOString().split('T')[0];
@@ -416,9 +431,10 @@
                 progressFill.style.width = `${(completed / total) * 100}%`;
 
                 let foundPrices = false;
+                const maxDays = getMaxAlternativeDays();
                 
-                // Tentar data original e até 3 dias à frente
-                for (let dateOffset = 0; dateOffset <= 3 && !foundPrices; dateOffset++) {
+                // Tentar data original e até X dias à frente (configurável)
+                for (let dateOffset = 0; dateOffset <= maxDays && !foundPrices; dateOffset++) {
                     const searchDate = new Date(pickupDate);
                     searchDate.setDate(searchDate.getDate() + dateOffset);
                     const searchDateStr = searchDate.toISOString().split('T')[0];

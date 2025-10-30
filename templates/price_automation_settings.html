@@ -23,27 +23,35 @@
                 Regras Globais
             </h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Comissão Broker (%)</label>
-                    <input type="number" id="comissaoBroker" value="13.66" step="0.01" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent">
+                    <input type="number" id="comissaoBroker" value="13.66" step="0.01" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
                     <p class="text-xs text-gray-500 mt-1">Preço NET = Preço Final / (1 + comissão)</p>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Margem Padrão (%)</label>
-                    <input type="number" id="defaultMargin" value="15" step="0.1" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent">
+                    <input type="number" id="defaultMargin" value="15" step="0.1" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
                     <p class="text-xs text-gray-500 mt-1">Margem aplicada quando não há regra específica</p>
                 </div>
-                
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Arredondamento</label>
-                    <select id="rounding" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent">
+                    <select id="rounding" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
                         <option value="0.01">Cêntimos (0.01€)</option>
                         <option value="0.50">Meio Euro (0.50€)</option>
                         <option value="1.00" selected>Euro (1.00€)</option>
                         <option value="5.00">5 Euros (5.00€)</option>
                     </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Pesquisa Alternativa (dias à frente)</label>
+                    <input type="number" id="maxAlternativeDays" value="3" min="0" max="7" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded">
+                    <p class="text-xs text-gray-500 mt-1">Se não encontrar preços, tenta até X dias à frente (0-7)</p>
                 </div>
             </div>
         </div>
@@ -194,15 +202,45 @@
     </div>
 
     <script>
+        // Carregar configurações ao iniciar
+        window.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+        });
+
+        function loadSettings() {
+            const saved = localStorage.getItem('priceAutomationSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    if (settings.comissaoBroker) document.getElementById('comissaoBroker').value = settings.comissaoBroker;
+                    if (settings.defaultMargin) document.getElementById('defaultMargin').value = settings.defaultMargin;
+                    if (settings.rounding) document.getElementById('rounding').value = settings.rounding;
+                    if (settings.maxAlternativeDays !== undefined) document.getElementById('maxAlternativeDays').value = settings.maxAlternativeDays;
+                } catch (e) {
+                    console.error('Erro ao carregar configurações:', e);
+                }
+            }
+        }
+
         function saveSettings() {
             // Coletar todos os valores
             const settings = {
-                defaultMargin: document.getElementById('defaultMargin').value,
-                rounding: document.getElementById('rounding').value,
-                // ... coletar outros valores
+                comissaoBroker: parseFloat(document.getElementById('comissaoBroker').value),
+                defaultMargin: parseFloat(document.getElementById('defaultMargin').value),
+                rounding: parseFloat(document.getElementById('rounding').value),
+                maxAlternativeDays: parseInt(document.getElementById('maxAlternativeDays').value)
             };
 
-            // Enviar para API
+            // Validar
+            if (settings.maxAlternativeDays < 0 || settings.maxAlternativeDays > 7) {
+                alert('⚠️ Dias à frente deve estar entre 0 e 7');
+                return;
+            }
+
+            // Guardar localmente
+            localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
+
+            // Enviar para API (opcional)
             fetch('/api/price-automation/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -210,18 +248,22 @@
             })
             .then(r => r.json())
             .then(data => {
-                if (data.ok) {
-                    alert('✅ Configurações guardadas com sucesso!');
-                } else {
-                    alert('❌ Erro: ' + data.error);
-                }
+                alert('✅ Configurações guardadas com sucesso!');
             })
-            .catch(err => alert('❌ Erro: ' + err.message));
+            .catch(err => {
+                // Mesmo se API falhar, já guardou localmente
+                alert('✅ Configurações guardadas localmente!');
+            });
         }
 
         function resetDefaults() {
             if (confirm('Restaurar todas as configurações para os valores padrão?')) {
-                location.reload();
+                localStorage.removeItem('priceAutomationSettings');
+                document.getElementById('comissaoBroker').value = 13.66;
+                document.getElementById('defaultMargin').value = 15;
+                document.getElementById('rounding').value = 1.00;
+                document.getElementById('maxAlternativeDays').value = 3;
+                alert('✅ Configurações restauradas para valores padrão!');
             }
         }
     </script>
