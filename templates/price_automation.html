@@ -490,43 +490,70 @@
                     
                     if (data.items && data.items.length > 0) {
                         console.log(`${day} dias - ${data.items.length} carros encontrados`);
-                        data.items.forEach(item => {
-                            const grupo = item.group || extractGroup(item.car);
-                            console.log(`Carro: ${item.car}, Grupo API: ${item.group}, Grupo extraído: ${grupo}, Preço: ${item.price_num}`);
-                            
-                            if (grupos.includes(grupo)) {
+                        
+                        // FILTRAR APENAS AUTOPRUDENTE
+                        const autoprudenteItems = data.items.filter(item => {
+                            const supplier = (item.supplier || '').toLowerCase();
+                            return supplier.includes('autoprudente') || supplier.includes('auto prudente');
+                        });
+                        
+                        console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
+                        
+                        if (autoprudenteItems.length === 0) {
+                            // Nenhum carro AUTOPRUDENTE encontrado - marcar todas células como vermelhas
+                            console.warn(`${day} dias - AUTOPRUDENTE não tem preços disponíveis`);
+                            grupos.forEach(grupo => {
                                 const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
                                 const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
                                 
                                 if (inputReal && inputNet) {
-                                    const precoReal = parseFloat(item.price_num || 0);
-                                    if (precoReal > 0) {
-                                        // Preço Real total
-                                        inputReal.value = precoReal.toFixed(2);
-                                        inputReal.dataset.manual = 'false';
-                                        inputReal.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
-                                        
-                                        // Preço NET total
-                                        const precoNet = calculateNet(precoReal);
-                                        inputNet.value = precoNet.toFixed(2);
-                                        inputNet.dataset.manual = 'false';
-                                        inputNet.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
-                                        
-                                        // Remover vermelho se existir
-                                        inputReal.parentElement.classList.remove('bg-red-100');
-                                        inputNet.parentElement.classList.remove('bg-red-100');
-                                        
-                                        // Real sempre azul (50% opacidade para destaque)
-                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
-                                        // NET mantém branco (não adiciona cor)
-                                        
-                                        foundPrices = true;
-                                    }
+                                    inputReal.value = '-';
+                                    inputNet.value = '-';
+                                    inputReal.parentElement.classList.add('bg-red-100');
+                                    inputNet.parentElement.classList.add('bg-red-100');
+                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                 }
-                            } else {
-                                console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
-                            }
-                        });
+                            });
+                        } else {
+                            // Processar apenas carros AUTOPRUDENTE
+                            autoprudenteItems.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                console.log(`AUTOPRUDENTE - Carro: ${item.car}, Grupo: ${grupo}, Preço: ${item.price_num}`);
+                                
+                                if (grupos.includes(grupo)) {
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    if (inputReal && inputNet) {
+                                        const precoReal = parseFloat(item.price_num || 0);
+                                        if (precoReal > 0) {
+                                            // Preço Real total
+                                            inputReal.value = precoReal.toFixed(2);
+                                            inputReal.dataset.manual = 'false';
+                                            inputReal.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                            
+                                            // Preço NET total
+                                            const precoNet = calculateNet(precoReal);
+                                            inputNet.value = precoNet.toFixed(2);
+                                            inputNet.dataset.manual = 'false';
+                                            inputNet.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                            
+                                            // Remover vermelho se existir
+                                            inputReal.parentElement.classList.remove('bg-red-100');
+                                            inputNet.parentElement.classList.remove('bg-red-100');
+                                            
+                                            // Real sempre azul (50% opacidade para destaque)
+                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
+                                            // NET mantém branco (não adiciona cor)
+                                            
+                                            foundPrices = true;
+                                        }
+                                    }
+                                } else {
+                                    console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
+                                }
+                            });
+                        }
                         
                         // Copiar D para C automaticamente após preencher
                         if (foundPrices) {
