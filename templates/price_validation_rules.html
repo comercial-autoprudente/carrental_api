@@ -64,13 +64,13 @@
             <div class="border-b border-gray-200">
                 <nav class="flex -mb-px">
                     <button onclick="switchTab('rules')" id="tab-rules" class="tab-btn active px-6 py-3 border-b-2 border-[#f4ad0f] text-[#f4ad0f] font-medium">
-                        📋 Group Rules
+                        Group Rules
                     </button>
                     <button onclick="switchTab('alerts')" id="tab-alerts" class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
-                        🚨 Active Alerts
+                        Active Alerts
                     </button>
                     <button onclick="switchTab('history')" id="tab-history" class="tab-btn px-6 py-3 border-b-2 border-transparent text-gray-500 hover:text-gray-700 font-medium">
-                        📊 History
+                        History
                     </button>
                 </nav>
             </div>
@@ -145,7 +145,7 @@
 
             <!-- Lista de Regras -->
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📋 Regras Configuradas</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Regras Configuradas</h2>
                 <div id="rulesList" class="space-y-4">
                     <!-- Regras serão inseridas aqui via JavaScript -->
                 </div>
@@ -155,7 +155,7 @@
         <!-- Tab: Alertas Ativos -->
         <div id="content-alerts" class="tab-content hidden">
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">🚨 Alertas Ativos</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Alertas Ativos</h2>
                 <div id="alertsList" class="space-y-4">
                     <p class="text-gray-500 text-center py-8">Nenhum alerta ativo no momento</p>
                 </div>
@@ -165,7 +165,7 @@
         <!-- Tab: Histórico -->
         <div id="content-history" class="tab-content hidden">
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📊 Histórico de Alertas</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Histórico de Alertas</h2>
                 <div id="historyList" class="space-y-4">
                     <p class="text-gray-500 text-center py-8">Nenhum histórico disponível</p>
                 </div>
@@ -292,7 +292,7 @@
                     <div class="flex items-start justify-between">
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-2">
-                                <span class="text-2xl">${rule.enabled ? '✅' : '⏸️'}</span>
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${rule.enabled ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>
                                 <h3 class="font-semibold text-gray-800">${rule.description}</h3>
                             </div>
                             <div class="text-sm text-gray-600">
