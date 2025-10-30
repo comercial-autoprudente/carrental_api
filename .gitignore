@@ -5,6 +5,7 @@ __pycache__/
 *.sqlite3
 .env
 .venv/
+venv/
 .vscode/
 .idea/
 .DS_Store
@@ -12,9 +13,18 @@ node_modules/
 static/debug/
 data.db
 car_images.db
-\n# Ignore env and virtualenv
-.env
-.venv/
 *.db
 uploads/
+
+# Backups (não commitar arquivos de backup)
+backups/*.tar.gz
+backups/backup_*/
+!backups/README.md
+
+# Logs
+logs/
+*.log
+
+# Cache
+cache/
 __pycache__/
