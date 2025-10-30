@@ -1409,6 +1409,7 @@
           const locEl = document.getElementById('location');
           const sdEl = document.getElementById('startDate');
           const stEl = document.getElementById('startTime');
+          const daysInput = document.getElementById('days');
           
           const location = (locEl && locEl.value || '').trim();
           const pickup_date = sdEl && sdEl.value || '';
@@ -1421,9 +1422,14 @@
           
           const daysList = [1, 2, 3, 4];
           searchAllDaysBtn.disabled = true;
-          searchAllDaysBtn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Searching...';
           
-          for (const days of daysList) {
+          for (let i = 0; i < daysList.length; i++) {
+            const days = daysList[i];
+            const progress = `${i + 1}/${daysList.length}`;
+            
+            // Mostrar progresso no botão
+            searchAllDaysBtn.innerHTML = `<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Downloading ${days}d (${progress})`;
+            
             try {
               const body = { location, start_date: pickup_date, start_time, days, lang: 'pt', currency: 'EUR' };
               console.log(`[SEARCH ALL] ${days}d - Fetching...`);
@@ -1448,9 +1454,19 @@
             }
           }
           
+          // Restaurar botão
           searchAllDaysBtn.disabled = false;
           searchAllDaysBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Search All Days';
-          alert('✅ Preços carregados para 1, 2, 3 e 4 dias! Clique nos dias para ver.');
+          
+          // Selecionar automaticamente 1 dia e mostrar resultados
+          if (daysInput) daysInput.value = 1;
+          updateDaysChips();
+          
+          // Mostrar resultados de 1 dia automaticamente
+          if (cachedResults[1] && cachedResults[1].length > 0) {
+            displayResults(cachedResults[1]);
+            displayPreview(cachedResults[1]);
+          }
         });
         searchAllDaysBtn._bound = true;
       }
