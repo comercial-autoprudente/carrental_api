@@ -693,8 +693,9 @@
             btn.disabled = false;
 
             // Guardar automaticamente no histórico após pesquisa
-            saveToHistory();
+            const savedCount = saveToHistory();
             console.log('Preços guardados no histórico automaticamente');
+            console.log(`Total de preços guardados: ${savedCount}`);
 
             setTimeout(() => {
                 progressBar.classList.add('hidden');
@@ -894,6 +895,17 @@
             const now = new Date();
             const months = [];
             
+            // Debug: listar todas as chaves do localStorage
+            console.log('=== DEBUG HISTÓRICO ===');
+            console.log('Todas as chaves no localStorage:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('priceHistory_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    console.log(`${key}: ${data.priceCount} preços, data: ${data.date}`);
+                }
+            }
+            
             // Gerar 24 meses (2 anos)
             for (let i = 0; i < 24; i++) {
                 const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -903,7 +915,10 @@
             months.forEach(date => {
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 const monthName = date.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
-                const hasData = localStorage.getItem(`priceHistory_${monthKey}`) !== null;
+                const historyKey = `priceHistory_${monthKey}`;
+                const hasData = localStorage.getItem(historyKey) !== null;
+                
+                console.log(`Verificando ${monthKey}: ${hasData ? 'TEM DADOS' : 'SEM DADOS'}`);
                 
                 const button = document.createElement('button');
                 button.className = `p-3 border rounded text-sm ${hasData ? 'bg-[#009cb6] text-white hover:bg-[#f4ad0f]' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`;
@@ -916,6 +931,8 @@
                 
                 container.appendChild(button);
             });
+            
+            console.log('=== FIM DEBUG ===');
         }
 
         function showHistoryMonth(monthKey, monthName) {
