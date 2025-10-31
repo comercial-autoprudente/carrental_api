@@ -7086,11 +7086,15 @@ async def get_vehicles_with_originals(request: Request):
     """Retorna veículos com nomes originais do scraping"""
     require_auth(request)
     try:
+        print("[VEHICLES API] Iniciando...", file=sys.stderr, flush=True)
+        
         # Recarregar módulo para pegar alterações mais recentes
         import carjet_direct
         import importlib
         importlib.reload(carjet_direct)
         from carjet_direct import VEHICLES
+        
+        print(f"[VEHICLES API] VEHICLES importado: {len(VEHICLES)} veículos", file=sys.stderr, flush=True)
         
         # Criar mapeamento com TODOS os veículos do dicionário
         originals_map = {}
@@ -7137,6 +7141,8 @@ async def get_vehicles_with_originals(request: Request):
             # Se falhar ao buscar histórico, continuar com nomes limpos
             print(f"[VEHICLES] Aviso: não foi possível buscar histórico: {e}")
         
+        print(f"[VEHICLES API] Retornando {len(originals_map)} veículos", file=sys.stderr, flush=True)
+        
         return _no_store_json({
             "ok": True,
             "vehicles": originals_map,
@@ -7145,6 +7151,8 @@ async def get_vehicles_with_originals(request: Request):
         
     except Exception as e:
         import traceback
+        print(f"[VEHICLES API] ERRO: {e}", file=sys.stderr, flush=True)
+        traceback.print_exc()
         return _no_store_json({"ok": False, "error": str(e), "traceback": traceback.format_exc()}, 500)
 
 # ============================================================
