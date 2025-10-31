@@ -7096,50 +7096,49 @@ async def get_vehicles_with_originals(request: Request):
         
         print(f"[VEHICLES API] VEHICLES importado: {len(VEHICLES)} veículos", file=sys.stderr, flush=True)
         
-        # Criar mapeamento com TODOS os veículos do dicionário
+        # Buscar nomes originais do histórico
+        with _db_lock:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                # Pegar exemplos recentes de cada carro
+                query = """
+                    SELECT DISTINCT car 
+                    FROM price_snapshots 
+                    WHERE ts >= datetime('now', '-7 days')
+                    ORDER BY car
+                """
+                rows = conn.execute(query).fetchall()
+                print(f"[VEHICLES API] Encontrados {len(rows)} carros no histórico", file=sys.stderr, flush=True)
+            finally:
+                conn.close()
+        
+        # Criar mapeamento de originais
         originals_map = {}
-        
-        # Primeiro, adicionar TODOS os veículos do dicionário
-        for clean_name, category in VEHICLES.items():
-            originals_map[clean_name] = {
-                'original': clean_name,  # Por padrão, usar o nome limpo
-                'clean': clean_name,
-                'category': category
-            }
-        
-        # Depois, tentar encontrar nomes originais do histórico recente
-        try:
-            with _db_lock:
-                conn = sqlite3.connect(DB_PATH)
-                try:
-                    # Pegar exemplos recentes de cada carro
-                    query = """
-                        SELECT DISTINCT car 
-                        FROM price_snapshots 
-                        WHERE ts >= datetime('now', '-30 days')
-                        ORDER BY car
-                    """
-                    rows = conn.execute(query).fetchall()
-                finally:
-                    conn.close()
+        for row in rows:
+            original_name = row[0]  # Nome como veio do scraping
+            # Limpar para encontrar no VEHICLES
+            import re
+            clean = original_name.lower().strip()
+            clean = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s*\|\s*.*$', '', clean)
+            clean = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico).*$', '', clean, flags=re.IGNORECASE)
+            clean = re.sub(r'\s+', ' ', clean).strip()
             
-            # Atualizar com nomes originais quando encontrados
-            for row in rows:
-                original_name = row[0]  # Nome como veio do scraping
-                # Limpar para encontrar no VEHICLES
-                import re
-                clean = original_name.lower().strip()
-                clean = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', clean, flags=re.IGNORECASE)
-                clean = re.sub(r'\s*\|\s*.*$', '', clean)
-                clean = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico).*$', '', clean, flags=re.IGNORECASE)
-                clean = re.sub(r'\s+', ' ', clean).strip()
-                
-                # Se encontrar no dicionário, atualizar com nome original
-                if clean in originals_map:
-                    originals_map[clean]['original'] = original_name
-        except Exception as e:
-            # Se falhar ao buscar histórico, continuar com nomes limpos
-            print(f"[VEHICLES] Aviso: não foi possível buscar histórico: {e}")
+            if clean in VEHICLES:
+                originals_map[clean] = {
+                    'original': original_name,
+                    'clean': clean,
+                    'category': VEHICLES[clean]
+                }
+        
+        # Adicionar veículos que não têm dados de scraping
+        for clean_name, category in VEHICLES.items():
+            if clean_name not in originals_map:
+                originals_map[clean_name] = {
+                    'original': f'{clean_name} (sem dados recentes)',
+                    'clean': clean_name,
+                    'category': category
+                }
         
         print(f"[VEHICLES API] Retornando {len(originals_map)} veículos", file=sys.stderr, flush=True)
         
