@@ -37,12 +37,23 @@
         
         /* MOBILE OPTIMIZATIONS */
         @media (max-width: 768px) {
-            .mx-auto.max-w-7xl { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
-            .flex.gap-6 { flex-direction: column !important; gap: 1rem !important; }
-            aside { width: 100% !important; position: static !important; }
+            .mx-auto.max-w-7xl { padding-left: 0 !important; padding-right: 0 !important; }
+            .flex.gap-6 { flex-direction: column !important; gap: 0 !important; }
+            
+            /* Hide sidebar on mobile - use menu instead */
+            aside { display: none !important; }
+            
+            /* Full width iframe on mobile */
+            main.flex-1 { width: 100% !important; }
+            #content-area { padding: 0.5rem !important; border-radius: 0 !important; }
+            #content-area iframe { height: calc(100vh - 120px) !important; }
+            
             .desktop-nav { display: none !important; }
             .mobile-menu-btn { display: block !important; }
             header img { max-height: 36px !important; }
+            
+            /* Mobile menu items larger */
+            .mobile-menu a { font-size: 18px; padding: 20px; }
         }
         
         .mobile-menu-btn { display: none; background: none; border: none; color: white; padding: 8px; }
@@ -87,10 +98,14 @@
     <!-- Mobile Menu -->
     <div class="mobile-menu" id="mobileMenu">
         <button class="mobile-menu-close" onclick="closeMobileMenu()">×</button>
+        <div style="color: #f4ad0f; font-weight: 600; padding: 10px; font-size: 14px; text-transform: uppercase;">Settings</div>
         <a href="/" onclick="closeMobileMenu()">🏠 Home</a>
+        <a href="#" onclick="closeMobileMenu(); loadSection('users')">👥 Users</a>
+        <a href="#" onclick="closeMobileMenu(); loadSection('vehicles')">🚗 Vehicles</a>
         <a href="#" onclick="closeMobileMenu(); loadSection('price-adjustment')">💰 Price Adjustment</a>
-        <a href="#" onclick="closeMobileMenu(); loadSection('price-automation-settings')">⚙️ Parametrizações</a>
-        <a href="#" onclick="event.preventDefault(); document.querySelector('form[action=\"/logout\"]').submit();">🚪 Logout</a>
+        <a href="#" onclick="closeMobileMenu(); loadSection('price-validation')">✅ Price Validation</a>
+        <a href="#" onclick="closeMobileMenu(); loadSection('price-automation-settings')">⚙️ Parametrizações Preços</a>
+        <a href="#" onclick="event.preventDefault(); document.querySelector('form[action=\"/logout\"]').submit();" style="border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">🚪 Logout</a>
     </div>
     
     <script>
