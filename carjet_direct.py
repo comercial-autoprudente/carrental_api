@@ -63,7 +63,6 @@ SUPPLIER_MAP = {
     'CAR': 'Carnect',
     'DRI': 'Drive on Holidays',
     'KEY': 'KeynGo',
-    'WIN': 'WinRent',
     'LOY': 'Loyalty',
     'RHO': 'Rhodium',
     'WAY': 'Wayzor',
