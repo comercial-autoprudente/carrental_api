@@ -760,7 +760,8 @@
                                     const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
                                     const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
                                     
-                                    if (inputReal && inputNet && !inputReal.value) {
+                                    // Preencher sempre (não verificar se já tem valor)
+                                    if (inputReal && inputNet) {
                                         // Preço Real total
                                         inputReal.value = precoReal.toFixed(2);
                                         inputReal.dataset.manual = 'false';
