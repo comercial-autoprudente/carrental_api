@@ -1043,14 +1043,16 @@ def map_category_to_group(category: str, car_name: str = "") -> str:
     
     # Mapeamento direto (TUDO EM LOWERCASE)
     category_map = {
-        # B1 - Mini 4 Portas
+        # B1 - Mini 4 Lugares
         "mini 4 doors": "B1",
         "mini 4 portas": "B1",
+        "mini 4 lugares": "B1",
         
-        # B2 - Mini 5 Portas
+        # B2 - Mini 5 Lugares
         "mini": "B2",
         "mini 5 doors": "B2",
         "mini 5 portas": "B2",
+        "mini 5 lugares": "B2",
         
         # D - Economy
         "economy": "D",
