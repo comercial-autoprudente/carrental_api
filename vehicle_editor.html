@@ -18,11 +18,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
                 </button>
-                <button onclick="exportVehicles()" class="p-2 hover:bg-white/10 transition-all" title="Export">
+                <button onclick="exportConfiguration()" class="p-2 hover:bg-white/10 transition-all" title="Export Config (with photos)">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                     </svg>
                 </button>
+                <button onclick="document.getElementById('importFile').click()" class="p-2 hover:bg-white/10 transition-all" title="Import Config (with photos)">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importConfiguration(event)">
             </div>
         </div>
     </header>
@@ -522,30 +528,71 @@
             }
         }
         
-        function exportVehicles() {
-            let code = 'VEHICLES = {\n';
-            const byCategory = {};
-            allVehicles.forEach(v => {
-                if (!byCategory[v.category]) byCategory[v.category] = [];
-                byCategory[v.category].push(v);
-            });
+        async function exportConfiguration() {
+            try {
+                const response = await fetch('/api/export/config');
+                
+                if (!response.ok) {
+                    throw new Error('Export failed');
+                }
+                
+                // Download do ficheiro
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // Obter nome do ficheiro do header
+                const contentDisposition = response.headers.get('Content-Disposition');
+                const filename = contentDisposition 
+                    ? contentDisposition.split('filename=')[1]?.replace(/"/g, '') 
+                    : 'vehicles_config.json';
+                
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                alert('✅ Configuration exported successfully!\nIncludes: vehicles, photos, categories');
+            } catch (error) {
+                alert('❌ Export error: ' + error.message);
+            }
+        }
+        
+        async function importConfiguration(event) {
+            const file = event.target.files[0];
+            if (!file) return;
             
-            Object.keys(byCategory).sort().forEach(category => {
-                code += `    # ${category}\n`;
-                byCategory[category].forEach(v => {
-                    code += `    '${v.clean}': '${category}',\n`;
+            if (!confirm('⚠️ Import configuration?\n\nThis will update vehicles and photos.')) {
+                event.target.value = '';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/import/config', {
+                    method: 'POST',
+                    body: formData
                 });
-                code += '\n';
-            });
-            code += '}';
-            
-            const blob = new Blob([code], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'vehicles_export.py';
-            a.click();
-            URL.revokeObjectURL(url);
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert(`✅ Import completed!\n\nVehicles: ${data.vehicles_count}\nPhotos: ${data.photos_imported || 0}`);
+                    
+                    // Recarregar dados
+                    await loadVehicles();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Import error: ' + error.message);
+            } finally {
+                event.target.value = '';
+            }
         }
         
         // Load on start

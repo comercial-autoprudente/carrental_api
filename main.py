@@ -7383,7 +7383,7 @@ def detect_category_suggestion(car_name: str) -> str:
 @app.get("/api/export/config")
 async def export_configuration(request: Request):
     """Exporta configurações completas: VEHICLES, users, suppliers, FOTOS"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         from carjet_direct import VEHICLES, SUPPLIER_MAP
         import base64
@@ -7463,7 +7463,7 @@ async def export_configuration(request: Request):
 @app.post("/api/import/config")
 async def import_configuration(request: Request, file: UploadFile = File(...)):
     """Importa configurações de ficheiro JSON"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         import json
         
