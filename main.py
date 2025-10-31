@@ -1437,6 +1437,27 @@ def init_db():
             )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_strategies ON pricing_strategies(location, grupo, month, day, priority)")
             
+            # Tabela para histórico de preços automatizados
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS automated_prices_history (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  location TEXT NOT NULL,
+                  grupo TEXT NOT NULL,
+                  dias INTEGER NOT NULL,
+                  pickup_date TEXT NOT NULL,
+                  auto_price REAL NOT NULL,
+                  real_price REAL NOT NULL,
+                  strategy_used TEXT,
+                  strategy_details TEXT,
+                  min_price_applied REAL,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  created_by TEXT
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_auto_prices_history ON automated_prices_history(location, grupo, pickup_date, created_at)")
+            
         finally:
             conn.commit()
             conn.close()
@@ -7351,6 +7372,113 @@ async def load_pricing_strategies(request: Request):
                         pass
                 
                 return JSONResponse({"ok": True, "strategies": strategies})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/price-automation/history/save")
+async def save_automated_prices_history(request: Request):
+    """Salvar histórico de preços automatizados"""
+    require_auth(request)
+    
+    try:
+        data = await request.json()
+        username = request.session.get("username", "unknown")
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                # Salvar cada entrada do histórico
+                for entry in data.get("entries", []):
+                    conn.execute(
+                        """
+                        INSERT INTO automated_prices_history 
+                        (location, grupo, dias, pickup_date, auto_price, real_price, 
+                         strategy_used, strategy_details, min_price_applied, created_by)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            entry.get("location"),
+                            entry.get("grupo"),
+                            entry.get("dias"),
+                            entry.get("pickup_date"),
+                            entry.get("auto_price"),
+                            entry.get("real_price"),
+                            entry.get("strategy_used"),
+                            json.dumps(entry.get("strategy_details", {})),
+                            entry.get("min_price_applied"),
+                            username
+                        )
+                    )
+                
+                conn.commit()
+                return JSONResponse({"ok": True, "message": "History saved successfully"})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/price-automation/history/load")
+async def load_automated_prices_history(request: Request):
+    """Carregar histórico de preços automatizados"""
+    require_auth(request)
+    
+    try:
+        # Parâmetros opcionais de filtro
+        location = request.query_params.get("location")
+        grupo = request.query_params.get("grupo")
+        limit = int(request.query_params.get("limit", 100))
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                query = """
+                    SELECT id, location, grupo, dias, pickup_date, 
+                           auto_price, real_price, strategy_used, strategy_details,
+                           min_price_applied, created_at, created_by
+                    FROM automated_prices_history
+                    WHERE 1=1
+                """
+                params = []
+                
+                if location:
+                    query += " AND location = ?"
+                    params.append(location)
+                
+                if grupo:
+                    query += " AND grupo = ?"
+                    params.append(grupo)
+                
+                query += " ORDER BY created_at DESC LIMIT ?"
+                params.append(limit)
+                
+                cursor = conn.execute(query, params)
+                rows = cursor.fetchall()
+                
+                history = []
+                for row in rows:
+                    try:
+                        strategy_details = json.loads(row[8]) if row[8] else {}
+                    except:
+                        strategy_details = {}
+                    
+                    history.append({
+                        "id": row[0],
+                        "location": row[1],
+                        "grupo": row[2],
+                        "dias": row[3],
+                        "pickup_date": row[4],
+                        "auto_price": row[5],
+                        "real_price": row[6],
+                        "strategy_used": row[7],
+                        "strategy_details": strategy_details,
+                        "min_price_applied": row[9],
+                        "created_at": row[10],
+                        "created_by": row[11]
+                    })
+                
+                return JSONResponse({"ok": True, "history": history})
             finally:
                 conn.close()
     except Exception as e:
