@@ -12,8 +12,25 @@
 </head>
 <body class="bg-gray-50 p-4 sm:p-6">
     <div class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Price Automation Settings</h1>
-        <p class="text-gray-600 mb-6">Configure all parameters for price automation. Changes are applied in real-time.</p>
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Price Automation Settings</h1>
+                <p class="text-gray-600 mt-1">Configure all parameters for price automation. Changes are applied in real-time.</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="exportSettings()" class="p-2 text-[#009cb6] hover:bg-[#009cb6] hover:text-white border border-[#009cb6] rounded transition-all" title="Export All Settings">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </button>
+                <button onclick="importSettings()" class="p-2 text-[#f4ad0f] hover:bg-[#f4ad0f] hover:text-white border border-[#f4ad0f] rounded transition-all" title="Import All Settings">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                </button>
+                <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+            </div>
+        </div>
 
         <!-- Regras Globais -->
         <div class="bg-white shadow mb-6 p-6">
@@ -1137,6 +1154,110 @@
             localStorage.setItem('automatedPriceRules', JSON.stringify(rules));
             console.log('Automated rules saved:', rules);
             return rules;
+        }
+        
+        // ===== EXPORT / IMPORT SETTINGS =====
+        
+        function exportSettings() {
+            // Collect all settings
+            const allSettings = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                globalSettings: {
+                    comissaoBroker: parseFloat(document.getElementById('comissaoBroker')?.value) || 0,
+                    defaultMargin: parseFloat(document.getElementById('defaultMargin')?.value) || 0,
+                    rounding: document.getElementById('rounding')?.value || '0.01',
+                    maxAlternativeDays: parseInt(document.getElementById('maxAlternativeDays')?.value) || 3,
+                    defaultLocation: document.getElementById('defaultLocation')?.value || 'Albufeira',
+                    autoSaveHistory: document.getElementById('autoSaveHistory')?.value === 'true'
+                },
+                automatedPriceRules: JSON.parse(localStorage.getItem('automatedPriceRules') || '{}'),
+                strategiesData: strategiesData || {}
+            };
+            
+            // Create JSON file
+            const dataStr = JSON.stringify(allSettings, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            
+            // Create download link
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `price_automation_settings_${new Date().toISOString().split('T')[0]}.json`;
+            
+            // Trigger download
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            showNotification('✅ Settings exported successfully!');
+        }
+        
+        function importSettings() {
+            // Trigger file input
+            document.getElementById('importFileInput').click();
+        }
+        
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedSettings = JSON.parse(e.target.result);
+                    
+                    // Validate format
+                    if (!importedSettings.version || !importedSettings.globalSettings) {
+                        alert('❌ Invalid settings file format');
+                        return;
+                    }
+                    
+                    // Confirm import
+                    if (!confirm('⚠️ This will overwrite all current settings. Continue?')) {
+                        return;
+                    }
+                    
+                    // Apply global settings
+                    const gs = importedSettings.globalSettings;
+                    if (gs.comissaoBroker !== undefined) document.getElementById('comissaoBroker').value = gs.comissaoBroker;
+                    if (gs.defaultMargin !== undefined) document.getElementById('defaultMargin').value = gs.defaultMargin;
+                    if (gs.rounding) document.getElementById('rounding').value = gs.rounding;
+                    if (gs.maxAlternativeDays !== undefined) document.getElementById('maxAlternativeDays').value = gs.maxAlternativeDays;
+                    if (gs.defaultLocation) document.getElementById('defaultLocation').value = gs.defaultLocation;
+                    if (gs.autoSaveHistory !== undefined) document.getElementById('autoSaveHistory').value = gs.autoSaveHistory ? 'true' : 'false';
+                    
+                    // Save global settings
+                    saveSettings();
+                    
+                    // Apply automated price rules
+                    if (importedSettings.automatedPriceRules) {
+                        localStorage.setItem('automatedPriceRules', JSON.stringify(importedSettings.automatedPriceRules));
+                    }
+                    
+                    // Apply strategies data
+                    if (importedSettings.strategiesData) {
+                        strategiesData = importedSettings.strategiesData;
+                    }
+                    
+                    showNotification('✅ Settings imported successfully! Reloading page...');
+                    
+                    // Reload page to apply all changes
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                    
+                } catch (error) {
+                    console.error('Import error:', error);
+                    alert('❌ Error importing settings: ' + error.message);
+                }
+            };
+            
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
         }
     </script>
 </body>
