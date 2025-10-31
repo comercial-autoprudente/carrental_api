@@ -69,18 +69,11 @@ def _set_setting(key: str, value: str) -> None:
         pass
 
 def _get_carjet_adjustment() -> Tuple[float, float]:
-    try:
-        pct_s = _get_setting("carjet_pct", "")
-        off_s = _get_setting("carjet_off", "")
-        if pct_s or off_s:
-            try:
-                return float(pct_s or 0.0), float(off_s or 0.0)
-            except Exception:
-                pass
-        # Fallback to env
-        return float(os.getenv("CARJET_PRICE_ADJUSTMENT_PCT", "0") or 0.0), float(os.getenv("CARJET_PRICE_OFFSET_EUR", "0") or 0.0)
-    except Exception:
-        return 0.0, 0.0
+    """
+    CRITICAL: Carjet Adjustment must ALWAYS be 0% and 0€
+    User requirement: Never apply price adjustments to Carjet
+    """
+    return 0.0, 0.0
 
 def apply_price_adjustments(items: List[Dict[str, Any]], base_url: str) -> List[Dict[str, Any]]:
     try:
