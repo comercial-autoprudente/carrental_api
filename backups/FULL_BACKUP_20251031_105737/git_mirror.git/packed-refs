@@ -1,0 +1,11 @@
+# pack-refs with: peeled fully-peeled sorted 
+ace40f62747b185d5798d7588a5b002048c4f15c refs/heads/main
+ace40f62747b185d5798d7588a5b002048c4f15c refs/remotes/backup/HEAD
+ace40f62747b185d5798d7588a5b002048c4f15c refs/remotes/backup/main
+8a0042871c32b3f3e3f0ae73c75903f1ce676833 refs/remotes/carrental-final/HEAD
+8a0042871c32b3f3e3f0ae73c75903f1ce676833 refs/remotes/carrental-final/main
+7a777f28d31ff67854a3bd93de17b6ba3b8f9f03 refs/remotes/origin/HEAD
+7a777f28d31ff67854a3bd93de17b6ba3b8f9f03 refs/remotes/origin/main
+37b64ae0671aad3813897ebba278148dc5cc0ee5 refs/stash
+577c20e0cd5b6247be55905a40f7dc60cb7ec417 refs/tags/backup-20251030_193755
+^b0b36673f7a54fb8d6c3c8a6734dad743d9d2390

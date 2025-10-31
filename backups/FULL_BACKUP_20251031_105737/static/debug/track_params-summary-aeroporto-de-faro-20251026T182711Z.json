@@ -1,0 +1,70 @@
+{
+  "ts": "20251026T182711Z",
+  "location": "Aeroporto de Faro",
+  "start": "2025-11-01T10:00:00",
+  "end": "2025-11-08T10:00:00",
+  "days": 7,
+  "count": 205,
+  "preview": [
+    {
+      "id": 0,
+      "car": "Opel Corsa",
+      "supplier": "TAN1",
+      "price": "20,01 €",
+      "currency": "EUR",
+      "category": "Economy",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C82.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "19,31 €"
+    },
+    {
+      "id": 1,
+      "car": "Peugeot 108",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "25,06 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C15.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "24,19 €"
+    },
+    {
+      "id": 2,
+      "car": "Opel Adam",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "25,06 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C50.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "24,19 €"
+    },
+    {
+      "id": 3,
+      "car": "Fiat 500",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "25,85 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C25.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "24,95 €"
+    },
+    {
+      "id": 4,
+      "car": "Toyota Aygo",
+      "supplier": "KLA",
+      "price": "28,42 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C29.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "27,43 €"
+    }
+  ]
+}

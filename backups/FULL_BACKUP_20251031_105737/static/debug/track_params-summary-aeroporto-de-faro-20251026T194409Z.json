@@ -1,0 +1,70 @@
+{
+  "ts": "20251026T194409Z",
+  "location": "Aeroporto de Faro",
+  "start": "2025-10-31T10:00:00",
+  "end": "2025-11-07T10:00:00",
+  "days": 7,
+  "count": 203,
+  "preview": [
+    {
+      "id": 0,
+      "car": "Fiat 500",
+      "supplier": "Green Motion",
+      "price": "20,08 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C25.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "19,38 €"
+    },
+    {
+      "id": 1,
+      "car": "Fiat Panda",
+      "supplier": "Green Motion",
+      "price": "20,75 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C30.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "20,02 €"
+    },
+    {
+      "id": 2,
+      "car": "Renault Clio",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "40,34 €",
+      "currency": "EUR",
+      "category": "Economy",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C04.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "38,95 €"
+    },
+    {
+      "id": 3,
+      "car": "Toyota Aygo",
+      "supplier": "KLA",
+      "price": "21,10 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C29.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "20,36 €"
+    },
+    {
+      "id": 4,
+      "car": "Volkswagen UP",
+      "supplier": "KLA",
+      "price": "21,10 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C66.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "20,36 €"
+    }
+  ]
+}

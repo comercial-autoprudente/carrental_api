@@ -1,0 +1,70 @@
+{
+  "ts": "20251026T183211Z",
+  "location": "Aeroporto de Faro",
+  "start": "2025-11-03T10:00:00",
+  "end": "2025-12-01T10:00:00",
+  "days": 28,
+  "count": 202,
+  "preview": [
+    {
+      "id": 0,
+      "car": "Fiat Panda",
+      "supplier": "OKR1",
+      "price": "147,29 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C45.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "142,25 €"
+    },
+    {
+      "id": 1,
+      "car": "Fiat 500",
+      "supplier": "OKR1",
+      "price": "150,37 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C25.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "145,22 €"
+    },
+    {
+      "id": 2,
+      "car": "Renault Clio",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "286,58 €",
+      "currency": "EUR",
+      "category": "Economy",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C04.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "276,79 €"
+    },
+    {
+      "id": 3,
+      "car": "Peugeot 108",
+      "supplier": "Auto Prudente Rent a Car",
+      "price": "154,64 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C38.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "149,35 €"
+    },
+    {
+      "id": 4,
+      "car": "Fiat Panda",
+      "supplier": "Auto Prudente Rent a Car",
+      "price": "155,27 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C30.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "149,96 €"
+    }
+  ]
+}
