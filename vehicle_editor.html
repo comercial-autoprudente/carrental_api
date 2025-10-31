@@ -299,13 +299,18 @@
                 
                 if (!data.ok) throw new Error(data.error);
                 
-                allVehicles = Object.entries(data.vehicles).map(([clean, info]) => ({
-                    clean: clean,
-                    original: info.original || clean,
-                    category: info.category || 'Unknown',
-                    brand: clean.split(' ')[0] || '',
-                    model: clean.split(' ').slice(1).join(' ') || ''
-                }));
+                allVehicles = Object.entries(data.vehicles).map(([clean, info]) => {
+                    const parts = clean.split(' ');
+                    const brand = parts[0] || '';
+                    const model = parts.slice(1).join(' ') || '';
+                    return {
+                        clean: clean,
+                        original: info.original || clean,
+                        category: info.category || 'Unknown',
+                        brand: brand,
+                        model: model
+                    };
+                });
                 
                 document.getElementById('totalVehicles').textContent = allVehicles.length;
                 populateFilters();
@@ -410,7 +415,7 @@
                                                  class="h-12 w-auto rounded border shadow-sm">
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-500">${v.original}</td>
-                                        <td class="px-6 py-4 text-sm font-semibold text-blue-600">${v.clean}</td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-blue-600">${v.clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</td>
                                         <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-mono rounded bg-[#f4ad0f] text-gray-900 font-bold">${group}</span></td>
                                         <td class="px-6 py-4 text-sm text-gray-500">${v.category}</td>
                                         <td class="px-6 py-4">
