@@ -451,7 +451,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         // Grupos visíveis na automação (C não aparece pois copia D automaticamente)
-        const grupos = ['B1', 'B2', 'D', 'E1', 'E2', 'F', 'G', 'X', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
+        const grupos = ['B1', 'B2', 'D', 'E1', 'E2', 'F', 'G', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
         
         // Grupos que copiam preços de outros (C = D)
         const gruposCopia = {
@@ -1297,9 +1297,12 @@
                 dias.forEach((day, dayIndex) => {
                     const bgColor = dayIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                     
-                    // Coluna Auto (purple)
+                    // Coluna Auto (purple) - vermelha se não tiver regras
                     const tdAuto = document.createElement('td');
                     tdAuto.className = `px-1 py-1 ${bgColor} bg-purple-50`;
+                    tdAuto.dataset.grupo = grupo;
+                    tdAuto.dataset.day = day;
+                    tdAuto.dataset.cellType = 'auto';
                     
                     const inputAuto = document.createElement('input');
                     inputAuto.type = 'text';
@@ -1313,9 +1316,12 @@
                     tdAuto.appendChild(inputAuto);
                     tr.appendChild(tdAuto);
 
-                    // Coluna Real (blue)
+                    // Coluna Real (blue) - vermelha se não tiver regras
                     const tdReal = document.createElement('td');
                     tdReal.className = `px-1 py-1 border-r ${bgColor} bg-[#009cb6] bg-opacity-50`;
+                    tdReal.dataset.grupo = grupo;
+                    tdReal.dataset.day = day;
+                    tdReal.dataset.cellType = 'real';
                     
                     const inputReal = document.createElement('input');
                     inputReal.type = 'text';
@@ -1343,6 +1349,58 @@
                 });
 
                 tbody.appendChild(tr);
+            });
+            
+            // Marcar células sem regras como vermelhas
+            markCellsWithoutRules();
+        }
+        
+        function markCellsWithoutRules() {
+            // Carregar regras configuradas
+            const strategiesData = JSON.parse(localStorage.getItem('pricingStrategies') || '{}');
+            const currentLocation = document.getElementById('locationSelectAuto')?.value || 'Albufeira';
+            
+            // Para cada grupo e dia, verificar se há regras
+            grupos.forEach(grupo => {
+                dias.forEach(day => {
+                    // Verificar se há estratégias configuradas para este grupo/dia
+                    let hasRules = false;
+                    
+                    // Procurar por qualquer mês que tenha regras para este grupo/dia
+                    for (let month = 1; month <= 12; month++) {
+                        const key = `${currentLocation}_${grupo}_${month}_${day}`;
+                        if (strategiesData[key] && strategiesData[key].length > 0) {
+                            hasRules = true;
+                            break;
+                        }
+                    }
+                    
+                    // Se não há regras, marcar células como vermelhas
+                    if (!hasRules) {
+                        const cellsAuto = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="auto"]`);
+                        const cellsReal = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="real"]`);
+                        
+                        cellsAuto.forEach(cell => {
+                            cell.classList.remove('bg-purple-50');
+                            cell.classList.add('bg-red-100');
+                            const input = cell.querySelector('input');
+                            if (input) {
+                                input.value = ''; // Deixar vazio
+                                input.placeholder = 'No rules';
+                            }
+                        });
+                        
+                        cellsReal.forEach(cell => {
+                            cell.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                            cell.classList.add('bg-red-100');
+                            const input = cell.querySelector('input');
+                            if (input) {
+                                input.value = ''; // Deixar vazio
+                                input.placeholder = 'No rules';
+                            }
+                        });
+                    }
+                });
             });
         }
         
