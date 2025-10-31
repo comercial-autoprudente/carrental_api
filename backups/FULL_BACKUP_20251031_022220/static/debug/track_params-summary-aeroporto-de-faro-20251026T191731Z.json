@@ -1,0 +1,70 @@
+{
+  "ts": "20251026T191731Z",
+  "location": "Aeroporto de Faro",
+  "start": "2025-11-13T10:00:00",
+  "end": "2025-11-22T10:00:00",
+  "days": 9,
+  "count": 221,
+  "preview": [
+    {
+      "id": 0,
+      "car": "Hyundai i10",
+      "supplier": "AMI1",
+      "price": "23,66 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C32.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "22,83 €"
+    },
+    {
+      "id": 1,
+      "car": "Fiat 500",
+      "supplier": "Green Motion",
+      "price": "23,97 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C25.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "23,13 €"
+    },
+    {
+      "id": 2,
+      "car": "Renault Clio",
+      "supplier": "Goldcar Non-Refundable",
+      "price": "38,42 €",
+      "currency": "EUR",
+      "category": "Economy",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C04.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "37,09 €"
+    },
+    {
+      "id": 3,
+      "car": "Fiat Panda",
+      "supplier": "Green Motion",
+      "price": "24,77 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C30.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "23,91 €"
+    },
+    {
+      "id": 4,
+      "car": "Toyota Aygo",
+      "supplier": "KLA",
+      "price": "24,79 €",
+      "currency": "EUR",
+      "category": "Mini 4 Doors",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C29.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "23,93 €"
+    }
+  ]
+}

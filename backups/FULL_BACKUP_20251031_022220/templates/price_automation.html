@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automação de Preços - Auto Prudente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        img[alt="Profile"], img[src*="profile"], .profile-picture { border-radius: 50% !important; }
+        .drag-drop-area {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s;
+        }
+        .drag-drop-area.dragover {
+            border-color: #009cb6;
+            background-color: #f0f9ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <header class="bg-[#009cb6] border-b">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/" class="inline-flex items-center" title="Homepage">
+                    <img src="/static/ap-heather.png" alt="Auto Prudente" class="h-12 w-auto" />
+                </a>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/" class="p-2 text-white/90 hover:text-white hover:bg-white/10 transition-all" title="Home">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                </a>
+                {% if request.session and request.session.get('is_admin') %}
+                <a href="/admin" class="p-2 text-white/90 hover:text-white hover:bg-white/10 transition-all" title="Settings">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6">
+        <div class="mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Automação de Preços - Auto Prudente Rent a Car</h1>
+            <p class="text-gray-600">Preencha os preços do CarJet para comparação e análise de competitividade</p>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6 border-b border-gray-200">
+            <nav class="flex gap-4">
+                <button onclick="switchTab('current')" id="tabCurrent" class="px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold">
+                    Preços Atuais
+                </button>
+                <button onclick="switchTab('history')" id="tabHistory" class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900">
+                    Histórico
+                </button>
+            </nav>
+        </div>
+
+        <!-- Tab: Preços Atuais -->
+        <div id="contentCurrent">
+
+        <!-- Controles -->
+        <div class="bg-white shadow mb-6 p-4">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Localização</label>
+                        <select id="location" class="px-3 py-2 border border-gray-300 rounded">
+                            <option value="Aeroporto de Faro">Aeroporto de Faro</option>
+                            <option value="Albufeira" selected>Albufeira</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data de Início</label>
+                        <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300 rounded">
+                    </div>
+                    <div class="flex items-end">
+                        <button id="btnSearchAll" onclick="searchAllPrices()" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Pesquisar todos os preços">
+                            <svg class="w-6 h-6 text-[#009cb6] search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                            <svg class="w-6 h-6 text-[#009cb6] loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestão de Colunas -->
+            <div class="border-t pt-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600">Gerir colunas:</span>
+                    <button onclick="showAddColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Adicionar coluna">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Adicionar
+                    </button>
+                    <button onclick="showRemoveColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Remover coluna">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                        </svg>
+                        Remover
+                    </button>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-sm text-gray-600">Descarregar Excel:</span>
+                    <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
+                        <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                    <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Abbycar">
+                        <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progresso -->
+        <div id="progressBar" class="bg-white shadow mb-6 p-4 hidden">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 animate-spin text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span id="progressText">A pesquisar...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2">
+                        <div id="progressFill" class="bg-[#009cb6] h-2 transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Preços -->
+        <div class="bg-white shadow overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead class="bg-gray-50 sticky top-0">
+                    <tr>
+                        <th rowspan="2" class="px-2 py-3 text-left font-semibold border-r">Grupo</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">1d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">2d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">3d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">4d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">5d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">6d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">7d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">8d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">9d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">14d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">22d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">28d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">31d</th>
+                        <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">60d</th>
+                    </tr>
+                    <tr>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                    </tr>
+                </thead>
+                <tbody id="pricesTable">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Legenda -->
+        <div class="mt-4 flex items-center gap-6 text-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-white border border-gray-300"></div>
+                <span>Coluna NET (branco)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-50 border border-[#009cb6]"></div>
+                <span>Coluna Real (azul)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
+                <span>Sem preço disponível (vermelho)</span>
+            </div>
+        </div>
+        </div>
+
+        <!-- Tab: Histórico -->
+        <div id="contentHistory" class="hidden">
+            <div class="bg-white shadow mb-6 p-4">
+                <h2 class="text-lg font-semibold mb-4">Histórico de Preços (2 anos)</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="historyMonths">
+                    <!-- Meses serão gerados dinamicamente -->
+                </div>
+            </div>
+
+            <!-- Tabela de histórico -->
+            <div id="historyTableContainer" class="hidden">
+                <div class="bg-white shadow mb-4 p-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold" id="historyTitle"></h3>
+                        <button onclick="closeHistory()" class="text-gray-500 hover:text-gray-700">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white shadow overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead class="bg-gray-50 sticky top-0" id="historyTableHeader">
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        // Grupos visíveis na automação (C não aparece pois copia D automaticamente)
+        const grupos = ['B1', 'B2', 'D', 'E1', 'E2', 'F', 'G', 'X', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
+        
+        // Grupos que copiam preços de outros (C = D)
+        const gruposCopia = {
+            'C': 'D'  // Grupo C sempre tem o mesmo preço do Grupo D
+        };
+        const dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31, 60];
+
+        // Carregar configurações
+        function getMaxAlternativeDays() {
+            const saved = localStorage.getItem('priceAutomationSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    return settings.maxAlternativeDays !== undefined ? settings.maxAlternativeDays : 3;
+                } catch (e) {
+                    return 3;
+                }
+            }
+            return 3; // Padrão
+        }
+
+        function getComissao() {
+            const saved = localStorage.getItem('priceAutomationSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    return settings.comissaoBroker !== undefined ? settings.comissaoBroker / 100 : 0.1366;
+                } catch (e) {
+                    return 0.1366;
+                }
+            }
+            return 0.1366; // Padrão 13.66%
+        }
+
+        function calculateNet(real) {
+            const comissao = getComissao();
+            return real / (1 + comissao);
+        }
+
+        function calculateReal(net) {
+            const comissao = getComissao();
+            return net * (1 + comissao);
+        }
+
+        // Recriar header da tabela
+        function rebuildTableHeader() {
+            const table = document.querySelector('.bg-white.shadow.overflow-x-auto table');
+            const thead = table.querySelector('thead');
+            
+            // Primeira linha do header (dias)
+            let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Grupo</th>';
+            dias.forEach((d, index) => {
+                const bgColor = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                headerRow1 += `<th colspan="2" class="px-2 py-2 text-center font-semibold border-r ${bgColor}">${d}d</th>`;
+            });
+            headerRow1 += '</tr>';
+            
+            // Segunda linha do header (NET/Real)
+            let headerRow2 = '<tr>';
+            dias.forEach((d, index) => {
+                const bgColor = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-blue-700 font-semibold">NET</th>`;
+                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-green-700 font-semibold border-r">Real</th>`;
+            });
+            headerRow2 += '</tr>';
+            
+            thead.innerHTML = headerRow1 + headerRow2;
+        }
+
+        // Inicializar tabela
+        function initTable() {
+            rebuildTableHeader();
+            
+            const tbody = document.getElementById('pricesTable');
+            tbody.innerHTML = '';
+
+            grupos.forEach(grupo => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-t hover:bg-gray-50';
+                
+                const tdGrupo = document.createElement('td');
+                tdGrupo.className = 'px-2 py-3 font-semibold border-r';
+                tdGrupo.textContent = grupo;
+                tr.appendChild(tdGrupo);
+
+                dias.forEach((day, dayIndex) => {
+                    const bgColor = dayIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                    
+                    // Coluna NET
+                    const tdNet = document.createElement('td');
+                    tdNet.className = `px-1 py-1 ${bgColor}`;
+                    
+                    const inputNet = document.createElement('input');
+                    inputNet.type = 'text';
+                    inputNet.placeholder = '-';
+                    inputNet.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6] bg-transparent';
+                    inputNet.dataset.grupo = grupo;
+                    inputNet.dataset.dias = day;
+                    inputNet.dataset.type = 'net';
+                    inputNet.dataset.manual = 'false';
+                    
+                    inputNet.addEventListener('input', function() {
+                        this.value = this.value.replace(',', '.');
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(this.value) && this.value !== '') {
+                            this.value = this.value.slice(0, -1);
+                        }
+                        if (this.value) {
+                            this.dataset.manual = 'true';
+                            const real = calculateReal(parseFloat(this.value));
+                            const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                            if (inputReal) {
+                                inputReal.value = real.toFixed(2);
+                                inputReal.dataset.manual = 'true';
+                            }
+                            this.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50', 'bg-[#f4ad0f]');
+                            this.parentElement.classList.add('bg-red-100');
+                            if (inputReal) {
+                                inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50', 'bg-[#f4ad0f]');
+                                inputReal.parentElement.classList.add('bg-red-100');
+                            }
+                        }
+                    });
+                    
+                    // NET sempre branco (sem cor adicional, usa bgColor da coluna)
+                    tdNet.appendChild(inputNet);
+                    tr.appendChild(tdNet);
+
+                    // Coluna Real
+                    const tdReal = document.createElement('td');
+                    tdReal.className = `px-1 py-1 border-r ${bgColor}`;
+                    
+                    const inputReal = document.createElement('input');
+                    inputReal.type = 'text';
+                    inputReal.placeholder = '-';
+                    inputReal.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6] bg-transparent';
+                    inputReal.dataset.grupo = grupo;
+                    inputReal.dataset.dias = day;
+                    inputReal.dataset.type = 'real';
+                    inputReal.dataset.manual = 'false';
+                    
+                    inputReal.addEventListener('input', function() {
+                        this.value = this.value.replace(',', '.');
+                        const regex = /^\d*\.?\d{0,2}$/;
+                        if (!regex.test(this.value) && this.value !== '') {
+                            this.value = this.value.slice(0, -1);
+                        }
+                        if (this.value) {
+                            this.dataset.manual = 'true';
+                            const net = calculateNet(parseFloat(this.value));
+                            const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                            if (inputNet) {
+                                inputNet.value = net.toFixed(2);
+                                inputNet.dataset.manual = 'true';
+                            }
+                        }
+                    });
+                    
+                    // Real sempre azul (50% opacidade para destaque)
+                    tdReal.classList.add('bg-[#009cb6]', 'bg-opacity-50');
+                    tdReal.appendChild(inputReal);
+                    tr.appendChild(tdReal);
+                });
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        async function searchSingleDay(day) {
+            const location = document.getElementById('location').value;
+            const pickupDate = document.getElementById('pickupDate').value;
+
+            if (!pickupDate) {
+                showNotification('Selecione uma data primeiro', 'warning');
+                return;
+            }
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.classList.remove('hidden');
+            progressText.textContent = `A pesquisar ${day} dias...`;
+            progressPercent.textContent = '0%';
+            progressFill.style.width = '0%';
+
+            let foundPrices = false;
+            let isAlternativeSearch = false;
+            const maxDays = getMaxAlternativeDays();
+            
+            // Tentar data original primeiro
+            for (let dateOffset = 0; dateOffset <= maxDays; dateOffset++) {
+                const searchDate = new Date(pickupDate);
+                searchDate.setDate(searchDate.getDate() + dateOffset);
+                
+                // Verificar se mudou de mês
+                const originalDate = new Date(pickupDate);
+                if (searchDate.getMonth() !== originalDate.getMonth()) {
+                    // Parar se mudou de mês
+                    break;
+                }
+                
+                const searchDateStr = searchDate.toISOString().split('T')[0];
+                
+                if (dateOffset > 0) {
+                    isAlternativeSearch = true;
+                    progressText.textContent = `A pesquisar ${day} dias (data alternativa +${dateOffset})...`;
+                }
+
+                try {
+                    const response = await fetch('/api/track-by-params', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: location,
+                            start_date: searchDateStr,
+                            start_time: '15:00',
+                            days: day,
+                            lang: 'pt',
+                            currency: 'EUR'
+                        })
+                    });
+
+                    progressPercent.textContent = `${30 + (dateOffset * 15)}%`;
+                    progressFill.style.width = `${30 + (dateOffset * 15)}%`;
+
+                    const data = await response.json();
+                    
+                    if (data.items && data.items.length > 0) {
+                        console.log(`${day} dias - ${data.items.length} carros encontrados`);
+                        
+                        // DEBUG: Mostrar todos os suppliers únicos
+                        const allSuppliers = [...new Set(data.items.map(item => item.supplier))];
+                        console.log(`[DEBUG] Suppliers encontrados:`, allSuppliers);
+                        
+                        // FILTRAR APENAS AUTOPRUDENTE
+                        let debugCount = 0;
+                        const autoprudenteItems = data.items.filter(item => {
+                            const supplier = (item.supplier || '').toLowerCase();
+                            const isAutoprudente = supplier.includes('autoprudente') || 
+                                                   supplier.includes('auto prudente') ||
+                                                   supplier.includes('auto-prudente') ||
+                                                   supplier === 'aup';
+                            
+                            // DEBUG: Log de cada item
+                            if (isAutoprudente) {
+                                console.log(`[DEBUG] ✅ AUTOPRUDENTE encontrado: "${item.supplier}" - ${item.car}`);
+                            } else if (debugCount < 3) {
+                                console.log(`[DEBUG] ❌ NÃO é AUTOPRUDENTE: "${item.supplier}" - ${item.car}`);
+                                debugCount++;
+                            }
+                            
+                            return isAutoprudente;
+                        });
+                        
+                        console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
+                        
+                        // DEBUG: Mostrar distribuição por grupo
+                        const gruposCom = {};
+                        autoprudenteItems.forEach(item => {
+                            const grupo = item.group || extractGroup(item.car);
+                            if (!gruposCom[grupo]) gruposCom[grupo] = 0;
+                            gruposCom[grupo]++;
+                        });
+                        console.log(`[DEBUG ${day}d] Grupos com AUTOPRUDENTE:`, gruposCom);
+                        
+                        // Verificar quais grupos NÃO têm carros
+                        const gruposSem = grupos.filter(g => !gruposCom[g]);
+                        if (gruposSem.length > 0) {
+                            console.warn(`[DEBUG ${day}d] Grupos SEM AUTOPRUDENTE:`, gruposSem);
+                        }
+                        
+                        if (autoprudenteItems.length === 0) {
+                            // Nenhum carro AUTOPRUDENTE encontrado - marcar todas células como vermelhas
+                            console.warn(`${day} dias - AUTOPRUDENTE não tem preços disponíveis`);
+                            grupos.forEach(grupo => {
+                                const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                
+                                if (inputReal && inputNet) {
+                                    inputReal.value = '-';
+                                    inputNet.value = '-';
+                                    inputReal.parentElement.classList.add('bg-red-100');
+                                    inputNet.parentElement.classList.add('bg-red-100');
+                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                }
+                            });
+                            // PARAR AQUI - Não tentar datas alternativas se AUTOPRUDENTE não tem preços
+                            break;
+                        } else {
+                            // Processar apenas carros AUTOPRUDENTE
+                            autoprudenteItems.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                console.log(`AUTOPRUDENTE - Carro: ${item.car}, Grupo: ${grupo}, Preço: ${item.price_num}`);
+                                
+                                if (grupos.includes(grupo)) {
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    if (inputReal && inputNet) {
+                                        const precoReal = parseFloat(item.price_num || 0);
+                                        if (precoReal > 0) {
+                                            // Preço Real total
+                                            inputReal.value = precoReal.toFixed(2);
+                                            inputReal.dataset.manual = 'false';
+                                            inputReal.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                            
+                                            // Preço NET total
+                                            const precoNet = calculateNet(precoReal);
+                                            inputNet.value = precoNet.toFixed(2);
+                                            inputNet.dataset.manual = 'false';
+                                            inputNet.dataset.alternativeDate = isAlternativeSearch ? 'true' : 'false';
+                                            
+                                            // Remover vermelho se existir
+                                            inputReal.parentElement.classList.remove('bg-red-100');
+                                            inputNet.parentElement.classList.remove('bg-red-100');
+                                            
+                                            // Real sempre azul (50% opacidade para destaque)
+                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
+                                            // NET mantém branco (não adiciona cor)
+                                            
+                                            foundPrices = true;
+                                        }
+                                    }
+                                } else {
+                                    console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
+                                }
+                            });
+                            
+                            // Copiar D para C automaticamente após preencher
+                            if (foundPrices) {
+                                copyGroupCFromDForDay(day);
+                                break; // Parar de tentar datas alternativas
+                            }
+                        }
+                    } else {
+                        console.warn(`${day} dias - Nenhum item retornado pela API`);
+                    }
+                } catch (err) {
+                    console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
+                }
+            }
+
+            if (foundPrices) {
+                progressText.textContent = isAlternativeSearch ? 
+                    `✅ ${day} dias concluído (data alternativa)` : 
+                    `✅ ${day} dias concluído!`;
+            } else {
+                progressText.textContent = `⚠️ ${day} dias - nenhum preço encontrado`;
+            }
+            
+            progressPercent.textContent = '100%';
+            progressFill.style.width = '100%';
+
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+            }, 2000);
+        }
+
+        async function searchAllPrices() {
+            const location = document.getElementById('location').value;
+            const pickupDate = document.getElementById('pickupDate').value;
+
+            if (!pickupDate) {
+                showNotification('Selecione uma data primeiro', 'warning');
+                return;
+            }
+
+            // Animação do botão
+            const btn = document.getElementById('btnSearchAll');
+            const searchIcon = btn.querySelector('.search-icon');
+            const loadingIcon = btn.querySelector('.loading-icon');
+            
+            searchIcon.classList.add('hidden');
+            loadingIcon.classList.remove('hidden');
+            btn.disabled = true;
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const progressFill = document.getElementById('progressFill');
+
+            progressBar.classList.remove('hidden');
+
+            const total = dias.length;
+            let completed = 0;
+
+            for (const day of dias) {
+                progressText.textContent = `A pesquisar ${day} dias...`;
+                progressPercent.textContent = `${Math.round((completed / total) * 100)}%`;
+                progressFill.style.width = `${(completed / total) * 100}%`;
+
+                let foundPrices = false;
+                const maxDays = getMaxAlternativeDays();
+                
+                // Tentar data original e até X dias à frente (configurável)
+                for (let dateOffset = 0; dateOffset <= maxDays && !foundPrices; dateOffset++) {
+                    const searchDate = new Date(pickupDate);
+                    searchDate.setDate(searchDate.getDate() + dateOffset);
+                    
+                    // Verificar se mudou de mês
+                    const originalDate = new Date(pickupDate);
+                    if (searchDate.getMonth() !== originalDate.getMonth()) {
+                        // Parar se mudou de mês
+                        break;
+                    }
+                    
+                    const searchDateStr = searchDate.toISOString().split('T')[0];
+                    
+                    if (dateOffset > 0) {
+                        progressText.textContent = `A pesquisar ${day} dias (data +${dateOffset})...`;
+                    }
+
+                    try {
+                        const response = await fetch('/api/track-by-params', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                location: location,
+                                start_date: searchDateStr,
+                                start_time: '15:00',
+                                days: day,
+                                lang: 'pt',
+                                currency: 'EUR'
+                            })
+                        });
+
+                        const data = await response.json();
+                        
+                        if (data.items && data.items.length > 0) {
+                            console.log(`${day} dias - ${data.items.length} carros encontrados`);
+                            
+                            // FILTRAR APENAS AUTOPRUDENTE
+                            const autoprudenteItems = data.items.filter(item => {
+                                const supplier = (item.supplier || '').toLowerCase();
+                                return supplier.includes('autoprudente') || 
+                                       supplier.includes('auto prudente') ||
+                                       supplier.includes('auto-prudente') ||
+                                       supplier === 'aup';
+                            });
+                            
+                            console.log(`${day} dias - ${autoprudenteItems.length} carros AUTOPRUDENTE encontrados`);
+                            
+                            // DEBUG: Mostrar distribuição por grupo
+                            const gruposCom = {};
+                            autoprudenteItems.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                if (!gruposCom[grupo]) gruposCom[grupo] = 0;
+                                gruposCom[grupo]++;
+                            });
+                            console.log(`[DEBUG ${day}d] Grupos com AUTOPRUDENTE:`, gruposCom);
+                            
+                            // Verificar quais grupos NÃO têm carros
+                            const gruposSem = grupos.filter(g => !gruposCom[g]);
+                            if (gruposSem.length > 0) {
+                                console.warn(`[DEBUG ${day}d] Grupos SEM AUTOPRUDENTE:`, gruposSem);
+                            }
+                            
+                            if (autoprudenteItems.length === 0) {
+                                // Nenhum carro AUTOPRUDENTE - marcar células vermelhas
+                                console.warn(`${day} dias - AUTOPRUDENTE não tem preços disponíveis`);
+                                grupos.forEach(grupo => {
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    if (inputReal && inputNet) {
+                                        inputReal.value = '-';
+                                        inputNet.value = '-';
+                                        inputReal.parentElement.classList.add('bg-red-100');
+                                        inputNet.parentElement.classList.add('bg-red-100');
+                                        inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                    }
+                                });
+                                // Não tentar datas alternativas
+                                break;
+                            }
+                            
+                            // REGRA: Agrupar por grupo e escolher o PREÇO MENOR
+                            const precosPorGrupo = {};
+                            autoprudenteItems.forEach(item => {
+                                const grupo = item.group || extractGroup(item.car);
+                                const precoReal = parseFloat(item.price_num || 0);
+                                
+                                if (precoReal > 0) {
+                                    if (!precosPorGrupo[grupo] || precoReal < precosPorGrupo[grupo].preco) {
+                                        precosPorGrupo[grupo] = {
+                                            preco: precoReal,
+                                            carro: item.car
+                                        };
+                                    }
+                                }
+                            });
+                            
+                            // Preencher com os preços menores de cada grupo
+                            Object.keys(precosPorGrupo).forEach(grupo => {
+                                const { preco: precoReal, carro } = precosPorGrupo[grupo];
+                                
+                                console.log(`AUTOPRUDENTE - Grupo ${grupo}: ${carro} (MENOR PREÇO: ${precoReal}€)`);
+                                
+                                if (grupos.includes(grupo)) {
+                                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                                    
+                                    // Preencher sempre (não verificar se já tem valor)
+                                    if (inputReal && inputNet) {
+                                        // Preço Real total
+                                        inputReal.value = precoReal.toFixed(2);
+                                        inputReal.dataset.manual = 'false';
+                                        inputReal.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
+                                        
+                                        // Preço NET total
+                                        const precoNet = calculateNet(precoReal);
+                                        inputNet.value = precoNet.toFixed(2);
+                                        inputNet.dataset.manual = 'false';
+                                        inputNet.dataset.alternativeDate = dateOffset > 0 ? 'true' : 'false';
+                                        
+                                        // Remover vermelho se existir
+                                        inputReal.parentElement.classList.remove('bg-red-100');
+                                        inputNet.parentElement.classList.remove('bg-red-100');
+                                        
+                                        // Real sempre azul (50% opacidade para destaque)
+                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
+                                        // NET mantém branco (não adiciona cor)
+                                        
+                                        foundPrices = true;
+                                    }
+                                } else {
+                                    console.warn(`Grupo ${grupo} não reconhecido para: ${item.car}`);
+                                }
+                            });
+                            
+                            // Copiar D para C automaticamente após preencher
+                            if (foundPrices) {
+                                copyGroupCFromDForDay(day);
+                            }
+                        } else {
+                            console.warn(`${day} dias - Nenhum item retornado pela API`);
+                        }
+                    } catch (err) {
+                        console.error(`Erro ao pesquisar ${day} dias (offset ${dateOffset}):`, err);
+                    }
+                }
+
+                // Marcar células sem preço em vermelho
+                if (!foundPrices) {
+                    dias.forEach(d => {
+                        if (d === day) {
+                            grupos.forEach(g => {
+                                const inputReal = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="real"]`);
+                                const inputNet = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="net"]`);
+                                if (inputReal && !inputReal.value) {
+                                    inputReal.parentElement.classList.add('bg-red-100');
+                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                }
+                                if (inputNet && !inputNet.value) {
+                                    inputNet.parentElement.classList.add('bg-red-100');
+                                }
+                            });
+                        }
+                    });
+                }
+
+                completed++;
+            }
+
+            progressText.textContent = '✅ Pesquisa concluída!';
+            progressPercent.textContent = '100%';
+            progressFill.style.width = '100%';
+
+            // Restaurar botão
+            loadingIcon.classList.add('hidden');
+            searchIcon.classList.remove('hidden');
+            btn.disabled = false;
+
+            // Guardar automaticamente no histórico após pesquisa
+            const savedCount = saveToHistory();
+            console.log('Preços guardados no histórico automaticamente');
+            console.log(`Total de preços guardados: ${savedCount}`);
+
+            setTimeout(() => {
+                progressBar.classList.add('hidden');
+            }, 2000);
+        }
+
+        function extractGroup(carName) {
+            const match = carName.match(/Group\s+([A-Z]\d?)/i);
+            return match ? match[1] : '';
+        }
+
+        function copyGroupCFromDForDay(day) {
+            // Copiar valores de D para C para um dia específico
+            const dNet = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="net"]`);
+            const cNet = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="net"]`);
+            if (dNet && cNet && dNet.value) {
+                cNet.value = dNet.value;
+                cNet.dataset.manual = dNet.dataset.manual;
+                cNet.parentElement.className = dNet.parentElement.className;
+            }
+            
+            const dReal = document.querySelector(`input[data-grupo="D"][data-dias="${day}"][data-type="real"]`);
+            const cReal = document.querySelector(`input[data-grupo="C"][data-dias="${day}"][data-type="real"]`);
+            if (dReal && cReal && dReal.value) {
+                cReal.value = dReal.value;
+                cReal.dataset.manual = dReal.dataset.manual;
+                cReal.parentElement.className = dReal.parentElement.className;
+            }
+        }
+
+        function copyGroupCFromD() {
+            // Copiar todos os valores de D para C
+            dias.forEach(day => {
+                copyGroupCFromDForDay(day);
+            });
+        }
+
+        function downloadExcel(broker) {
+            // Copiar C de D antes de descarregar
+            copyGroupCFromD();
+            
+            const wb = XLSX.utils.book_new();
+            const comissao = getComissao();
+            
+            // Header com colunas intercaladas: Preço e NET/dia
+            const header = ['Grupo'];
+            dias.forEach(d => {
+                header.push(`${d}d Preço`);
+                header.push(`${d}d NET/dia`);
+            });
+            const wsData = [header];
+
+            grupos.forEach(grupo => {
+                const row = [grupo];
+                dias.forEach(day => {
+                    // Pegar valores de NET e Real
+                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                    
+                    const precoNet = inputNet && inputNet.value ? parseFloat(inputNet.value) : 0;
+                    const precoReal = inputReal && inputReal.value ? parseFloat(inputReal.value) : 0;
+                    
+                    // Coluna: Preço Real
+                    row.push(precoReal > 0 ? precoReal.toFixed(2) : '');
+                    
+                    // Coluna: NET por dia
+                    if (precoNet > 0) {
+                        const netPorDia = precoNet / day;
+                        row.push(netPorDia.toFixed(2));
+                    } else {
+                        row.push('');
+                    }
+                });
+                wsData.push(row);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+            
+            // Definir larguras das colunas
+            const colWidths = [{ wch: 10 }]; // Grupo
+            dias.forEach(() => {
+                colWidths.push({ wch: 12 }); // Preço Real
+                colWidths.push({ wch: 12 }); // NET/dia
+            });
+            ws['!cols'] = colWidths;
+            
+            XLSX.utils.book_append_sheet(wb, ws, 'Preços CarJet');
+            
+            const location = document.getElementById('location').value;
+            const date = document.getElementById('pickupDate').value || 'sem-data';
+            const brokerName = broker === 'way2rentals' ? 'Way2Rentals' : broker === 'abbycar' ? 'Abbycar' : 'AutoPrudente';
+            const filename = `${brokerName}_${location.replace(/\s+/g, '_')}_${date}.xlsx`;
+            
+            XLSX.writeFile(wb, filename);
+            
+            // Guardar no histórico
+            saveToHistory();
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-[#009cb6]' : type === 'warning' ? 'bg-[#f4ad0f]' : 'bg-red-500';
+            notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2 animate-fade-in`;
+            
+            const icon = type === 'success' ? '✓' : type === 'warning' ? '⚠' : '✕';
+            notification.innerHTML = `<span class="text-xl">${icon}</span><span>${message}</span>`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showAddColumnDialog() {
+            const newDays = prompt('Quantos dias deseja adicionar? (ex: 15, 45, 90)');
+            if (newDays) {
+                const daysNum = parseInt(newDays);
+                if (isNaN(daysNum) || daysNum <= 0) {
+                    showNotification('Por favor insira um número válido', 'warning');
+                    return;
+                }
+                if (dias.includes(daysNum)) {
+                    showNotification('Esta coluna já existe', 'warning');
+                    return;
+                }
+                
+                // Adicionar e ordenar
+                dias.push(daysNum);
+                dias.sort((a, b) => a - b);
+                
+                // Guardar configuração
+                localStorage.setItem('customDias', JSON.stringify(dias));
+                
+                // Recriar tabela
+                initTable();
+                showNotification(`Coluna ${daysNum} dias adicionada!`, 'success');
+            }
+        }
+
+        function showRemoveColumnDialog() {
+            const diasStr = dias.join(', ');
+            const removeDays = prompt(`Que coluna deseja remover?\nColunas disponíveis: ${diasStr}`);
+            if (removeDays) {
+                const daysNum = parseInt(removeDays);
+                const index = dias.indexOf(daysNum);
+                
+                if (index === -1) {
+                    showNotification('Coluna não encontrada', 'warning');
+                    return;
+                }
+                
+                if (dias.length <= 1) {
+                    showNotification('Não pode remover a última coluna', 'warning');
+                    return;
+                }
+                
+                // Remover
+                dias.splice(index, 1);
+                
+                // Guardar configuração
+                localStorage.setItem('customDias', JSON.stringify(dias));
+                
+                // Recriar tabela
+                initTable();
+                showNotification(`Coluna ${daysNum} dias removida!`, 'success');
+            }
+        }
+
+        // Carregar dias personalizados ao iniciar
+        function loadCustomDias() {
+            const saved = localStorage.getItem('customDias');
+            if (saved) {
+                try {
+                    const customDias = JSON.parse(saved);
+                    if (Array.isArray(customDias) && customDias.length > 0) {
+                        dias.length = 0;
+                        dias.push(...customDias);
+                    }
+                } catch (e) {
+                    console.error('Erro ao carregar dias personalizados:', e);
+                }
+            }
+        }
+
+        // ===== HISTÓRICO =====
+        
+        function switchTab(tab) {
+            const tabCurrent = document.getElementById('tabCurrent');
+            const tabHistory = document.getElementById('tabHistory');
+            const contentCurrent = document.getElementById('contentCurrent');
+            const contentHistory = document.getElementById('contentHistory');
+            
+            if (tab === 'current') {
+                tabCurrent.className = 'px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold';
+                tabHistory.className = 'px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900';
+                contentCurrent.classList.remove('hidden');
+                contentHistory.classList.add('hidden');
+            } else {
+                tabHistory.className = 'px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold';
+                tabCurrent.className = 'px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900';
+                contentHistory.classList.remove('hidden');
+                contentCurrent.classList.add('hidden');
+                generateHistoryMonths();
+            }
+        }
+
+        function generateHistoryMonths() {
+            const container = document.getElementById('historyMonths');
+            container.innerHTML = '';
+            
+            const now = new Date();
+            const months = [];
+            
+            // Debug: listar todas as chaves do localStorage
+            console.log('=== DEBUG HISTÓRICO ===');
+            console.log('Todas as chaves no localStorage:');
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('priceHistory_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    if (Array.isArray(data)) {
+                        console.log(`${key}: ${data.length} versões`);
+                        data.forEach((v, idx) => {
+                            console.log(`  Versão ${idx + 1}: ${v.priceCount} preços, data: ${v.date}`);
+                        });
+                    } else {
+                        console.log(`${key}: ${data.priceCount} preços, data: ${data.date} (formato antigo)`);
+                    }
+                }
+            }
+            
+            // Gerar 24 meses (2 anos)
+            for (let i = 0; i < 24; i++) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(date);
+            }
+            
+            months.forEach(date => {
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                const monthName = date.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+                const historyKey = `priceHistory_${monthKey}`;
+                const hasData = localStorage.getItem(historyKey) !== null;
+                
+                console.log(`Verificando ${monthKey}: ${hasData ? 'TEM DADOS' : 'SEM DADOS'}`);
+                
+                const button = document.createElement('button');
+                button.className = `p-3 border rounded text-sm ${hasData ? 'bg-[#009cb6] text-white hover:bg-[#f4ad0f]' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`;
+                button.textContent = monthName;
+                button.disabled = !hasData;
+                
+                if (hasData) {
+                    button.onclick = () => showHistoryMonth(monthKey, monthName);
+                }
+                
+                container.appendChild(button);
+            });
+            
+            console.log('=== FIM DEBUG ===');
+        }
+
+        function showHistoryMonth(monthKey, monthName) {
+            const data = localStorage.getItem(`priceHistory_${monthKey}`);
+            if (!data) return;
+            
+            try {
+                let historyArray = JSON.parse(data);
+                
+                // Converter objeto antigo para array se necessário
+                if (!Array.isArray(historyArray)) {
+                    historyArray = [historyArray];
+                }
+                
+                document.getElementById('historyTitle').textContent = `Preços de ${monthName} (${historyArray.length} versões)`;
+                document.getElementById('historyTableContainer').classList.remove('hidden');
+                
+                const container = document.getElementById('historyTableContainer');
+                
+                // Limpar tabelas antigas
+                const oldTables = container.querySelectorAll('.history-version-table');
+                oldTables.forEach(t => t.remove());
+                
+                // Criar uma tabela para cada versão
+                historyArray.forEach((historyData, index) => {
+                    const versionDate = new Date(historyData.date);
+                    const dateStr = versionDate.toLocaleString('pt-PT', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    const versionDiv = document.createElement('div');
+                    versionDiv.className = 'history-version-table mb-6';
+                    
+                    const versionTitle = document.createElement('div');
+                    versionTitle.className = 'bg-gray-100 px-4 py-2 font-semibold text-sm border-t border-x';
+                    versionTitle.textContent = `Versão ${index + 1} - ${dateStr}`;
+                    versionDiv.appendChild(versionTitle);
+                    
+                    const tableDiv = document.createElement('div');
+                    tableDiv.className = 'bg-white shadow overflow-x-auto border';
+                    
+                    const table = document.createElement('table');
+                    table.className = 'w-full text-xs';
+                    
+                    // Header
+                    const thead = document.createElement('thead');
+                    thead.className = 'bg-gray-50';
+                    
+                    let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Grupo</th>';
+                    historyData.dias.forEach((d, idx) => {
+                        const bgColor = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                        headerRow1 += `<th colspan="2" class="px-2 py-2 text-center font-semibold border-r ${bgColor}">${d}d</th>`;
+                    });
+                    headerRow1 += '</tr>';
+                    
+                    let headerRow2 = '<tr>';
+                    historyData.dias.forEach((d, idx) => {
+                        const bgColor = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-blue-700 font-semibold">NET</th>`;
+                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-green-700 font-semibold border-r">Real</th>`;
+                    });
+                    headerRow2 += '</tr>';
+                    
+                    thead.innerHTML = headerRow1 + headerRow2;
+                    table.appendChild(thead);
+                    
+                    // Body
+                    const tbody = document.createElement('tbody');
+                    
+                    historyData.grupos.forEach(grupo => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'border-t hover:bg-gray-50';
+                        
+                        const tdGrupo = document.createElement('td');
+                        tdGrupo.className = 'px-2 py-3 font-semibold border-r';
+                        tdGrupo.textContent = grupo;
+                        tr.appendChild(tdGrupo);
+                        
+                        historyData.dias.forEach((day, dayIdx) => {
+                            const bgColor = dayIdx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
+                            const key = `${grupo}_${day}`;
+                            const priceData = historyData.prices[key] || { net: '', real: '' };
+                            
+                            // NET
+                            const tdNet = document.createElement('td');
+                            tdNet.className = `px-1 py-1 text-right text-xs ${bgColor}`;
+                            tdNet.textContent = priceData.net || '-';
+                            tr.appendChild(tdNet);
+                            
+                            // Real
+                            const tdReal = document.createElement('td');
+                            tdReal.className = `px-1 py-1 text-right text-xs border-r ${bgColor} bg-[#009cb6] bg-opacity-10`;
+                            tdReal.textContent = priceData.real || '-';
+                            tr.appendChild(tdReal);
+                        });
+                        
+                        tbody.appendChild(tr);
+                    });
+                    
+                    table.appendChild(tbody);
+                    tableDiv.appendChild(table);
+                    versionDiv.appendChild(tableDiv);
+                    
+                    // Inserir antes do botão fechar
+                    const closeButton = container.querySelector('.bg-white.shadow.mb-4');
+                    closeButton.parentNode.insertBefore(versionDiv, closeButton.nextSibling);
+                });
+                
+            } catch (e) {
+                console.error('Erro ao carregar histórico:', e);
+                showNotification('Erro ao carregar dados do histórico', 'error');
+            }
+        }
+
+        function closeHistory() {
+            document.getElementById('historyTableContainer').classList.add('hidden');
+        }
+
+        function saveToHistory() {
+            const now = new Date();
+            const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            const prices = {};
+            let priceCount = 0;
+            
+            grupos.forEach(grupo => {
+                dias.forEach(day => {
+                    const inputNet = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="net"]`);
+                    const inputReal = document.querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                    
+                    if (inputNet && inputReal && (inputNet.value || inputReal.value)) {
+                        prices[`${grupo}_${day}`] = {
+                            net: inputNet.value || '',
+                            real: inputReal.value || ''
+                        };
+                        priceCount++;
+                    }
+                });
+            });
+            
+            // Copiar automaticamente preços de grupos dependentes (C = D)
+            Object.keys(gruposCopia).forEach(grupoDestino => {
+                const grupoOrigem = gruposCopia[grupoDestino];
+                dias.forEach(day => {
+                    const keyOrigem = `${grupoOrigem}_${day}`;
+                    const keyDestino = `${grupoDestino}_${day}`;
+                    if (prices[keyOrigem]) {
+                        prices[keyDestino] = {
+                            net: prices[keyOrigem].net,
+                            real: prices[keyOrigem].real
+                        };
+                    }
+                });
+            });
+            
+            const newEntry = {
+                date: now.toISOString(),
+                grupos: grupos,
+                dias: [...dias],
+                prices: prices,
+                priceCount: priceCount
+            };
+            
+            // Carregar histórico existente do mês
+            const existingData = localStorage.getItem(`priceHistory_${monthKey}`);
+            let historyArray = [];
+            
+            if (existingData) {
+                try {
+                    const parsed = JSON.parse(existingData);
+                    // Se for array, usar; se for objeto antigo, converter
+                    historyArray = Array.isArray(parsed) ? parsed : [parsed];
+                } catch (e) {
+                    historyArray = [];
+                }
+            }
+            
+            // Adicionar nova entrada no início
+            historyArray.unshift(newEntry);
+            
+            // Manter apenas as últimas 3
+            if (historyArray.length > 3) {
+                historyArray = historyArray.slice(0, 3);
+            }
+            
+            localStorage.setItem(`priceHistory_${monthKey}`, JSON.stringify(historyArray));
+            console.log(`Histórico guardado automaticamente: ${monthKey} com ${priceCount} preços (${historyArray.length} versões)`);
+            return priceCount;
+        }
+
+        loadCustomDias();
+        document.getElementById('pickupDate').valueAsDate = new Date();
+        initTable();
+    </script>
+</body>
+</html>

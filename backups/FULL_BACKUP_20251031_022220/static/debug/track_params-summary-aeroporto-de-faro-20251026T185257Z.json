@@ -1,0 +1,70 @@
+{
+  "ts": "20251026T185257Z",
+  "location": "Aeroporto de Faro",
+  "start": "2025-11-05T10:00:00",
+  "end": "2026-01-04T10:00:00",
+  "days": 60,
+  "count": 104,
+  "preview": [
+    {
+      "id": 0,
+      "car": "Fiat Panda",
+      "supplier": "Drive4Fun",
+      "price": "437,43 €",
+      "currency": "EUR",
+      "category": "Mini",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C30.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "422,50 €"
+    },
+    {
+      "id": 1,
+      "car": "Peugeot 208",
+      "supplier": "Drive4Fun",
+      "price": "456,59 €",
+      "currency": "EUR",
+      "category": "Economy",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C60.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "441,00 €"
+    },
+    {
+      "id": 2,
+      "car": "Kia Picanto Auto",
+      "supplier": "Drive4Fun",
+      "price": "518,56 €",
+      "currency": "EUR",
+      "category": "Mini Automatic",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_A134.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "500,86 €"
+    },
+    {
+      "id": 3,
+      "car": "Citroen C3",
+      "supplier": "Drive4Fun",
+      "price": "591,57 €",
+      "currency": "EUR",
+      "category": "Economy Automatic",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_C06.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "571,38 €"
+    },
+    {
+      "id": 4,
+      "car": "Seat Arona",
+      "supplier": "Drive4Fun",
+      "price": "591,57 €",
+      "currency": "EUR",
+      "category": "SUV",
+      "transmission": "",
+      "photo": "https://www.carjet.com/cdn/img/cars/M/car_F194.jpg",
+      "link": "https://www.carjet.com/do/list/pt",
+      "original_price": "571,38 €"
+    }
+  ]
+}

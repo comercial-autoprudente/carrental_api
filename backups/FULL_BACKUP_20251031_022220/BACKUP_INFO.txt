@@ -1,0 +1,57 @@
+╔════════════════════════════════════════════════════════════╗
+║         BACKUP COMPLETO - Car Rental API                   ║
+╚════════════════════════════════════════════════════════════╝
+
+📅 Data: 31/10/2025 às 02:22:34
+💻 Hostname: MacBook-Pro-de-Filipe.local
+👤 User: filipepacheco
+📦 Backup: FULL_BACKUP_20251031_022220
+
+════════════════════════════════════════════════════════════
+
+📊 CONTEÚDO DO BACKUP:
+
+✅ Código Fonte Completo
+   - Python (main.py, etc)
+   - Templates HTML
+   - Static files (CSS, JS, imagens)
+   
+✅ Git Repository
+   - Histórico completo de commits
+   - Todas as branches
+   - Tags
+   
+✅ Bases de Dados
+   - carrental.db (utilizadores, settings, logs)
+   - car_images.db (fotos de veículos)
+   - data.db (dados de scraping)
+   - SQL dumps de todas as DBs
+   
+✅ Fotos
+   - Todas as fotos de veículos
+   - Logos e favicons
+   - Profile pictures
+   
+✅ Configurações
+   - .env (credenciais)
+   - render.yaml (deploy config)
+   - Dockerfile
+   - requirements.txt
+   
+✅ Documentação
+   - Todos os ficheiros .md
+   - Guias de deploy
+   - Workflows
+
+════════════════════════════════════════════════════════════
+
+📈 ESTATÍSTICAS:
+
+Tamanho total: 1.7G
+Ficheiros:     7573
+Pastas:      649
+
+Git:
+  - Branch atual: main
+  - Último commit: 7a777f2 - fix: esconder botões de navegação quando Price Adjustment carregado em iframe (2025-10-31 02:00:38 +0000)
+  - Total commits: 342
