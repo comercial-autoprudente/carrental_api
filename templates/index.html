@@ -381,7 +381,7 @@
           <div class="md:col-span-2 seg">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
             <label class="sr-only">Início (data)</label>
-            <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;"/>
+            <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;" min=""/>
           </div>
           <!-- Dias (terceiro campo na mesma linha) -->
           <div class="md:col-span-7 seg" style="flex-wrap: nowrap; overflow-x: auto;">
@@ -595,6 +595,18 @@
       
       // Limpar cache quando localização muda
       document.addEventListener('DOMContentLoaded', () => {
+        // Definir data mínima como hoje
+        const startDateInput = document.getElementById('startDate');
+        if (startDateInput) {
+          const today = new Date();
+          const yyyy = today.getFullYear();
+          const mm = String(today.getMonth() + 1).padStart(2, '0');
+          const dd = String(today.getDate()).padStart(2, '0');
+          const todayStr = `${yyyy}-${mm}-${dd}`;
+          startDateInput.setAttribute('min', todayStr);
+          console.log('[DATE] Data mínima definida:', todayStr);
+        }
+        
         const locEl = document.getElementById('location');
         if (locEl) {
           locEl.addEventListener('change', () => {
