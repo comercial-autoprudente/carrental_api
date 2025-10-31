@@ -1458,11 +1458,220 @@ def init_db():
             )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_auto_prices_history ON automated_prices_history(location, grupo, pickup_date, created_at)")
             
+            # Tabela para logs do sistema (evitar perda em disco efêmero)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS system_logs (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  level TEXT NOT NULL,
+                  message TEXT NOT NULL,
+                  module TEXT,
+                  function TEXT,
+                  line_number INTEGER,
+                  exception TEXT,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_system_logs ON system_logs(level, created_at)")
+            
+            # Tabela para cache de dados (evitar perda em disco efêmero)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS cache_data (
+                  key TEXT PRIMARY KEY,
+                  value TEXT NOT NULL,
+                  expires_at TEXT,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            
+            # Tabela para uploads/ficheiros (evitar perda em disco efêmero)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS file_storage (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  filename TEXT NOT NULL,
+                  filepath TEXT NOT NULL UNIQUE,
+                  file_data BLOB NOT NULL,
+                  content_type TEXT,
+                  file_size INTEGER,
+                  uploaded_by TEXT,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_file_storage ON file_storage(filepath, uploaded_by)")
+            
         finally:
             conn.commit()
             conn.close()
 
 init_db()
+
+# ============================================================
+# HELPER FUNCTIONS - PERSISTÊNCIA EM DB (EVITAR DISCO EFÊMERO)
+# ============================================================
+
+def log_to_db(level: str, message: str, module: str = None, function: str = None, line_number: int = None, exception: str = None):
+    """Salvar logs na base de dados em vez de ficheiros"""
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                conn.execute(
+                    """
+                    INSERT INTO system_logs (level, message, module, function, line_number, exception)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (level, message, module, function, line_number, exception)
+                )
+                conn.commit()
+            finally:
+                conn.close()
+    except Exception as e:
+        # Fallback para print se DB falhar
+        print(f"[{level}] {message}", file=sys.stderr, flush=True)
+
+def save_to_cache(key: str, value: str, expires_in_seconds: int = None):
+    """Salvar dados em cache na DB em vez de filesystem"""
+    try:
+        expires_at = None
+        if expires_in_seconds:
+            from datetime import datetime, timedelta, timezone
+            expires_at = (datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)).isoformat()
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO cache_data (key, value, expires_at, updated_at)
+                    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                    """,
+                    (key, value, expires_at)
+                )
+                conn.commit()
+            finally:
+                conn.close()
+    except Exception as e:
+        log_to_db("ERROR", f"Failed to save cache: {str(e)}", "main", "save_to_cache")
+
+def get_from_cache(key: str):
+    """Obter dados do cache na DB"""
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute(
+                    """
+                    SELECT value, expires_at FROM cache_data 
+                    WHERE key = ?
+                    """,
+                    (key,)
+                )
+                row = cursor.fetchone()
+                
+                if row:
+                    value, expires_at = row
+                    
+                    # Verificar expiração
+                    if expires_at:
+                        from datetime import datetime, timezone
+                        expires_dt = datetime.fromisoformat(expires_at)
+                        if datetime.now(timezone.utc) > expires_dt:
+                            # Expirado, deletar
+                            conn.execute("DELETE FROM cache_data WHERE key = ?", (key,))
+                            conn.commit()
+                            return None
+                    
+                    return value
+                
+                return None
+            finally:
+                conn.close()
+    except Exception as e:
+        log_to_db("ERROR", f"Failed to get cache: {str(e)}", "main", "get_from_cache")
+        return None
+
+def save_file_to_db(filename: str, filepath: str, file_data: bytes, content_type: str = None, uploaded_by: str = None):
+    """Salvar ficheiro na base de dados em vez de filesystem"""
+    try:
+        file_size = len(file_data)
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO file_storage 
+                    (filename, filepath, file_data, content_type, file_size, uploaded_by)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (filename, filepath, file_data, content_type, file_size, uploaded_by)
+                )
+                conn.commit()
+                log_to_db("INFO", f"File saved to DB: {filepath} ({file_size} bytes)", "main", "save_file_to_db")
+            finally:
+                conn.close()
+    except Exception as e:
+        log_to_db("ERROR", f"Failed to save file to DB: {str(e)}", "main", "save_file_to_db", exception=str(e))
+        raise
+
+def get_file_from_db(filepath: str):
+    """Obter ficheiro da base de dados"""
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute(
+                    """
+                    SELECT filename, file_data, content_type, file_size FROM file_storage 
+                    WHERE filepath = ?
+                    """,
+                    (filepath,)
+                )
+                row = cursor.fetchone()
+                
+                if row:
+                    return {
+                        "filename": row[0],
+                        "data": row[1],
+                        "content_type": row[2],
+                        "size": row[3]
+                    }
+                
+                return None
+            finally:
+                conn.close()
+    except Exception as e:
+        log_to_db("ERROR", f"Failed to get file from DB: {str(e)}", "main", "get_file_from_db")
+        return None
+
+def cleanup_expired_cache():
+    """Limpar cache expirado"""
+    try:
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute(
+                    "DELETE FROM cache_data WHERE expires_at IS NOT NULL AND expires_at < ?",
+                    (now,)
+                )
+                deleted = cursor.rowcount
+                conn.commit()
+                
+                if deleted > 0:
+                    log_to_db("INFO", f"Cleaned up {deleted} expired cache entries", "main", "cleanup_expired_cache")
+            finally:
+                conn.close()
+    except Exception as e:
+        log_to_db("ERROR", f"Failed to cleanup cache: {str(e)}", "main", "cleanup_expired_cache")
 
 
 IDLE_TIMEOUT_SECONDS = 30 * 60  # 30 minutes
