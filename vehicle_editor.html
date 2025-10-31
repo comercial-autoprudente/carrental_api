@@ -178,7 +178,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Category</label>
-                            <select id="editCategory" class="w-full px-3 py-2 border rounded-lg">
+                            <select id="editCategory" class="w-full px-3 py-2 border rounded-lg" onchange="updateGroupFromCategory()">
                                 <option value="MINI 4 Portas">MINI 4 Portas</option>
                                 <option value="MINI 5 Portas">MINI 5 Portas</option>
                                 <option value="MINI Auto">MINI Auto</option>
@@ -187,7 +187,11 @@
                                 <option value="SUV">SUV</option>
                                 <option value="SUV Auto">SUV Auto</option>
                                 <option value="Crossover">Crossover</option>
+                                <option value="Station Wagon">Station Wagon</option>
+                                <option value="Station Wagon Auto">Station Wagon Auto</option>
+                                <option value="Cabrio">Cabrio</option>
                                 <option value="Premium">Premium</option>
+                                <option value="Luxury">Luxury</option>
                                 <option value="7 Lugares">7 Lugares</option>
                                 <option value="7 Lugares Auto">7 Lugares Auto</option>
                                 <option value="9 Lugares">9 Lugares</option>
@@ -203,9 +207,12 @@
                                 <option value="E1">E1 - Mini Auto</option>
                                 <option value="E2">E2 - Economy Auto</option>
                                 <option value="F">F - SUV</option>
-                                <option value="G">G - Premium</option>
+                                <option value="G">G - Cabrio</option>
+                                <option value="X">X - Premium/Luxury</option>
                                 <option value="J1">J1 - Crossover</option>
+                                <option value="J2">J2 - Station Wagon</option>
                                 <option value="L1">L1 - SUV Auto</option>
+                                <option value="L2">L2 - Station Wagon Auto</option>
                                 <option value="M1">M1 - 7 Seater</option>
                                 <option value="M2">M2 - 7 Seater Auto</option>
                                 <option value="N">N - 9 Seater</option>
@@ -213,7 +220,41 @@
                         </div>
                     </div>
                     
-                    <div class="flex gap-3">
+                    <!-- Upload/Download Foto -->
+                    <div class="border-t pt-4">
+                        <label class="block text-sm font-medium mb-2">Vehicle Photo</label>
+                        
+                        <!-- Preview -->
+                        <div id="photoPreview" class="mb-3 hidden">
+                            <img id="photoPreviewImage" src="" alt="Preview" class="h-32 w-auto rounded border">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <!-- Upload -->
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Upload File</label>
+                                <input type="file" id="photoFile" accept="image/*" 
+                                       class="w-full text-sm border rounded-lg p-2"
+                                       onchange="handlePhotoUpload(event)">
+                            </div>
+                            
+                            <!-- URL -->
+                            <div>
+                                <label class="block text-xs text-gray-600 mb-1">Or paste URL</label>
+                                <div class="flex gap-2">
+                                    <input type="url" id="photoUrl" 
+                                           placeholder="https://..." 
+                                           class="flex-1 px-3 py-2 border rounded-lg text-sm">
+                                    <button type="button" onclick="downloadPhotoFromUrl()" 
+                                            class="px-3 py-2 bg-[#009cb6] text-white rounded-lg hover:bg-[#007a8e] text-sm">
+                                        📥
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 pt-4">
                         <button onclick="saveEdit()" class="flex-1 px-4 py-2 bg-[#009cb6] text-white rounded-lg">
                             💾 Save
                         </button>
@@ -241,7 +282,11 @@
             'SUV': 'F',
             'SUV Auto': 'L1',
             'Crossover': 'J1',
-            'Premium': 'G',
+            'Station Wagon': 'J2',
+            'Station Wagon Auto': 'L2',
+            'Cabrio': 'G',
+            'Premium': 'X',
+            'Luxury': 'X',
             '7 Lugares': 'M1',
             '7 Lugares Auto': 'M2',
             '9 Lugares': 'N'
@@ -401,7 +446,104 @@
             document.getElementById('editCleanName').value = vehicle.clean;
             document.getElementById('editCategory').value = vehicle.category;
             document.getElementById('editGroup').value = categoryToGroup[vehicle.category] || 'D';
+            
+            // Carregar foto se existir
+            loadVehiclePhoto(vehicle.clean);
+            
             document.getElementById('editModal').classList.remove('hidden');
+        }
+        
+        async function loadVehiclePhoto(vehicleName) {
+            const photoUrl = `/api/vehicles/${encodeURIComponent(vehicleName)}/photo?t=${Date.now()}`;
+            const preview = document.getElementById('photoPreview');
+            const previewImage = document.getElementById('photoPreviewImage');
+            const urlInput = document.getElementById('photoUrl');
+            
+            try {
+                const response = await fetch(photoUrl);
+                if (response.ok) {
+                    previewImage.src = photoUrl;
+                    preview.classList.remove('hidden');
+                    
+                    // Tentar obter URL original
+                    try {
+                        const metaResponse = await fetch(`/api/vehicles/${encodeURIComponent(vehicleName)}/photo/metadata`);
+                        if (metaResponse.ok) {
+                            const metadata = await metaResponse.json();
+                            if (metadata.ok && metadata.source_url) {
+                                urlInput.value = metadata.source_url;
+                            }
+                        }
+                    } catch (err) {
+                        console.log('No metadata');
+                    }
+                } else {
+                    preview.classList.add('hidden');
+                    urlInput.value = '';
+                }
+            } catch (error) {
+                preview.classList.add('hidden');
+                urlInput.value = '';
+            }
+        }
+        
+        async function handlePhotoUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !editingVehicle) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`/api/vehicles/${encodeURIComponent(editingVehicle.clean)}/photo/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (data.ok) {
+                    alert('✅ Photo uploaded!');
+                    await loadVehiclePhoto(editingVehicle.clean);
+                    renderVehicles(); // Atualizar tabela
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+        
+        async function downloadPhotoFromUrl() {
+            const url = document.getElementById('photoUrl').value.trim();
+            if (!url || !editingVehicle) {
+                alert('Enter a valid URL!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/vehicles/${encodeURIComponent(editingVehicle.clean)}/photo/from-url`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                if (data.ok) {
+                    alert('✅ Photo downloaded!');
+                    await loadVehiclePhoto(editingVehicle.clean);
+                    renderVehicles(); // Atualizar tabela
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            }
+        }
+        
+        function updateGroupFromCategory() {
+            const category = document.getElementById('editCategory').value;
+            const group = categoryToGroup[category] || 'D';
+            document.getElementById('editGroup').value = group;
         }
         
         function closeEditModal() {
