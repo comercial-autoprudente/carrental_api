@@ -101,6 +101,7 @@ VEHICLES = {
     'citroen c1 auto': 'MINI Auto',
     'toyota aygo auto': 'MINI Auto',
     'peugeot 108 auto': 'MINI Auto',
+    'kia picanto auto': 'MINI Auto',
     'mitsubishi spacestar auto': 'MINI Auto',
     
     # ECONOMY
@@ -237,6 +238,7 @@ VEHICLES = {
     'vw multivan auto': '7 Lugares Auto',
     'citroen c4 grand spacetourer auto': '7 Lugares Auto',
     'citroen c4 picasso auto': '7 Lugares Auto',
+    'renault grand scenic auto': '7 Lugares Auto',
     'mercedes glb auto': '7 Lugares Auto',
     
     # 9 Lugares
