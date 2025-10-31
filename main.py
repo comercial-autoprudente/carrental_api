@@ -1388,6 +1388,55 @@ def init_db():
                 """
             )
             conn.execute("CREATE INDEX IF NOT EXISTS idx_snapshots_q ON price_snapshots(location, days, ts)")
+            
+            # Tabela para configurações globais de automação de preços
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS price_automation_settings (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  key TEXT NOT NULL UNIQUE,
+                  value TEXT NOT NULL,
+                  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            
+            # Tabela para regras automatizadas de preços
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS automated_price_rules (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  location TEXT NOT NULL,
+                  grupo TEXT NOT NULL,
+                  month INTEGER,
+                  day INTEGER,
+                  config TEXT NOT NULL,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  UNIQUE(location, grupo, month, day)
+                )
+                """
+            )
+            
+            # Tabela para estratégias de pricing
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS pricing_strategies (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  location TEXT NOT NULL,
+                  grupo TEXT NOT NULL,
+                  month INTEGER,
+                  day INTEGER,
+                  priority INTEGER NOT NULL DEFAULT 1,
+                  strategy_type TEXT NOT NULL,
+                  config TEXT NOT NULL,
+                  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            conn.execute("CREATE INDEX IF NOT EXISTS idx_strategies ON pricing_strategies(location, grupo, month, day, priority)")
+            
         finally:
             conn.commit()
             conn.close()
@@ -7103,6 +7152,209 @@ async def admin_price_automation_settings(request: Request):
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Erro: price_automation_settings.html não encontrado</h1>", status_code=500)
+
+# ============================================================
+# API ENDPOINTS - PRICE AUTOMATION SETTINGS PERSISTENCE
+# ============================================================
+
+@app.post("/api/price-automation/settings/save")
+async def save_price_automation_settings(request: Request):
+    """Salvar configurações globais de automação de preços na base de dados"""
+    require_auth(request)
+    
+    try:
+        data = await request.json()
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                # Salvar cada configuração
+                for key, value in data.items():
+                    conn.execute(
+                        """
+                        INSERT OR REPLACE INTO price_automation_settings (key, value, updated_at)
+                        VALUES (?, ?, CURRENT_TIMESTAMP)
+                        """,
+                        (key, json.dumps(value))
+                    )
+                conn.commit()
+                return JSONResponse({"ok": True, "message": "Settings saved successfully"})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/price-automation/settings/load")
+async def load_price_automation_settings(request: Request):
+    """Carregar configurações globais de automação de preços da base de dados"""
+    require_auth(request)
+    
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute("SELECT key, value FROM price_automation_settings")
+                rows = cursor.fetchall()
+                
+                settings = {}
+                for row in rows:
+                    try:
+                        settings[row[0]] = json.loads(row[1])
+                    except:
+                        settings[row[0]] = row[1]
+                
+                return JSONResponse({"ok": True, "settings": settings})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/price-automation/rules/save")
+async def save_automated_price_rules(request: Request):
+    """Salvar regras automatizadas de preços na base de dados"""
+    require_auth(request)
+    
+    try:
+        data = await request.json()
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                # Limpar regras antigas
+                conn.execute("DELETE FROM automated_price_rules")
+                
+                # Salvar novas regras
+                for location, grupos in data.items():
+                    for grupo, grupo_data in grupos.items():
+                        if 'months' in grupo_data:
+                            for month, month_data in grupo_data['months'].items():
+                                if 'days' in month_data:
+                                    for day, day_config in month_data['days'].items():
+                                        conn.execute(
+                                            """
+                                            INSERT INTO automated_price_rules 
+                                            (location, grupo, month, day, config, updated_at)
+                                            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                                            """,
+                                            (location, grupo, int(month), int(day), json.dumps(day_config))
+                                        )
+                
+                conn.commit()
+                return JSONResponse({"ok": True, "message": "Rules saved successfully"})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/price-automation/rules/load")
+async def load_automated_price_rules(request: Request):
+    """Carregar regras automatizadas de preços da base de dados"""
+    require_auth(request)
+    
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute(
+                    "SELECT location, grupo, month, day, config FROM automated_price_rules ORDER BY location, grupo, month, day"
+                )
+                rows = cursor.fetchall()
+                
+                rules = {}
+                for row in rows:
+                    location, grupo, month, day, config_json = row
+                    
+                    if location not in rules:
+                        rules[location] = {}
+                    if grupo not in rules[location]:
+                        rules[location][grupo] = {"months": {}}
+                    if str(month) not in rules[location][grupo]["months"]:
+                        rules[location][grupo]["months"][str(month)] = {"days": {}}
+                    
+                    try:
+                        rules[location][grupo]["months"][str(month)]["days"][str(day)] = json.loads(config_json)
+                    except:
+                        rules[location][grupo]["months"][str(month)]["days"][str(day)] = {}
+                
+                return JSONResponse({"ok": True, "rules": rules})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.post("/api/price-automation/strategies/save")
+async def save_pricing_strategies(request: Request):
+    """Salvar estratégias de pricing na base de dados"""
+    require_auth(request)
+    
+    try:
+        data = await request.json()
+        
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                # Limpar estratégias antigas
+                conn.execute("DELETE FROM pricing_strategies")
+                
+                # Salvar novas estratégias
+                for key, strategies in data.items():
+                    # Parse key: location_grupo_month_day
+                    parts = key.split('_')
+                    if len(parts) >= 4:
+                        location = parts[0]
+                        grupo = parts[1]
+                        month = int(parts[2])
+                        day = int(parts[3])
+                        
+                        for idx, strategy in enumerate(strategies):
+                            conn.execute(
+                                """
+                                INSERT INTO pricing_strategies 
+                                (location, grupo, month, day, priority, strategy_type, config, updated_at)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                                """,
+                                (location, grupo, month, day, idx + 1, strategy['type'], json.dumps(strategy))
+                            )
+                
+                conn.commit()
+                return JSONResponse({"ok": True, "message": "Strategies saved successfully"})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
+
+@app.get("/api/price-automation/strategies/load")
+async def load_pricing_strategies(request: Request):
+    """Carregar estratégias de pricing da base de dados"""
+    require_auth(request)
+    
+    try:
+        with _db_lock:
+            conn = _db_connect()
+            try:
+                cursor = conn.execute(
+                    "SELECT location, grupo, month, day, priority, config FROM pricing_strategies ORDER BY location, grupo, month, day, priority"
+                )
+                rows = cursor.fetchall()
+                
+                strategies = {}
+                for row in rows:
+                    location, grupo, month, day, priority, config_json = row
+                    key = f"{location}_{grupo}_{month}_{day}"
+                    
+                    if key not in strategies:
+                        strategies[key] = []
+                    
+                    try:
+                        strategies[key].append(json.loads(config_json))
+                    except:
+                        pass
+                
+                return JSONResponse({"ok": True, "strategies": strategies})
+            finally:
+                conn.close()
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=500)
 
 @app.get("/api/vehicles/with-originals")
 async def get_vehicles_with_originals(request: Request):
