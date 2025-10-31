@@ -1297,15 +1297,35 @@
                         const key = `${currentLocation}_${grupo}_${month}_${day}`;
                         const strategies = strategiesData[key];
                         
+                        let autoPrice = null;
+                        
                         if (!strategies || strategies.length === 0) {
-                            // Sem estratégias configuradas, pular
-                            pricesSkipped++;
+                            // SEM estratégias: Extrair valor Real do supplier de referência (AUTOPRUDENTE)
+                            const groupPrices = currentPrices[grupo];
+                            if (groupPrices && groupPrices[day]) {
+                                // Usar preço do Current Prices diretamente (já é Real/GROSS)
+                                const realPrice = groupPrices[day];
+                                
+                                // Calcular Auto (NET) a partir do Real
+                                autoPrice = calculateNet(realPrice);
+                                
+                                // Preencher ambos os campos
+                                const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
+                                const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                
+                                if (inputAuto && inputReal) {
+                                    inputAuto.value = autoPrice.toFixed(2);
+                                    inputReal.value = realPrice.toFixed(2);
+                                    pricesGenerated++;
+                                }
+                            } else {
+                                pricesSkipped++;
+                            }
                             continue;
                         }
                         
-                        // Aplicar primeira estratégia (prioridade)
+                        // COM estratégias: Aplicar primeira estratégia (prioridade)
                         const strategy = strategies[0];
-                        let autoPrice = null;
                         
                         // Calcular preço baseado na estratégia
                         if (strategy.type === 'follow_lowest') {
@@ -1339,8 +1359,13 @@
                     }
                 }
                 
-                console.log(`✅ Generated ${pricesGenerated} prices, skipped ${pricesSkipped} (no rules)`);
-                alert(`✅ Generated ${pricesGenerated} automated prices!\n\n⚠️ ${pricesSkipped} cells skipped (no rules configured)`);
+                console.log(`✅ Generated ${pricesGenerated} prices, skipped ${pricesSkipped} (no data)`);
+                
+                if (pricesSkipped > 0) {
+                    alert(`✅ Generated ${pricesGenerated} automated prices!\n\n⚠️ ${pricesSkipped} cells skipped (no data in Current Prices)`);
+                } else {
+                    alert(`✅ Generated ${pricesGenerated} automated prices successfully!`);
+                }
                 
             } catch (error) {
                 console.error('Error generating automated prices:', error);
@@ -1531,30 +1556,37 @@
                         }
                     }
                     
-                    // Se não há regras, marcar células como laranja
+                    // Se não há regras, verificar se há dados no Current Prices
                     if (!hasRules) {
-                        const cellsAuto = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="auto"]`);
-                        const cellsReal = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="real"]`);
+                        // Verificar se há dados no Current Prices para este grupo/dia
+                        const inputCurrentPrice = document.querySelector(`#pricesTable input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                        const hasCurrentPriceData = inputCurrentPrice && inputCurrentPrice.value && parseFloat(inputCurrentPrice.value) > 0;
                         
-                        cellsAuto.forEach(cell => {
-                            cell.classList.remove('bg-[#f4ad0f]', 'bg-opacity-20');
-                            cell.classList.add('bg-orange-200');
-                            const input = cell.querySelector('input');
-                            if (input) {
-                                input.value = ''; // Deixar vazio
-                                input.placeholder = 'No rules';
-                            }
-                        });
-                        
-                        cellsReal.forEach(cell => {
-                            cell.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
-                            cell.classList.add('bg-orange-200');
-                            const input = cell.querySelector('input');
-                            if (input) {
-                                input.value = ''; // Deixar vazio
-                                input.placeholder = 'No rules';
-                            }
-                        });
+                        // Só marcar como laranja se NÃO houver dados no Current Prices
+                        if (!hasCurrentPriceData) {
+                            const cellsAuto = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="auto"]`);
+                            const cellsReal = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="real"]`);
+                            
+                            cellsAuto.forEach(cell => {
+                                cell.classList.remove('bg-[#f4ad0f]', 'bg-opacity-20');
+                                cell.classList.add('bg-orange-200');
+                                const input = cell.querySelector('input');
+                                if (input) {
+                                    input.value = ''; // Deixar vazio
+                                    input.placeholder = 'No data';
+                                }
+                            });
+                            
+                            cellsReal.forEach(cell => {
+                                cell.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                cell.classList.add('bg-orange-200');
+                                const input = cell.querySelector('input');
+                                if (input) {
+                                    input.value = ''; // Deixar vazio
+                                    input.placeholder = 'No data';
+                                }
+                            });
+                        }
                     }
                 });
             });
