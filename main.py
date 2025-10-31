@@ -7084,7 +7084,7 @@ async def admin_price_automation_settings(request: Request):
 @app.get("/api/vehicles/with-originals")
 async def get_vehicles_with_originals(request: Request):
     """Retorna veículos com nomes originais do scraping"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         print("[VEHICLES API] Iniciando...", file=sys.stderr, flush=True)
         
