@@ -85,13 +85,13 @@ SUPPLIER_MAP = {
 VEHICLES = {
     # MINI 4 Lugares
     'fiat 500 4p': 'MINI 4 Lugares',
+    'toyota aygo': 'MINI 4 Lugares',
+    'peugeot 108': 'MINI 4 Lugares',
     
     # MINI 5 Lugares
     'fiat 500': 'MINI 5 Lugares',
     'citroen c1': 'MINI 5 Lugares',
-    'toyota aygo': 'MINI 5 Lugares',
     'volkswagen up': 'MINI 5 Lugares',
-    'peugeot 108': 'MINI 5 Lugares',
     'hyundai i10': 'MINI 5 Lugares',
     'kia picanto': 'MINI 5 Lugares',
     'fiat panda': 'MINI 5 Lugares',
