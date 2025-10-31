@@ -99,11 +99,11 @@
                     </svg>
                     Group Hierarchy & Price Validation
                 </h3>
-                <p class="text-sm text-gray-600 mb-3">Define group hierarchy to ensure higher-tier groups never have lower prices than lower-tier groups.</p>
+                <p class="text-sm text-gray-600 mb-3">Define group price dependencies to ensure pricing consistency across vehicle categories.</p>
                 
                 <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-3">
-                    <p class="text-sm text-blue-800"><strong>Rule:</strong> Groups on the right cannot have prices lower than groups on the left.</p>
-                    <p class="text-xs text-blue-600 mt-1">Example: If B1 → B2, then B2 price must be ≥ B1 price</p>
+                    <p class="text-sm text-blue-800"><strong>Rule:</strong> Define which groups must have prices ≥ (greater or equal) to other groups.</p>
+                    <p class="text-xs text-blue-600 mt-1">Example: D ≥ B1 means group D price cannot be lower than B1 price</p>
                 </div>
 
                 <div class="mb-3">
@@ -114,9 +114,42 @@
                 </div>
 
                 <div id="groupHierarchyConfig" class="hidden">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Group Order (Lowest to Highest Price)</label>
-                    <textarea id="groupHierarchy" rows="3" class="w-full px-3 py-2 border border-gray-300 focus:ring-2 focus:ring-[#009cb6] focus:border-transparent rounded font-mono text-sm" placeholder="B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N">B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N</textarea>
-                    <p class="text-xs text-gray-500 mt-1">Comma-separated list. Groups on the right must have equal or higher prices than groups on the left.</p>
+                    <div class="mb-3 flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700">Available Groups</label>
+                        <button onclick="showGroupHierarchyBuilder()" class="px-3 py-1.5 text-xs bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f] transition-colors">
+                            Configure Dependencies
+                        </button>
+                    </div>
+                    
+                    <!-- Groups List -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3 p-3 bg-gray-50 rounded border border-gray-200">
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">B1</span> - Mini 4 Doors</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">B2</span> - Mini</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">D</span> - Economy</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">E1</span> - Mini Auto</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">E2</span> - Economy Auto</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">F</span> - SUV</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">G</span> - Premium</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">J1</span> - Crossover</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">J2</span> - Station Wagon</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">L1</span> - SUV Auto</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">L2</span> - SW Auto</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">M1</span> - 7 Seater</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">M2</span> - 7 Seater Auto</div>
+                        <div class="text-xs"><span class="font-semibold text-[#009cb6]">N</span> - 9 Seater</div>
+                    </div>
+                    
+                    <!-- Configured Rules Display -->
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Configured Dependency Rules</label>
+                        <div id="hierarchyRulesList" class="space-y-1 min-h-[60px] p-3 bg-white border border-gray-300 rounded">
+                            <p class="text-xs text-gray-400 italic" id="noRulesMessage">No rules configured yet. Click "Configure Dependencies" to add rules.</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 mt-2">
+                        💡 <strong>Tip:</strong> You can define multiple dependencies per group. For example, D can be set to be ≥ both B1 and B2.
+                    </p>
                 </div>
             </div>
 
@@ -339,6 +372,9 @@
             initializeAutomatedRules();
         });
 
+        // Group Hierarchy Rules Storage
+        let groupHierarchyRules = {}; // Format: { "D": ["B1", "B2"], "E1": ["B2"], ... }
+
         async function loadSettings() {
             try {
                 // Try to load from database first
@@ -358,8 +394,9 @@
                         document.getElementById('enableGroupHierarchy').checked = settings.enableGroupHierarchy;
                         toggleGroupHierarchy();
                     }
-                    if (settings.groupHierarchy && Array.isArray(settings.groupHierarchy)) {
-                        document.getElementById('groupHierarchy').value = settings.groupHierarchy.join(', ');
+                    if (settings.groupHierarchyRules && typeof settings.groupHierarchyRules === 'object') {
+                        groupHierarchyRules = settings.groupHierarchyRules;
+                        renderHierarchyRules();
                     }
                     
                     // Also save to localStorage as backup
@@ -381,6 +418,10 @@
                     if (settings.rounding) document.getElementById('rounding').value = settings.rounding;
                     if (settings.maxAlternativeDays !== undefined) document.getElementById('maxAlternativeDays').value = settings.maxAlternativeDays;
                     if (settings.referenceSupplier) document.getElementById('referenceSupplier').value = settings.referenceSupplier;
+                    if (settings.groupHierarchyRules && typeof settings.groupHierarchyRules === 'object') {
+                        groupHierarchyRules = settings.groupHierarchyRules;
+                        renderHierarchyRules();
+                    }
                     console.log('⚠️ Settings loaded from localStorage (fallback)');
                 } catch (e) {
                     console.error('Erro ao carregar configurações:', e);
@@ -399,7 +440,7 @@
                 autoSaveHistory: document.getElementById('autoSaveHistory').value === 'true',
                 referenceSupplier: document.getElementById('referenceSupplier').value,
                 enableGroupHierarchy: document.getElementById('enableGroupHierarchy').checked,
-                groupHierarchy: document.getElementById('groupHierarchy').value.split(',').map(g => g.trim()).filter(g => g)
+                groupHierarchyRules: groupHierarchyRules
             };
 
             // Validate
@@ -471,7 +512,8 @@
                 document.getElementById('defaultLocation').value = 'Albufeira';
                 document.getElementById('autoSaveHistory').value = 'true';
                 document.getElementById('enableGroupHierarchy').checked = false;
-                document.getElementById('groupHierarchy').value = 'B1, B2, D, E1, E2, F, G, J1, J2, L1, L2, M1, M2, N';
+                groupHierarchyRules = {};
+                renderHierarchyRules();
                 toggleGroupHierarchy();
                 saveSettings();
                 showNotification('✅ Settings reset to defaults!');
@@ -489,35 +531,211 @@
             }
         }
 
+        // Render Hierarchy Rules List
+        function renderHierarchyRules() {
+            const container = document.getElementById('hierarchyRulesList');
+            const noRulesMsg = document.getElementById('noRulesMessage');
+            
+            if (!container) return;
+            
+            // Clear existing rules (except "no rules" message)
+            const existingRules = container.querySelectorAll('.hierarchy-rule-item');
+            existingRules.forEach(el => el.remove());
+            
+            if (Object.keys(groupHierarchyRules).length === 0) {
+                if (noRulesMsg) noRulesMsg.style.display = 'block';
+                return;
+            }
+            
+            if (noRulesMsg) noRulesMsg.style.display = 'none';
+            
+            // Render rules
+            for (const [group, dependencies] of Object.entries(groupHierarchyRules)) {
+                if (dependencies.length === 0) continue;
+                
+                const ruleDiv = document.createElement('div');
+                ruleDiv.className = 'hierarchy-rule-item flex items-center justify-between p-2 bg-blue-50 border border-blue-200 rounded text-xs';
+                
+                ruleDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-[#009cb6]">${group}</span>
+                        <span class="text-gray-600">≥</span>
+                        <span class="text-gray-700">${dependencies.join(', ')}</span>
+                    </div>
+                    <button onclick="removeHierarchyRule('${group}')" class="text-red-500 hover:text-red-700" title="Remove rule">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                `;
+                
+                container.appendChild(ruleDiv);
+            }
+        }
+        
+        // Show Group Hierarchy Builder Modal
+        function showGroupHierarchyBuilder() {
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            overlay.onclick = function(e) {
+                if (e.target === overlay) overlay.remove();
+            };
+            
+            const modal = document.createElement('div');
+            modal.className = 'bg-white rounded-lg shadow-xl p-6 max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto';
+            
+            modal.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Configure Group Dependencies</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-4">
+                    Select a group and define which groups it must be greater than or equal to (≥).
+                </p>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Group</label>
+                    <select id="hierarchyTargetGroup" class="w-full px-3 py-2 border border-gray-300 rounded">
+                        <option value="">-- Select a group --</option>
+                        ${grupos.map(g => `<option value="${g}">${g} - ${grupoNames[g]}</option>`).join('')}
+                    </select>
+                </div>
+                
+                <div id="hierarchyDependenciesSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        This group's price must be ≥ (greater or equal) to:
+                    </label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-gray-50 rounded border border-gray-200 max-h-64 overflow-y-auto">
+                        ${grupos.map(g => `
+                            <label class="flex items-center gap-2 p-2 hover:bg-white rounded cursor-pointer">
+                                <input type="checkbox" value="${g}" class="hierarchy-dep-checkbox w-4 h-4 text-[#009cb6] border-gray-300 rounded">
+                                <span class="text-sm">${g} - ${grupoNames[g]}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end gap-3">
+                    <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button onclick="applyHierarchyRule()" class="px-4 py-2 bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f]">
+                        Apply Rule
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            
+            // Add event listener for group selection
+            const targetGroupSelect = modal.querySelector('#hierarchyTargetGroup');
+            const dependenciesSection = modal.querySelector('#hierarchyDependenciesSection');
+            
+            targetGroupSelect.addEventListener('change', function() {
+                if (this.value) {
+                    dependenciesSection.classList.remove('hidden');
+                    
+                    // Load existing rules for this group
+                    const existingDeps = groupHierarchyRules[this.value] || [];
+                    const checkboxes = modal.querySelectorAll('.hierarchy-dep-checkbox');
+                    checkboxes.forEach(cb => {
+                        // Disable self-selection
+                        if (cb.value === this.value) {
+                            cb.disabled = true;
+                            cb.checked = false;
+                            cb.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                        } else {
+                            cb.disabled = false;
+                            cb.checked = existingDeps.includes(cb.value);
+                            cb.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                        }
+                    });
+                } else {
+                    dependenciesSection.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Apply Hierarchy Rule
+        function applyHierarchyRule() {
+            const modal = document.querySelector('.fixed.inset-0');
+            const targetGroup = modal.querySelector('#hierarchyTargetGroup').value;
+            
+            if (!targetGroup) {
+                alert('Please select a group');
+                return;
+            }
+            
+            const selectedDeps = [];
+            const checkboxes = modal.querySelectorAll('.hierarchy-dep-checkbox:checked');
+            checkboxes.forEach(cb => selectedDeps.push(cb.value));
+            
+            // Update rules
+            if (selectedDeps.length === 0) {
+                delete groupHierarchyRules[targetGroup];
+            } else {
+                groupHierarchyRules[targetGroup] = selectedDeps;
+            }
+            
+            // Render updated rules
+            renderHierarchyRules();
+            
+            // Save settings
+            saveSettings();
+            
+            // Close modal
+            modal.remove();
+            
+            showNotification(`✅ Rule applied for group ${targetGroup}`);
+        }
+        
+        // Remove Hierarchy Rule
+        function removeHierarchyRule(group) {
+            if (confirm(`Remove all dependency rules for group ${group}?`)) {
+                delete groupHierarchyRules[group];
+                renderHierarchyRules();
+                saveSettings();
+                showNotification(`✅ Rule removed for group ${group}`);
+            }
+        }
+        
         // Validate Group Hierarchy Prices
         function validateGroupHierarchy(prices) {
             const settings = JSON.parse(localStorage.getItem('priceAutomationSettings') || '{}');
-            if (!settings.enableGroupHierarchy || !settings.groupHierarchy || !Array.isArray(settings.groupHierarchy)) {
+            if (!settings.enableGroupHierarchy || !groupHierarchyRules || Object.keys(groupHierarchyRules).length === 0) {
                 return { valid: true, errors: [] };
             }
 
-            const hierarchy = settings.groupHierarchy;
             const errors = [];
 
-            // Check each group pair in hierarchy
-            for (let i = 0; i < hierarchy.length - 1; i++) {
-                const lowerGroup = hierarchy[i];
-                const higherGroup = hierarchy[i + 1];
-
+            // Check each group's dependencies
+            for (const [group, dependencies] of Object.entries(groupHierarchyRules)) {
                 // Check all day periods
-                for (const day in prices[lowerGroup] || {}) {
-                    const lowerPrice = parseFloat(prices[lowerGroup]?.[day]);
-                    const higherPrice = parseFloat(prices[higherGroup]?.[day]);
-
-                    if (!isNaN(lowerPrice) && !isNaN(higherPrice) && higherPrice < lowerPrice) {
-                        errors.push({
-                            day: day,
-                            lowerGroup: lowerGroup,
-                            higherGroup: higherGroup,
-                            lowerPrice: lowerPrice.toFixed(2),
-                            higherPrice: higherPrice.toFixed(2),
-                            message: `${higherGroup} (${higherPrice.toFixed(2)}€) cannot be lower than ${lowerGroup} (${lowerPrice.toFixed(2)}€) for ${day} days`
-                        });
+                for (const day in prices[group] || {}) {
+                    const groupPrice = parseFloat(prices[group]?.[day]);
+                    
+                    if (isNaN(groupPrice)) continue;
+                    
+                    // Check against all dependencies
+                    for (const depGroup of dependencies) {
+                        const depPrice = parseFloat(prices[depGroup]?.[day]);
+                        
+                        if (!isNaN(depPrice) && groupPrice < depPrice) {
+                            errors.push({
+                                day: day,
+                                group: group,
+                                dependencyGroup: depGroup,
+                                groupPrice: groupPrice.toFixed(2),
+                                depPrice: depPrice.toFixed(2),
+                                message: `${group} (${groupPrice.toFixed(2)}€) cannot be lower than ${depGroup} (${depPrice.toFixed(2)}€) for ${day} days`
+                            });
+                        }
                     }
                 }
             }
