@@ -297,8 +297,11 @@
                     </div>
                     <div class="flex items-end">
                         <button id="btnGenerateAuto" onclick="generateAutomatedPrices()" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Generate automated prices">
-                            <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[#009cb6] generate-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            <svg class="w-6 h-6 text-[#009cb6] loading-icon-auto hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
                         </button>
                     </div>
@@ -1252,8 +1255,28 @@
         // ===== AUTOMATED PRICES FUNCTIONS =====
         
         function generateAutomatedPrices() {
-            alert('🚧 Automated price generation will be implemented with parametrizations');
+            const btn = document.getElementById('btnGenerateAuto');
+            const generateIcon = btn.querySelector('.generate-icon');
+            const loadingIcon = btn.querySelector('.loading-icon-auto');
+            
+            // Show loading animation
+            generateIcon.classList.add('hidden');
+            loadingIcon.classList.remove('hidden');
+            btn.disabled = true;
+            
+            // Simulate generation (will be replaced with actual logic)
+            setTimeout(() => {
+                alert('🚧 Automated price generation will be implemented with parametrizations');
+                
+                // Hide loading animation
+                loadingIcon.classList.add('hidden');
+                generateIcon.classList.remove('hidden');
+                btn.disabled = false;
+            }, 500);
+            
             // TODO: Implement automated price generation based on parametrizations
+            // The Auto column will be calculated automatically
+            // The Real column works exactly like in Current Prices (editable, with commission calculation)
         }
         
         function initTableAuto() {
@@ -1301,6 +1324,19 @@
                     inputReal.dataset.grupo = grupo;
                     inputReal.dataset.dias = day;
                     inputReal.dataset.type = 'real';
+                    
+                    // Add event listener to calculate Auto from Real (reverse calculation)
+                    inputReal.addEventListener('input', function() {
+                        const realValue = parseFloat(this.value);
+                        if (!isNaN(realValue) && realValue > 0) {
+                            // Calculate Auto (NET) from Real using reverse commission
+                            const autoValue = calculateNet(realValue);
+                            const inputAuto = this.closest('tr').querySelector(`input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
+                            if (inputAuto) {
+                                inputAuto.value = autoValue.toFixed(2);
+                            }
+                        }
+                    });
                     
                     tdReal.appendChild(inputReal);
                     tr.appendChild(tdReal);
