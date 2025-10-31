@@ -202,13 +202,18 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                         <input type="date" id="pickupDate" class="px-3 py-2 border border-gray-300 rounded">
                     </div>
-                    <div class="flex items-end">
+                    <div class="flex items-end gap-2">
                         <button id="btnSearchAll" onclick="searchAllPrices()" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Search all prices">
-                            <svg class="w-6 h-6 text-[#009cb6] search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[#f4ad0f] search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                            <svg class="w-6 h-6 text-[#009cb6] loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[#f4ad0f] loading-icon hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                        <button id="btnStopSearch" onclick="stopSearch()" class="p-2 hover:bg-gray-100 rounded transition-colors hidden" title="Stop search">
+                            <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
@@ -288,34 +293,34 @@
                         <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">60d</th>
                     </tr>
                     <tr>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-blue-50 text-blue-700 font-semibold">NET</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
                     </tr>
                 </thead>
                 <tbody id="pricesTable">
@@ -323,21 +328,6 @@
             </table>
         </div>
 
-        <!-- Legenda -->
-        <div class="mt-4 flex items-center gap-6 text-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-white border border-gray-300"></div>
-                <span>NET Column (white)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-50 border border-[#009cb6]"></div>
-                <span>Real Column (blue)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
-                <span>No price available (red)</span>
-            </div>
-        </div>
         </div>
 
         <!-- Tab: Automated Prices -->
@@ -358,13 +348,18 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                         <input type="date" id="pickupDateAuto" class="px-3 py-2 border border-gray-300 rounded">
                     </div>
-                    <div class="flex items-end">
+                    <div class="flex items-end gap-2">
                         <button id="btnGenerateAuto" onclick="generateAutomatedPrices()" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Generate automated prices">
-                            <svg class="w-6 h-6 text-[#009cb6] generate-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[#f4ad0f] generate-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                             </svg>
-                            <svg class="w-6 h-6 text-[#009cb6] loading-icon-auto hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-6 h-6 text-[#f4ad0f] loading-icon-auto hidden animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                        </button>
+                        <button id="btnStopGenerate" onclick="stopGenerate()" class="p-2 hover:bg-gray-100 rounded transition-colors hidden" title="Stop generation">
+                            <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
                     </div>
@@ -404,6 +399,24 @@
             </div>
         </div>
 
+        <!-- Progress Bar for Automated Prices -->
+        <div id="progressBarAuto" class="bg-white shadow mb-6 p-4 hidden">
+            <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 animate-spin text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <div class="flex-1">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span id="progressTextAuto">Searching...</span>
+                        <span id="progressPercentAuto">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 h-2">
+                        <div id="progressFillAuto" class="bg-[#009cb6] h-2 transition-all" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabela de Preços Automatizados -->
         <div class="bg-white shadow overflow-x-auto">
             <table class="w-full text-xs">
@@ -426,34 +439,34 @@
                         <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">60d</th>
                     </tr>
                     <tr>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-purple-50 text-purple-700 font-semibold">Auto</th>
-                        <th class="px-1 py-1 text-center text-[10px] bg-green-50 text-green-700 font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">Auto</th>
+                        <th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>
                     </tr>
                 </thead>
                 <tbody id="pricesTableAuto">
@@ -461,29 +474,37 @@
             </table>
         </div>
 
-        <!-- Legenda -->
-        <div class="mt-4 flex items-center gap-6 text-sm">
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-purple-50 border border-purple-300"></div>
-                <span>Auto Column (purple) - Generated automatically</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-[#009cb6] bg-opacity-50 border border-[#009cb6]"></div>
-                <span>Real Column (blue)</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
-                <span>No price available (red)</span>
-            </div>
-        </div>
         </div>
 
         <!-- Tab: Histórico -->
         <div id="contentHistory" class="hidden">
             <div class="bg-white shadow mb-6 p-4">
                 <h2 class="text-lg font-semibold mb-4">Price History (2 years)</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="historyMonths">
-                    <!-- Meses serão gerados dinamicamente -->
+                
+                <!-- History Tabs -->
+                <div class="mb-4 border-b border-gray-200">
+                    <nav class="flex gap-4">
+                        <button onclick="switchHistoryTab('current')" id="historyTabCurrent" class="px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold">
+                            Current Prices
+                        </button>
+                        <button onclick="switchHistoryTab('automated')" id="historyTabAutomated" class="px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900">
+                            Automated Prices
+                        </button>
+                    </nav>
+                </div>
+                
+                <!-- Current Prices History -->
+                <div id="historyContentCurrent">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="historyMonthsCurrent">
+                        <!-- Meses serão gerados dinamicamente -->
+                    </div>
+                </div>
+                
+                <!-- Automated Prices History -->
+                <div id="historyContentAutomated" class="hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="historyMonthsAutomated">
+                        <!-- Meses serão gerados dinamicamente -->
+                    </div>
                 </div>
             </div>
 
@@ -574,6 +595,10 @@
         }
 
         // Carregar configurações
+        // Variáveis de controle para parar operações
+        let stopSearchFlag = false;
+        let stopGenerateFlag = false;
+
         function getMaxAlternativeDays() {
             const saved = localStorage.getItem('priceAutomationSettings');
             if (saved) {
@@ -585,6 +610,18 @@
                 }
             }
             return 3; // Padrão
+        }
+
+        function stopSearch() {
+            stopSearchFlag = true;
+            document.getElementById('btnStopSearch').classList.add('hidden');
+            showNotification('Pesquisa cancelada', 'info');
+        }
+
+        function stopGenerate() {
+            stopGenerateFlag = true;
+            document.getElementById('btnStopGenerate').classList.add('hidden');
+            showNotification('Geração cancelada', 'info');
         }
 
         function getComissao() {
@@ -627,8 +664,8 @@
             let headerRow2 = '<tr>';
             dias.forEach((d, index) => {
                 const bgColor = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
-                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-blue-700 font-semibold">NET</th>`;
-                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-green-700 font-semibold border-r">Real</th>`;
+                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>`;
+                headerRow2 += `<th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>`;
             });
             headerRow2 += '</tr>';
             
@@ -654,14 +691,14 @@
                 dias.forEach((day, dayIndex) => {
                     const bgColor = dayIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                     
-                    // Coluna NET
+                    // Coluna NET (amarelo claro)
                     const tdNet = document.createElement('td');
-                    tdNet.className = `px-1 py-1 ${bgColor}`;
+                    tdNet.className = `px-1 py-1 ${bgColor} bg-[#f4ad0f] bg-opacity-10`;
                     
                     const inputNet = document.createElement('input');
                     inputNet.type = 'text';
                     inputNet.placeholder = '-';
-                    inputNet.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6] bg-transparent';
+                    inputNet.className = 'w-full px-0.5 py-0.5 border-0 text-[10px] text-right focus:ring-1 focus:ring-[#f4ad0f] bg-transparent text-[#f4ad0f] font-semibold';
                     inputNet.dataset.grupo = grupo;
                     inputNet.dataset.dias = day;
                     inputNet.dataset.type = 'net';
@@ -694,14 +731,14 @@
                     tdNet.appendChild(inputNet);
                     tr.appendChild(tdNet);
 
-                    // Coluna Real
+                    // Coluna Real (azul claro)
                     const tdReal = document.createElement('td');
-                    tdReal.className = `px-1 py-1 border-r ${bgColor}`;
+                    tdReal.className = `px-1 py-1 border-r ${bgColor} bg-[#009cb6] bg-opacity-10`;
                     
                     const inputReal = document.createElement('input');
                     inputReal.type = 'text';
                     inputReal.placeholder = '-';
-                    inputReal.className = 'w-full px-1 py-1 border border-gray-300 text-xs text-right focus:ring-2 focus:ring-[#009cb6] bg-transparent';
+                    inputReal.className = 'w-full px-0.5 py-0.5 border-0 text-[10px] text-right focus:ring-1 focus:ring-[#009cb6] bg-transparent text-[#009cb6] font-semibold';
                     inputReal.dataset.grupo = grupo;
                     inputReal.dataset.dias = day;
                     inputReal.dataset.type = 'real';
@@ -724,8 +761,7 @@
                         }
                     });
                     
-                    // Real sempre azul (50% opacidade para destaque)
-                    tdReal.classList.add('bg-[#009cb6]', 'bg-opacity-50');
+                    // Real sempre limpo (sem cores)
                     tdReal.appendChild(inputReal);
                     tr.appendChild(tdReal);
                 });
@@ -849,9 +885,9 @@
                                 if (inputReal && inputNet) {
                                     inputReal.value = '-';
                                     inputNet.value = '-';
-                                    inputReal.parentElement.classList.add('bg-red-100');
+                                    inputReal.classList.remove('bg-[#009cb6]', 'text-white');
+                                    inputReal.classList.add('bg-red-100');
                                     inputNet.parentElement.classList.add('bg-red-100');
-                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                 }
                             });
                             // PARAR AQUI - Não tentar datas alternativas se AUTOPRUDENTE não tem preços
@@ -884,9 +920,9 @@
                                             inputReal.parentElement.classList.remove('bg-red-100');
                                             inputNet.parentElement.classList.remove('bg-red-100');
                                             
-                                            // Real sempre azul (50% opacidade para destaque)
-                                            inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
-                                            // NET mantém branco (não adiciona cor)
+                                            // Real sempre limpo (sem cores)
+                                            // NET sempre branco
+                                            inputNet.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                             
                                             foundPrices = true;
                                         }
@@ -935,14 +971,19 @@
                 return;
             }
 
+            // Reset stop flag
+            stopSearchFlag = false;
+
             // Animação do botão
             const btn = document.getElementById('btnSearchAll');
+            const btnStop = document.getElementById('btnStopSearch');
             const searchIcon = btn.querySelector('.search-icon');
             const loadingIcon = btn.querySelector('.loading-icon');
             
             searchIcon.classList.add('hidden');
             loadingIcon.classList.remove('hidden');
             btn.disabled = true;
+            btnStop.classList.remove('hidden');
 
             const progressBar = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
@@ -955,6 +996,11 @@
             let completed = 0;
 
             for (const day of dias) {
+                // Check stop flag
+                if (stopSearchFlag) {
+                    break;
+                }
+
                 progressText.textContent = `A pesquisar ${day} dias...`;
                 progressPercent.textContent = `${Math.round((completed / total) * 100)}%`;
                 progressFill.style.width = `${(completed / total) * 100}%`;
@@ -1037,7 +1083,8 @@
                                         inputNet.value = '-';
                                         inputReal.parentElement.classList.add('bg-red-100');
                                         inputNet.parentElement.classList.add('bg-red-100');
-                                        inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                        inputReal.classList.remove('bg-[#009cb6]', 'text-white');
+                                        inputReal.classList.add('bg-red-100');
                                     }
                                 });
                                 // Não tentar datas alternativas
@@ -1087,9 +1134,9 @@
                                         inputReal.parentElement.classList.remove('bg-red-100');
                                         inputNet.parentElement.classList.remove('bg-red-100');
                                         
-                                        // Real sempre azul (50% opacidade para destaque)
-                                        inputReal.parentElement.classList.add('bg-[#009cb6]', 'bg-opacity-50');
-                                        // NET mantém branco (não adiciona cor)
+                                        // Real sempre limpo (sem cores)
+                                        // NET sempre branco
+                                        inputNet.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
                                         
                                         foundPrices = true;
                                     }
@@ -1118,8 +1165,7 @@
                                 const inputReal = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="real"]`);
                                 const inputNet = document.querySelector(`input[data-grupo="${g}"][data-dias="${d}"][data-type="net"]`);
                                 if (inputReal && !inputReal.value) {
-                                    inputReal.parentElement.classList.add('bg-red-100');
-                                    inputReal.parentElement.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
+                                    inputReal.classList.add('bg-red-100');
                                 }
                                 if (inputNet && !inputNet.value) {
                                     inputNet.parentElement.classList.add('bg-red-100');
@@ -1140,6 +1186,7 @@
             loadingIcon.classList.add('hidden');
             searchIcon.classList.remove('hidden');
             btn.disabled = false;
+            btnStop.classList.add('hidden');
 
             // Guardar automaticamente no histórico após pesquisa
             const savedCount = saveToHistory();
@@ -1362,14 +1409,40 @@
             } else if (tab === 'history') {
                 tabHistory.className = 'px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold';
                 contentHistory.classList.remove('hidden');
-                generateHistoryMonths();
+                generateHistoryMonths(); // Generate both history tabs
+            }
+        }
+        
+        function switchHistoryTab(tab) {
+            const historyTabCurrent = document.getElementById('historyTabCurrent');
+            const historyTabAutomated = document.getElementById('historyTabAutomated');
+            const historyContentCurrent = document.getElementById('historyContentCurrent');
+            const historyContentAutomated = document.getElementById('historyContentAutomated');
+            
+            // Reset all history tabs
+            historyTabCurrent.className = 'px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900';
+            historyTabAutomated.className = 'px-4 py-2 border-b-2 border-transparent text-gray-600 hover:text-gray-900';
+            historyContentCurrent.classList.add('hidden');
+            historyContentAutomated.classList.add('hidden');
+            
+            // Activate selected history tab
+            if (tab === 'current') {
+                historyTabCurrent.className = 'px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold';
+                historyContentCurrent.classList.remove('hidden');
+            } else if (tab === 'automated') {
+                historyTabAutomated.className = 'px-4 py-2 border-b-2 border-[#009cb6] text-[#009cb6] font-semibold';
+                historyContentAutomated.classList.remove('hidden');
             }
         }
         
         // ===== AUTOMATED PRICES FUNCTIONS =====
         
         async function generateAutomatedPrices() {
+            // Reset stop flag
+            stopGenerateFlag = false;
+
             const btn = document.getElementById('btnGenerateAuto');
+            const btnStop = document.getElementById('btnStopGenerate');
             const generateIcon = btn.querySelector('.generate-icon');
             const loadingIcon = btn.querySelector('.loading-icon-auto');
             
@@ -1377,10 +1450,22 @@
             generateIcon.classList.add('hidden');
             loadingIcon.classList.remove('hidden');
             btn.disabled = true;
+            btnStop.classList.remove('hidden');
+            
+            // Ensure table is initialized
+            initTableAuto();
+            
+            // Progress bar elements
+            const progressBar = document.getElementById('progressBarAuto');
+            const progressText = document.getElementById('progressTextAuto');
+            const progressPercent = document.getElementById('progressPercentAuto');
+            const progressFill = document.getElementById('progressFillAuto');
+            
+            progressBar.classList.remove('hidden');
             
             try {
-                // Obter localização e data selecionadas
-                const currentLocation = document.getElementById('locationSelectAuto')?.value || 'Albufeira';
+                // Get selected location and date
+                const currentLocation = document.getElementById('locationAuto')?.value || 'Albufeira';
                 const pickupDate = document.getElementById('pickupDateAuto')?.value;
                 
                 if (!pickupDate) {
@@ -1388,68 +1473,195 @@
                     loadingIcon.classList.add('hidden');
                     generateIcon.classList.remove('hidden');
                     btn.disabled = false;
+                    btnStop.classList.add('hidden');
+                    progressBar.classList.add('hidden');
                     return;
                 }
                 
-                // Carregar estratégias configuradas
-                const strategiesData = JSON.parse(localStorage.getItem('pricingStrategies') || '{}');
+                console.log(`🚀 Generating automated prices for ${currentLocation}, Date: ${pickupDate}`);
                 
-                // Obter mês da data selecionada
+                // STEP 1: Fetch prices from Carjet API and fill Real column + store ALL cars for Auto calculation
+                let realPricesGenerated = 0;
+                const allCarsByDay = {}; // Store ALL cars for Auto price calculations
+                
+                const total = dias.length;
+                let completed = 0;
+                
+                for (const day of dias) {
+                    // Check stop flag
+                    if (stopGenerateFlag) {
+                        break;
+                    }
+
+                    progressText.textContent = `Searching ${day} days...`;
+                    progressPercent.textContent = `${Math.round((completed / total) * 100)}%`;
+                    progressFill.style.width = `${(completed / total) * 100}%`;
+                    
+                    console.log(`📡 Fetching prices for ${day} days from Carjet...`);
+                    
+                    let foundPrices = false;
+                    const maxAlternativeDays = getMaxAlternativeDays();
+                    
+                    // Try original date and up to X days forward (configurable in settings)
+                    for (let dateOffset = 0; dateOffset <= maxAlternativeDays && !foundPrices; dateOffset++) {
+                        const searchDate = new Date(pickupDate);
+                        searchDate.setDate(searchDate.getDate() + dateOffset);
+                        
+                        // Check if month changed
+                        const originalDate = new Date(pickupDate);
+                        if (searchDate.getMonth() !== originalDate.getMonth()) {
+                            // Stop if month changed
+                            break;
+                        }
+                        
+                        const searchDateStr = searchDate.toISOString().split('T')[0];
+                        
+                        if (dateOffset > 0) {
+                            progressText.textContent = `Searching ${day} days (date +${dateOffset})...`;
+                        }
+                        
+                        try {
+                            const response = await fetch('/api/track-by-params', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    location: currentLocation,
+                                    start_date: searchDateStr,
+                                    start_time: '15:00',
+                                    days: day,
+                                    lang: 'pt',
+                                    currency: 'EUR'
+                                })
+                            });
+
+                            const data = await response.json();
+                            
+                            if (data.items && data.items.length > 0) {
+                                console.log(`${day} days - ${data.items.length} cars found`);
+                                
+                                // Store ALL cars for Auto price calculations
+                                allCarsByDay[day] = data.items;
+                                
+                                // FILTER ONLY AUTOPRUDENTE for Real column
+                                const autoprudenteItems = data.items.filter(item => {
+                                    const supplier = (item.supplier || '').toLowerCase();
+                                    return supplier.includes('autoprudente') || 
+                                           supplier.includes('auto prudente') ||
+                                           supplier.includes('auto-prudente') ||
+                                           supplier === 'aup';
+                                });
+                                
+                                console.log(`${day} days - ${autoprudenteItems.length} AUTOPRUDENTE cars found`);
+                                
+                                if (autoprudenteItems.length > 0) {
+                                    // RULE: Group by car group and choose LOWEST PRICE
+                                    const precosPorGrupo = {};
+                                    autoprudenteItems.forEach(item => {
+                                        const grupo = item.group || extractGroup(item.car);
+                                        const precoReal = parseFloat(item.price_num || 0);
+                                        
+                                        if (precoReal > 0) {
+                                            if (!precosPorGrupo[grupo] || precoReal < precosPorGrupo[grupo].preco) {
+                                                precosPorGrupo[grupo] = {
+                                                    preco: precoReal,
+                                                    carro: item.car
+                                                };
+                                            }
+                                        }
+                                    });
+                                    
+                                    // Fill Real column with lowest prices per group
+                                    Object.keys(precosPorGrupo).forEach(grupo => {
+                                        const { preco: precoReal, carro } = precosPorGrupo[grupo];
+                                        
+                                        console.log(`AUTOPRUDENTE - Group ${grupo}: ${carro} (LOWEST PRICE: ${precoReal}€)`);
+                                        
+                                        if (grupos.includes(grupo)) {
+                                            const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                            
+                                            if (inputReal) {
+                                                // Fill Real column
+                                                inputReal.value = precoReal.toFixed(2);
+                                                realPricesGenerated++;
+                                                
+                                                // Remove red if exists
+                                                inputReal.classList.remove('bg-red-100');
+                                                
+                                                foundPrices = true;
+                                            }
+                                        }
+                                    });
+                                    
+                                    // Stop trying alternative dates if we found prices
+                                    if (foundPrices) {
+                                        break;
+                                    }
+                                }
+                            } else {
+                                console.warn(`${day} days - No items returned by API`);
+                            }
+                        } catch (err) {
+                            console.error(`Error searching ${day} days (offset ${dateOffset}):`, err);
+                        }
+                    }
+                    
+                    // If no prices found after trying alternative dates, mark as red
+                    if (!foundPrices) {
+                        console.warn(`${day} days - AUTOPRUDENTE has no prices available (tried ${maxAlternativeDays + 1} dates)`);
+                        grupos.forEach(grupo => {
+                            const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                            if (inputReal) {
+                                inputReal.value = '-';
+                                inputReal.classList.add('bg-red-100');
+                            }
+                        });
+                    }
+                    
+                    completed++;
+                }
+                
+                progressText.textContent = 'Calculating automated prices...';
+                progressPercent.textContent = '100%';
+                progressFill.style.width = '100%';
+                
+                // STEP 2: Calculate Auto prices based on strategies (using ALL cars from search)
+                const strategiesData = JSON.parse(localStorage.getItem('pricingStrategies') || '{}');
                 const date = new Date(pickupDate);
                 const month = date.getMonth() + 1; // 1-12
                 
-                console.log(`🚀 Generating automated prices for ${currentLocation}, Month: ${month}, Date: ${pickupDate}`);
+                let autoPricesGenerated = 0;
                 
-                // Carregar preços do Current Prices (Real column)
-                const currentPrices = await loadCurrentPrices(currentLocation, pickupDate);
-                
-                let autoPricesGenerated = 0;  // Contador para Auto (estratégias)
-                let realPricesGenerated = 0;  // Contador para Real (AUTOPRUDENTE)
-                
-                // Para cada grupo
                 for (const grupo of grupos) {
-                    // Para cada dia
                     for (const day of dias) {
-                        // Verificar se há estratégias configuradas para este grupo/mês/dia
+                        // Check if there are configured strategies for this group/month/day
                         const key = `${currentLocation}_${grupo}_${month}_${day}`;
                         const strategies = strategiesData[key];
                         
-                        let autoPrice = null;
-                        
-                        // SEMPRE preencher Real com preço do AUTOPRUDENTE
-                        const groupPrices = currentPrices[grupo];
-                        const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
-                        
-                        if (groupPrices && groupPrices[day] && inputReal) {
-                            // Real = Preço do AUTOPRUDENTE (direto, sem cálculos)
-                            inputReal.value = groupPrices[day].toFixed(2);
-                            realPricesGenerated++;
-                        }
-                        
-                        // Verificar se há estratégias configuradas para calcular Auto
+                        // Check if there are configured strategies to calculate Auto
                         if (!strategies || strategies.length === 0) {
-                            // SEM estratégias: Auto fica vazio
+                            // NO strategies: Auto stays empty
                             continue;
                         }
                         
-                        // COM estratégias: Calcular Auto baseado na estratégia
+                        // WITH strategies: Calculate Auto based on strategy using ALL cars
                         const strategy = strategies[0];
+                        let autoPrice = null;
                         
-                        // Calcular preço Auto baseado na estratégia
+                        // Calculate Auto price based on strategy
                         if (strategy.type === 'follow_lowest') {
-                            autoPrice = await calculateFollowLowest(currentPrices, grupo, day, strategy.config);
+                            autoPrice = await calculateFollowLowestFromAllCars(allCarsByDay, grupo, day, strategy.config);
                         } else if (strategy.type === 'follow_suppliers') {
-                            autoPrice = await calculateFollowSuppliers(currentPrices, grupo, day, strategy.config);
+                            autoPrice = await calculateFollowSuppliersFromAllCars(allCarsByDay, grupo, day, strategy.config);
                         } else if (strategy.type === 'follow_average') {
-                            autoPrice = await calculateFollowAverage(currentPrices, grupo, day, strategy.config);
+                            autoPrice = await calculateFollowAverageFromAllCars(allCarsByDay, grupo, day, strategy.config);
                         } else if (strategy.type === 'fixed_margin') {
-                            autoPrice = await calculateFixedMargin(currentPrices, grupo, day, strategy.config);
+                            autoPrice = await calculateFixedMarginFromAllCars(allCarsByDay, grupo, day, strategy.config);
                         } else if (strategy.type === 'fixed_price') {
                             autoPrice = calculateFixedPrice(strategy.config);
                         }
                         
                         if (autoPrice && autoPrice > 0) {
-                            // Preencher campo Auto com preço calculado
+                            // Fill Auto field with calculated price
                             const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
                             if (inputAuto) {
                                 inputAuto.value = autoPrice.toFixed(2);
@@ -1461,26 +1673,33 @@
                 
                 console.log(`✅ Auto: ${autoPricesGenerated}, Real: ${realPricesGenerated}`);
                 
-                // Mensagem customizada baseada nos resultados
+                // Custom message based on results
                 let message = '';
                 if (autoPricesGenerated > 0 && realPricesGenerated > 0) {
                     message = `Generated:\n• ${autoPricesGenerated} automated prices (Auto)\n• ${realPricesGenerated} real prices (AUTOPRUDENTE)`;
                 } else if (realPricesGenerated > 0) {
                     message = `Generated:\n• ${realPricesGenerated} real prices (AUTOPRUDENTE)\n• 0 automated prices (no strategies configured)`;
                 } else {
-                    message = 'No prices generated.\nPlease fill Current Prices first.';
+                    message = 'No prices generated from Carjet.\nPlease check your date and location.';
                 }
                 
                 showNotification(message, realPricesGenerated > 0 ? 'success' : 'warning');
                 
+                progressText.textContent = '✅ Generation complete!';
+                setTimeout(() => {
+                    progressBar.classList.add('hidden');
+                }, 2000);
+                
             } catch (error) {
                 console.error('Error generating automated prices:', error);
                 showNotification('Error generating prices: ' + error.message, 'error');
+                progressBar.classList.add('hidden');
             } finally {
                 // Hide loading animation
                 loadingIcon.classList.add('hidden');
                 generateIcon.classList.remove('hidden');
                 btn.disabled = false;
+                btnStop.classList.add('hidden');
             }
         }
         
@@ -1573,10 +1792,156 @@
             return basePrice;
         }
         
+        // NEW FUNCTIONS: Calculate Auto prices from ALL cars in search results
+        
+        async function calculateFollowLowestFromAllCars(allCarsByDay, grupo, day, config) {
+            // Find lowest price from ALL suppliers for this group/day
+            const cars = allCarsByDay[day];
+            if (!cars || cars.length === 0) return null;
+            
+            // Filter cars by group
+            const groupCars = cars.filter(item => {
+                const carGroup = item.group || extractGroup(item.car);
+                return carGroup === grupo;
+            });
+            
+            if (groupCars.length === 0) return null;
+            
+            // Find lowest price
+            let lowestPrice = null;
+            groupCars.forEach(item => {
+                const price = parseFloat(item.price_num || 0);
+                if (price > 0 && (lowestPrice === null || price < lowestPrice)) {
+                    lowestPrice = price;
+                }
+            });
+            
+            if (lowestPrice === null) return null;
+            
+            console.log(`Follow Lowest - Group ${grupo} ${day}d: Lowest = ${lowestPrice}€`);
+            return applyDifference(lowestPrice, config);
+        }
+        
+        async function calculateFollowSuppliersFromAllCars(allCarsByDay, grupo, day, config) {
+            // Find lowest price from SELECTED suppliers for this group/day
+            const cars = allCarsByDay[day];
+            if (!cars || cars.length === 0) return null;
+            
+            const selectedSuppliers = config.suppliers || [];
+            if (selectedSuppliers.length === 0) {
+                // If no suppliers selected, use all cars
+                return calculateFollowLowestFromAllCars(allCarsByDay, grupo, day, config);
+            }
+            
+            // Filter cars by group and selected suppliers
+            const groupCars = cars.filter(item => {
+                const carGroup = item.group || extractGroup(item.car);
+                const supplier = (item.supplier || '').toLowerCase();
+                
+                if (carGroup !== grupo) return false;
+                
+                // Check if supplier matches any selected supplier
+                return selectedSuppliers.some(s => supplier.includes(s.toLowerCase()));
+            });
+            
+            if (groupCars.length === 0) return null;
+            
+            // Find lowest price among selected suppliers
+            let lowestPrice = null;
+            groupCars.forEach(item => {
+                const price = parseFloat(item.price_num || 0);
+                if (price > 0 && (lowestPrice === null || price < lowestPrice)) {
+                    lowestPrice = price;
+                }
+            });
+            
+            if (lowestPrice === null) return null;
+            
+            console.log(`Follow Suppliers - Group ${grupo} ${day}d: Lowest = ${lowestPrice}€`);
+            return applyDifference(lowestPrice, config);
+        }
+        
+        async function calculateFollowAverageFromAllCars(allCarsByDay, grupo, day, config) {
+            // Calculate average price from SELECTED suppliers for this group/day
+            const cars = allCarsByDay[day];
+            if (!cars || cars.length === 0) return null;
+            
+            const selectedSuppliers = config.suppliers || [];
+            
+            // Filter cars by group and (optionally) selected suppliers
+            const groupCars = cars.filter(item => {
+                const carGroup = item.group || extractGroup(item.car);
+                if (carGroup !== grupo) return false;
+                
+                if (selectedSuppliers.length === 0) return true;
+                
+                const supplier = (item.supplier || '').toLowerCase();
+                return selectedSuppliers.some(s => supplier.includes(s.toLowerCase()));
+            });
+            
+            if (groupCars.length === 0) return null;
+            
+            // Calculate average price
+            let totalPrice = 0;
+            let count = 0;
+            groupCars.forEach(item => {
+                const price = parseFloat(item.price_num || 0);
+                if (price > 0) {
+                    totalPrice += price;
+                    count++;
+                }
+            });
+            
+            if (count === 0) return null;
+            
+            const averagePrice = totalPrice / count;
+            console.log(`Follow Average - Group ${grupo} ${day}d: Average = ${averagePrice.toFixed(2)}€ (${count} cars)`);
+            return applyDifference(averagePrice, config);
+        }
+        
+        async function calculateFixedMarginFromAllCars(allCarsByDay, grupo, day, config) {
+            // Apply fixed margin over the lowest price from ALL suppliers
+            const cars = allCarsByDay[day];
+            if (!cars || cars.length === 0) return null;
+            
+            // Filter cars by group
+            const groupCars = cars.filter(item => {
+                const carGroup = item.group || extractGroup(item.car);
+                return carGroup === grupo;
+            });
+            
+            if (groupCars.length === 0) return null;
+            
+            // Find lowest price
+            let lowestPrice = null;
+            groupCars.forEach(item => {
+                const price = parseFloat(item.price_num || 0);
+                if (price > 0 && (lowestPrice === null || price < lowestPrice)) {
+                    lowestPrice = price;
+                }
+            });
+            
+            if (lowestPrice === null) return null;
+            
+            const margin = parseFloat(config.margin) || 0;
+            const finalPrice = lowestPrice * (1 + margin / 100);
+            
+            console.log(`Fixed Margin - Group ${grupo} ${day}d: Base = ${lowestPrice}€, Margin = ${margin}%, Final = ${finalPrice.toFixed(2)}€`);
+            return finalPrice;
+        }
+        
         function initTableAuto() {
             // Initialize automated prices table (similar to initTable but for automated tab)
             const tbody = document.getElementById('pricesTableAuto');
-            if (!tbody || tbody.children.length > 0) return; // Already initialized
+            if (!tbody) return;
+            
+            // Only skip if already initialized with correct structure
+            if (tbody.children.length > 0) {
+                // Check if table has correct structure
+                const firstRow = tbody.children[0];
+                const hasCorrectStructure = firstRow && firstRow.querySelectorAll('input[data-type="auto"]').length > 0;
+                if (hasCorrectStructure) return; // Already initialized correctly
+            }
             
             tbody.innerHTML = '';
             grupos.forEach(grupo => {
@@ -1591,9 +1956,9 @@
                 dias.forEach((day, dayIndex) => {
                     const bgColor = dayIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                     
-                    // Coluna Auto (amarelo) - laranja se não tiver regras
+                    // Coluna Auto (amarelo claro)
                     const tdAuto = document.createElement('td');
-                    tdAuto.className = `px-1 py-1 ${bgColor} bg-[#f4ad0f] bg-opacity-20`;
+                    tdAuto.className = `px-1 py-1 ${bgColor} bg-[#f4ad0f] bg-opacity-10`;
                     tdAuto.dataset.grupo = grupo;
                     tdAuto.dataset.day = day;
                     tdAuto.dataset.cellType = 'auto';
@@ -1601,7 +1966,7 @@
                     const inputAuto = document.createElement('input');
                     inputAuto.type = 'text';
                     inputAuto.placeholder = '-';
-                    inputAuto.className = 'w-full px-1 py-1 text-center text-xs border-0 bg-transparent focus:ring-1 focus:ring-[#f4ad0f]';
+                    inputAuto.className = 'w-full px-0.5 py-0.5 text-center text-[10px] border-0 bg-transparent focus:ring-1 focus:ring-[#f4ad0f] text-[#f4ad0f] font-semibold';
                     inputAuto.dataset.grupo = grupo;
                     inputAuto.dataset.dias = day;
                     inputAuto.dataset.type = 'auto';
@@ -1610,9 +1975,9 @@
                     tdAuto.appendChild(inputAuto);
                     tr.appendChild(tdAuto);
 
-                    // Coluna Real (blue) - vermelha se não tiver regras
+                    // Coluna Real (azul claro)
                     const tdReal = document.createElement('td');
-                    tdReal.className = `px-1 py-1 border-r ${bgColor} bg-[#009cb6] bg-opacity-50`;
+                    tdReal.className = `px-1 py-1 border-r ${bgColor} bg-[#009cb6] bg-opacity-10`;
                     tdReal.dataset.grupo = grupo;
                     tdReal.dataset.day = day;
                     tdReal.dataset.cellType = 'real';
@@ -1620,7 +1985,7 @@
                     const inputReal = document.createElement('input');
                     inputReal.type = 'text';
                     inputReal.placeholder = '-';
-                    inputReal.className = 'w-full px-1 py-1 text-center text-xs border-0 bg-transparent focus:ring-1 focus:ring-[#009cb6]';
+                    inputReal.className = 'w-full px-0.5 py-0.5 text-center text-[10px] border-0 bg-transparent focus:ring-1 focus:ring-[#009cb6] text-[#009cb6] font-semibold';
                     inputReal.dataset.grupo = grupo;
                     inputReal.dataset.dias = day;
                     inputReal.dataset.type = 'real';
@@ -1719,8 +2084,10 @@
         }
 
         function generateHistoryMonths() {
-            const container = document.getElementById('historyMonths');
-            container.innerHTML = '';
+            const containerCurrent = document.getElementById('historyMonthsCurrent');
+            const containerAutomated = document.getElementById('historyMonthsAutomated');
+            containerCurrent.innerHTML = '';
+            containerAutomated.innerHTML = '';
             
             const now = new Date();
             const months = [];
@@ -1730,7 +2097,7 @@
             console.log('Todas as chaves no localStorage:');
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('priceHistory_')) {
+                if (key.startsWith('priceHistory_') || key.startsWith('automatedPriceHistory_')) {
                     const data = JSON.parse(localStorage.getItem(key));
                     if (Array.isArray(data)) {
                         console.log(`${key}: ${data.length} versões`);
@@ -1752,28 +2119,46 @@
             months.forEach(date => {
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
                 const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-                const historyKey = `priceHistory_${monthKey}`;
-                const hasData = localStorage.getItem(historyKey) !== null;
                 
-                console.log(`Verificando ${monthKey}: ${hasData ? 'TEM DADOS' : 'SEM DADOS'}`);
+                // Current Prices History
+                const currentHistoryKey = `priceHistory_${monthKey}`;
+                const hasCurrentData = localStorage.getItem(currentHistoryKey) !== null;
                 
-                const button = document.createElement('button');
-                button.className = `p-3 border rounded text-sm ${hasData ? 'bg-[#009cb6] text-white hover:bg-[#f4ad0f]' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`;
-                button.textContent = monthName;
-                button.disabled = !hasData;
+                const buttonCurrent = document.createElement('button');
+                buttonCurrent.className = `p-3 border rounded text-sm ${hasCurrentData ? 'bg-[#009cb6] text-white hover:bg-[#f4ad0f]' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`;
+                buttonCurrent.textContent = monthName;
+                buttonCurrent.disabled = !hasCurrentData;
                 
-                if (hasData) {
-                    button.onclick = () => showHistoryMonth(monthKey, monthName);
+                if (hasCurrentData) {
+                    buttonCurrent.onclick = () => showHistoryMonth(monthKey, monthName, 'current');
                 }
                 
-                container.appendChild(button);
+                containerCurrent.appendChild(buttonCurrent);
+                
+                // Automated Prices History
+                const automatedHistoryKey = `automatedPriceHistory_${monthKey}`;
+                const hasAutomatedData = localStorage.getItem(automatedHistoryKey) !== null;
+                
+                const buttonAutomated = document.createElement('button');
+                buttonAutomated.className = `p-3 border rounded text-sm ${hasAutomatedData ? 'bg-[#009cb6] text-white hover:bg-[#f4ad0f]' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`;
+                buttonAutomated.textContent = monthName;
+                buttonAutomated.disabled = !hasAutomatedData;
+                
+                if (hasAutomatedData) {
+                    buttonAutomated.onclick = () => showHistoryMonth(monthKey, monthName, 'automated');
+                }
+                
+                containerAutomated.appendChild(buttonAutomated);
+                
+                console.log(`${monthKey}: Current=${hasCurrentData ? 'TEM DADOS' : 'SEM DADOS'}, Automated=${hasAutomatedData ? 'TEM DADOS' : 'SEM DADOS'}`);
             });
             
             console.log('=== FIM DEBUG ===');
         }
 
-        function showHistoryMonth(monthKey, monthName) {
-            const data = localStorage.getItem(`priceHistory_${monthKey}`);
+        function showHistoryMonth(monthKey, monthName, type = 'current') {
+            const historyKey = type === 'automated' ? `automatedPriceHistory_${monthKey}` : `priceHistory_${monthKey}`;
+            const data = localStorage.getItem(historyKey);
             if (!data) return;
             
             try {
@@ -1832,8 +2217,8 @@
                     let headerRow2 = '<tr>';
                     historyData.dias.forEach((d, idx) => {
                         const bgColor = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
-                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-blue-700 font-semibold">NET</th>`;
-                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] ${bgColor} text-green-700 font-semibold border-r">Real</th>`;
+                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#f4ad0f] font-semibold">NET</th>`;
+                        headerRow2 += `<th class="px-1 py-1 text-center text-[10px] bg-gray-50 text-[#009cb6] font-semibold border-r">Real</th>`;
                     });
                     headerRow2 += '</tr>';
                     
