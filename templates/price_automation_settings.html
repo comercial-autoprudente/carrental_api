@@ -722,39 +722,120 @@
                 return;
             }
             
-            const key = `${location}_${grupo}_${currentDay}`;
+            // Show strategy selection dialog
+            showStrategySelectionDialog(location, grupo, currentDay);
+        }
+        
+        function showStrategySelectionDialog(location, grupo, day) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            overlay.onclick = function(e) {
+                if (e.target === overlay) overlay.remove();
+            };
+            
+            // Create modal content
+            const modal = document.createElement('div');
+            modal.className = 'bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto';
+            
+            modal.innerHTML = `
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Select Pricing Strategy</h3>
+                    <button onclick="this.closest('.fixed').remove()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-3">
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'follow_lowest', 'Follow Lowest Price')" 
+                            class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-[#009cb6] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">Follow Lowest Price</h4>
+                                <p class="text-sm text-gray-600">Follow the lowest price from all suppliers with a configurable difference (cents, euros, or percentage)</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'follow_suppliers', 'Follow Specific Suppliers')" 
+                            class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-[#009cb6] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">Follow Specific Suppliers</h4>
+                                <p class="text-sm text-gray-600">Select specific suppliers to follow. Price will be the lowest among selected suppliers with configurable difference</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'fixed_margin', 'Fixed Margin %')" 
+                            class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-[#f4ad0f] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">Fixed Margin %</h4>
+                                <p class="text-sm text-gray-600">Apply a fixed percentage margin over the base price (e.g., 15% margin)</p>
+                            </div>
+                        </div>
+                    </button>
+                    
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'fixed_price', 'Fixed Price')" 
+                            class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-[#f4ad0f] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">Fixed Price</h4>
+                                <p class="text-sm text-gray-600">Set a fixed price in euros (e.g., 45.00€). Useful as a fallback strategy</p>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            `;
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+        }
+        
+        function selectStrategy(location, grupo, day, strategyType, strategyName) {
+            const key = `${location}_${grupo}_${day}`;
             if (!strategiesData[key]) strategiesData[key] = [];
             
-            // Show strategy type selector
-            const strategyType = prompt('Select strategy type:\n1 - Follow Lowest Price\n2 - Follow Specific Suppliers\n3 - Fixed Margin %\n4 - Fixed Price\n\nEnter number (1-4):');
-            
-            if (!strategyType || !['1','2','3','4'].includes(strategyType)) return;
-            
-            const strategyMap = {
-                '1': 'follow_lowest',
-                '2': 'follow_suppliers',
-                '3': 'fixed_margin',
-                '4': 'fixed_price'
-            };
-            
-            const strategyNames = {
-                'follow_lowest': 'Follow Lowest Price',
-                'follow_suppliers': 'Follow Specific Suppliers',
-                'fixed_margin': 'Fixed Margin %',
-                'fixed_price': 'Fixed Price'
-            };
-            
-            const strategy = strategyMap[strategyType];
             const strategyId = Date.now();
             
             strategiesData[key].push({
                 id: strategyId,
-                type: strategy,
-                name: strategyNames[strategy],
+                type: strategyType,
+                name: strategyName,
                 config: {}
             });
             
-            renderStrategiesList(location, grupo, currentDay);
+            // Close modal
+            document.querySelector('.fixed.inset-0').remove();
+            
+            // Render updated list
+            renderStrategiesList(location, grupo, day);
+            
+            // Show success message
+            showNotification(`✅ ${strategyName} added as strategy #${strategiesData[key].length}`);
         }
         
         function renderStrategiesList(location, grupo, day) {
