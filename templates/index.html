@@ -1309,17 +1309,8 @@
         return it.category || '';
       }
 
-      function renderSupplierLogo(supplier, carName) {
-        // CORREÇÃO: Alguns suppliers vêm errados da API, corrigir baseado no carro
-        let correctedSupplier = supplier;
-        
-        // Renault Grand Scenic (manual e auto) são SEMPRE Autoprudente
-        if (carName && /renault\s+grand\s+scenic/i.test(carName)) {
-          correctedSupplier = 'AUP';
-          console.log('[SUPPLIER FIX] Renault Grand Scenic → Auto Prudente (corrigido de:', supplier, ')');
-        }
-        
-        const supplierName = displaySupplierName(correctedSupplier);
+      function renderSupplierLogo(supplier) {
+        const supplierName = displaySupplierName(supplier);
         const logoUrl = getSupplierLogo(supplierName);
         
         // Verificar se é não reembolsável (detecta HTML entities também)
@@ -1343,7 +1334,7 @@
                 <div class="flex items-center gap-3 p-3">
                   ${imgTagFor(it, 'card')}
                   <div class="min-w-0 flex-1">
-                    <div class="text-xs text-gray-500 flex items-center">${renderSupplierLogo(it.supplier, it.car)}</div>
+                    <div class="text-xs text-gray-500 flex items-center">${renderSupplierLogo(it.supplier)}</div>
                     <div class="text-sm font-medium text-gray-900 truncate">${escapeHtml(it.car || '-')}</div>
                     <div class="text-xs text-gray-600">${escapeHtml(displayCategory(it))}</div>
                   </div>
@@ -1378,7 +1369,7 @@
                       <td class="px-4 py-2 text-sm">
                         ${imgTagFor(it, 'table')}
                       </td>
-                      <td class="px-4 py-2 text-sm">${renderSupplierLogo(it.supplier, it.car)}</td>
+                      <td class="px-4 py-2 text-sm">${renderSupplierLogo(it.supplier)}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(it.car || '-')}</td>
                       <td class="px-4 py-2 text-sm">${escapeHtml(displayCategory(it))}</td>
                       <td class="px-4 py-2 text-sm font-medium">${escapeHtml(it.price || '')}</td>

@@ -572,33 +572,41 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                 if not car_name:
                     continue
                 
-                # Supplier - procurar por logo ou texto
+                # Supplier - PRIORIDADE 1: atributo data-prv (mais confiável)
                 supplier = 'CarJet'
-                img_tags = block.find_all('img')
-                for img in img_tags:
-                    src = img.get('src', '')
-                    alt = img.get('alt', '')
-                    title = img.get('title', '')
+                
+                # Tentar extrair data-prv do article
+                data_prv = block.get('data-prv', '').strip()
+                if data_prv:
+                    supplier = normalize_supplier(data_prv)
+                    print(f"[PARSE] Supplier de data-prv: {data_prv} → {supplier}")
+                else:
+                    # PRIORIDADE 2: procurar por logo ou texto (fallback)
+                    img_tags = block.find_all('img')
+                    for img in img_tags:
+                        src = img.get('src', '')
+                        alt = img.get('alt', '')
+                        title = img.get('title', '')
 
-                    # Logos normalmente têm /logo no path
-                    if '/logo' in src.lower() or 'logo_' in src.lower():
-                        supplier = normalize_supplier(src)
-                        if supplier != 'CarJet':
-                            break
+                        # Logos normalmente têm /logo no path
+                        if '/logo' in src.lower() or 'logo_' in src.lower():
+                            supplier = normalize_supplier(src)
+                            if supplier != 'CarJet':
+                                break
 
-                    # Verificar alt text
-                    if alt and len(alt) <= 50 and alt.lower() not in ['car', 'vehicle', 'auto']:
-                        normalized = normalize_supplier(alt)
-                        if normalized != 'CarJet' and normalized != alt:
-                            supplier = normalized
-                            break
+                        # Verificar alt text
+                        if alt and len(alt) <= 50 and alt.lower() not in ['car', 'vehicle', 'auto']:
+                            normalized = normalize_supplier(alt)
+                            if normalized != 'CarJet' and normalized != alt:
+                                supplier = normalized
+                                break
 
-                    # Verificar title
-                    if title and len(title) <= 50:
-                        normalized = normalize_supplier(title)
-                        if normalized != 'CarJet' and normalized != title:
-                            supplier = normalized
-                            break
+                        # Verificar title
+                        if title and len(title) <= 50:
+                            normalized = normalize_supplier(title)
+                            if normalized != 'CarJet' and normalized != title:
+                                supplier = normalized
+                                break
 
                 # Preço - PRIORIZAR .price.pr-euros (preço total, NÃO por dia)
                 price = '€0.00'
