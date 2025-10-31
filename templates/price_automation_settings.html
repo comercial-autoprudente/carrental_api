@@ -994,8 +994,8 @@
             showNotification(`✅ ${strategyName} added as strategy #${strategiesData[key].length}`);
         }
         
-        function renderStrategiesList(location, grupo, day) {
-            const key = `${location}_${grupo}_${day}`;
+        function renderStrategiesList(location, grupo, month, day) {
+            const key = `${location}_${grupo}_${month}_${day}`;
             const container = document.getElementById(`strategiesList_${location}_${grupo}`);
             if (!container) return;
             
@@ -1018,23 +1018,23 @@
                         <span class="text-xs font-medium">${strategy.name}</span>
                     </div>
                     <div class="flex items-center gap-1">
-                        <button onclick="configureStrategy('${location}', '${grupo}', ${day}, ${strategy.id})" class="px-2 py-1 text-xs bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f]" title="Configure">
+                        <button onclick="configureStrategy('${location}', '${grupo}', ${month}, ${day}, ${strategy.id})" class="px-2 py-1 text-xs bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f]" title="Configure">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             </svg>
                         </button>
-                        <button onclick="moveStrategyUp('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move up" ${index === 0 ? 'disabled' : ''}>
+                        <button onclick="moveStrategyUp('${location}', '${grupo}', ${month}, ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move up" ${index === 0 ? 'disabled' : ''}>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/>
                             </svg>
                         </button>
-                        <button onclick="moveStrategyDown('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move down" ${index === strategies.length - 1 ? 'disabled' : ''}>
+                        <button onclick="moveStrategyDown('${location}', '${grupo}', ${month}, ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move down" ${index === strategies.length - 1 ? 'disabled' : ''}>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </button>
-                        <button onclick="removeStrategy('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600" title="Remove">
+                        <button onclick="removeStrategy('${location}', '${grupo}', ${month}, ${day}, ${index})" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600" title="Remove">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
@@ -1046,8 +1046,8 @@
             });
         }
         
-        function configureStrategy(location, grupo, day, strategyId) {
-            const key = `${location}_${grupo}_${day}`;
+        function configureStrategy(location, grupo, month, day, strategyId) {
+            const key = `${location}_${grupo}_${month}_${day}`;
             const strategy = strategiesData[key]?.find(s => s.id === strategyId);
             
             if (!strategy) return;
@@ -1073,35 +1073,35 @@
             // This will be implemented based on strategy type
         }
         
-        function moveStrategyUp(location, grupo, day, index) {
-            const key = `${location}_${grupo}_${day}`;
+        function moveStrategyUp(location, grupo, month, day, index) {
+            const key = `${location}_${grupo}_${month}_${day}`;
             if (index === 0) return;
             
             const temp = strategiesData[key][index];
             strategiesData[key][index] = strategiesData[key][index - 1];
             strategiesData[key][index - 1] = temp;
             
-            renderStrategiesList(location, grupo, day);
+            renderStrategiesList(location, grupo, month, day);
         }
         
-        function moveStrategyDown(location, grupo, day, index) {
-            const key = `${location}_${grupo}_${day}`;
-            if (index === strategiesData[key].length - 1) return;
+        function moveStrategyDown(location, grupo, month, day, index) {
+            const key = `${location}_${grupo}_${month}_${day}`;
+            if (index >= strategiesData[key].length - 1) return;
             
             const temp = strategiesData[key][index];
             strategiesData[key][index] = strategiesData[key][index + 1];
             strategiesData[key][index + 1] = temp;
             
-            renderStrategiesList(location, grupo, day);
+            renderStrategiesList(location, grupo, month, day);
         }
         
-        function removeStrategy(location, grupo, day, index) {
+        function removeStrategy(location, grupo, month, day, index) {
             if (!confirm('Remove this strategy?')) return;
             
-            const key = `${location}_${grupo}_${day}`;
+            const key = `${location}_${grupo}_${month}_${day}`;
             strategiesData[key].splice(index, 1);
             
-            renderStrategiesList(location, grupo, day);
+            renderStrategiesList(location, grupo, month, day);
         }
         
         function generateSuppliersCheckboxes(location, grupo) {
