@@ -630,11 +630,23 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                     
                     if has_price and has_pr_euros and not has_day and not has_old:
                         text = span_tag.get_text(strip=True)
-                        # Formato esperado: "68,18 €" ou "68.18€"
-                        match = re.search(r'(\d+(?:[.,]\d{2})?)\s*€', text)
+                        # Formato esperado: "1.010,29 €" ou "68,18 €" ou "68.18€"
+                        # Aceitar separador de milhares (. ou ,) e decimais
+                        match = re.search(r'([\d.,]+)\s*€', text)
                         if match:
                             try:
-                                price_val = float(match.group(1).replace(',', '.'))
+                                price_str = match.group(1)
+                                # Normalizar: remover pontos (milhares) e trocar vírgula por ponto
+                                # Exemplo: "1.010,29" → "1010.29"
+                                if ',' in price_str and '.' in price_str:
+                                    # Formato europeu: 1.010,29
+                                    price_str = price_str.replace('.', '').replace(',', '.')
+                                elif ',' in price_str:
+                                    # Formato europeu sem milhares: 68,18
+                                    price_str = price_str.replace(',', '.')
+                                # else: já está em formato correto (1010.29)
+                                
+                                price_val = float(price_str)
                                 if 10 < price_val < 10000:
                                     price = f'{price_val:.2f} €'
                                     break  # Encontrou o correto!
@@ -651,10 +663,17 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                         if 'day' in tag.get('class', []) or 'dia' in tag.get('class', []):
                             continue
                         
-                        match = re.search(r'(\d+(?:[.,]\d{2})?)\s*€', text)
+                        match = re.search(r'([\d.,]+)\s*€', text)
                         if match:
                             try:
-                                price_val = float(match.group(1).replace(',', '.'))
+                                price_str = match.group(1)
+                                # Normalizar formato europeu
+                                if ',' in price_str and '.' in price_str:
+                                    price_str = price_str.replace('.', '').replace(',', '.')
+                                elif ',' in price_str:
+                                    price_str = price_str.replace(',', '.')
+                                
+                                price_val = float(price_str)
                                 if 10 < price_val < 10000:
                                     price = f'{price_val:.2f} €'
                                     break
