@@ -261,15 +261,15 @@
         <div class="mt-4 flex items-center gap-6 text-sm">
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-white border border-gray-300"></div>
-                <span>Coluna NET (branco)</span>
+                <span>NET Column (white)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-[#009cb6] bg-opacity-50 border border-[#009cb6]"></div>
-                <span>Coluna Real (azul)</span>
+                <span>Real Column (blue)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-4 h-4 bg-red-100 border border-red-300"></div>
-                <span>Sem preço disponível (vermelho)</span>
+                <span>No price available (red)</span>
             </div>
         </div>
         </div>
@@ -1016,7 +1016,7 @@
                     return;
                 }
                 if (dias.includes(daysNum)) {
-                    showNotification('Esta coluna já existe', 'warning');
+                    showNotification('This column already exists', 'warning');
                     return;
                 }
                 
@@ -1029,24 +1029,24 @@
                 
                 // Recriar tabela
                 initTable();
-                showNotification(`Coluna ${daysNum} dias adicionada!`, 'success');
+                showNotification(`Column ${daysNum} days added!`, 'success');
             }
         }
 
         function showRemoveColumnDialog() {
             const diasStr = dias.join(', ');
-            const removeDays = prompt(`Que coluna deseja remover?\nColunas disponíveis: ${diasStr}`);
+            const removeDays = prompt(`Which column do you want to remove?\nAvailable columns: ${diasStr}`);
             if (removeDays) {
                 const daysNum = parseInt(removeDays);
                 const index = dias.indexOf(daysNum);
                 
                 if (index === -1) {
-                    showNotification('Coluna não encontrada', 'warning');
+                    showNotification('Column not found', 'warning');
                     return;
                 }
                 
                 if (dias.length <= 1) {
-                    showNotification('Não pode remover a última coluna', 'warning');
+                    showNotification('Cannot remove the last column', 'warning');
                     return;
                 }
                 
@@ -1058,7 +1058,7 @@
                 
                 // Recriar tabela
                 initTable();
-                showNotification(`Coluna ${daysNum} dias removida!`, 'success');
+                showNotification(`Column ${daysNum} days removed!`, 'success');
             }
         }
 
@@ -1266,7 +1266,7 @@
                 
             } catch (e) {
                 console.error('Erro ao carregar histórico:', e);
-                showNotification('Erro ao carregar dados do histórico', 'error');
+                showNotification('Error loading history data', 'error');
             }
         }
 

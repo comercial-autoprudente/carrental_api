@@ -1462,7 +1462,7 @@
                 html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">${d} day(s) — ${escapeHtml(loc)} <span class="text-green-600 font-semibold ml-2">(${items.length} ${items.length === 1 ? 'vehicle' : 'vehicles'})</span> <span class="text-blue-600 ml-2">⚡ Cache</span></div>`);
                 
                 if (items.length === 0) {
-                  html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ Nenhum resultado encontrado</p></div>`);
+                  html.push(`<div class="px-4 py-3 text-center text-gray-600"><p class="mb-2">⚠️ No results found</p></div>`);
                 } else {
                   html.push(renderCategoryPreview(items));
                   html.push(`<div class="px-4 py-2 bg-gray-50 text-sm font-medium">Grouped by Category</div>`);
@@ -1573,7 +1573,7 @@
           inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">${(data.days ?? '-')} day(s) — ${escapeHtml(data.location || '-')} <span class=\"text-green-600 font-semibold ml-2\">(${items.length} ${items.length === 1 ? 'vehicle' : 'vehicles'})</span> <span class=\"text-blue-600 ml-2\">⚡ Cache</span><\/div>`);
           
           if (items.length === 0) {
-            inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\"><p class="mb-2">⚠️ Nenhum resultado encontrado</p><\/div>`);
+            inner.push(`<div class=\"px-4 py-3 text-center text-gray-600\"><p class="mb-2">⚠️ No results found</p><\/div>`);
           } else {
             inner.push(renderCategoryPreview(items));
             inner.push(`<div class=\"px-4 py-2 bg-gray-50 text-sm font-medium\">Grouped by Category<\/div>`);
@@ -2223,7 +2223,7 @@
         console.log('[SUPPLIERS] Excluídos da sidebar:', currentSuppliers.length - filteredSuppliers.length);
         
         if (filteredSuppliers.length === 0) {
-          container.innerHTML = '<p class="text-xs text-gray-500 p-2 col-span-3">Nenhum supplier encontrado</p>';
+          container.innerHTML = '<p class="text-xs text-gray-500 p-2 col-span-3">No supplier found</p>';
           return;
         }
         
