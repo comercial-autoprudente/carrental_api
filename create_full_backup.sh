@@ -249,5 +249,34 @@ echo -e "   tar -xzf ${BACKUP_NAME}.tar.gz"
 echo -e "   cd ${BACKUP_NAME}"
 echo -e "   # Copiar ficheiros necessários de volta"
 echo ""
+
+# ============================================================================
+# PUSH PARA GITHUB
+# ============================================================================
+echo -e "${YELLOW}🔄 Enviando para GitHub...${NC}"
+cd "$PROJECT_DIR"
+
+# Commit do código atual (se houver alterações)
+if ! git diff-index --quiet HEAD --; then
+    echo -e "   📝 Fazendo commit das alterações..."
+    git add .
+    git commit -m "backup: ${BACKUP_NAME}" > /dev/null 2>&1
+    echo -e "   ✅ Commit criado"
+else
+    echo -e "   ℹ️  Sem alterações para commit"
+fi
+
+# Push para GitHub
+echo -e "   📤 Enviando para GitHub..."
+if git push backup main > /dev/null 2>&1; then
+    echo -e "   ✅ Push para GitHub concluído"
+    echo -e "   🔗 https://github.com/comercial-autoprudente/carrental_api"
+else
+    echo -e "   ⚠️  Erro no push (verificar manualmente)"
+fi
+
+echo ""
 echo -e "${GREEN}✅ Backup completo guardado com sucesso!${NC}"
+echo -e "${GREEN}   📁 Local: $BACKUP_DIR${NC}"
+echo -e "${GREEN}   ☁️  GitHub: comercial-autoprudente/carrental_api${NC}"
 echo ""
