@@ -1416,35 +1416,26 @@
                         
                         let autoPrice = null;
                         
+                        // SEMPRE preencher Real com preço do AUTOPRUDENTE
+                        const groupPrices = currentPrices[grupo];
+                        const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                        
+                        if (groupPrices && groupPrices[day] && inputReal) {
+                            // Real = Preço do AUTOPRUDENTE (direto, sem cálculos)
+                            inputReal.value = groupPrices[day].toFixed(2);
+                        }
+                        
+                        // Verificar se há estratégias configuradas para calcular Auto
                         if (!strategies || strategies.length === 0) {
-                            // SEM estratégias: Extrair valor Real do supplier de referência (AUTOPRUDENTE)
-                            const groupPrices = currentPrices[grupo];
-                            if (groupPrices && groupPrices[day]) {
-                                // Usar preço do Current Prices diretamente (já é Real/GROSS)
-                                const realPrice = groupPrices[day];
-                                
-                                // Calcular Auto (NET) a partir do Real
-                                autoPrice = calculateNet(realPrice);
-                                
-                                // Preencher ambos os campos
-                                const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
-                                const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
-                                
-                                if (inputAuto && inputReal) {
-                                    inputAuto.value = autoPrice.toFixed(2);
-                                    inputReal.value = realPrice.toFixed(2);
-                                    pricesGenerated++;
-                                }
-                            } else {
-                                pricesSkipped++;
-                            }
+                            // SEM estratégias: Auto fica vazio
+                            pricesSkipped++;
                             continue;
                         }
                         
-                        // COM estratégias: Aplicar primeira estratégia (prioridade)
+                        // COM estratégias: Calcular Auto baseado na estratégia
                         const strategy = strategies[0];
                         
-                        // Calcular preço baseado na estratégia
+                        // Calcular preço Auto baseado na estratégia
                         if (strategy.type === 'follow_lowest') {
                             autoPrice = await calculateFollowLowest(currentPrices, grupo, day, strategy.config);
                         } else if (strategy.type === 'follow_suppliers') {
@@ -1458,18 +1449,10 @@
                         }
                         
                         if (autoPrice && autoPrice > 0) {
-                            // Preencher campo Auto
+                            // Preencher campo Auto com preço calculado
                             const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
                             if (inputAuto) {
                                 inputAuto.value = autoPrice.toFixed(2);
-                                
-                                // Calcular e preencher Real (Auto + comissão)
-                                const realPrice = calculateGross(autoPrice);
-                                const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
-                                if (inputReal) {
-                                    inputReal.value = realPrice.toFixed(2);
-                                }
-                                
                                 pricesGenerated++;
                             }
                         }
