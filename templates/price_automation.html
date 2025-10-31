@@ -1403,8 +1403,8 @@
                 // Carregar preços do Current Prices (Real column)
                 const currentPrices = await loadCurrentPrices(currentLocation, pickupDate);
                 
-                let pricesGenerated = 0;
-                let pricesSkipped = 0;
+                let autoPricesGenerated = 0;  // Contador para Auto (estratégias)
+                let realPricesGenerated = 0;  // Contador para Real (AUTOPRUDENTE)
                 
                 // Para cada grupo
                 for (const grupo of grupos) {
@@ -1423,12 +1423,12 @@
                         if (groupPrices && groupPrices[day] && inputReal) {
                             // Real = Preço do AUTOPRUDENTE (direto, sem cálculos)
                             inputReal.value = groupPrices[day].toFixed(2);
+                            realPricesGenerated++;
                         }
                         
                         // Verificar se há estratégias configuradas para calcular Auto
                         if (!strategies || strategies.length === 0) {
                             // SEM estratégias: Auto fica vazio
-                            pricesSkipped++;
                             continue;
                         }
                         
@@ -1453,19 +1453,25 @@
                             const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
                             if (inputAuto) {
                                 inputAuto.value = autoPrice.toFixed(2);
-                                pricesGenerated++;
+                                autoPricesGenerated++;
                             }
                         }
                     }
                 }
                 
-                console.log(`✅ Generated ${pricesGenerated} prices, skipped ${pricesSkipped} (no data)`);
+                console.log(`✅ Auto: ${autoPricesGenerated}, Real: ${realPricesGenerated}`);
                 
-                if (pricesSkipped > 0) {
-                    showNotification(`Generated ${pricesGenerated} automated prices!\n\n${pricesSkipped} cells skipped (no data in Current Prices)`, 'success');
+                // Mensagem customizada baseada nos resultados
+                let message = '';
+                if (autoPricesGenerated > 0 && realPricesGenerated > 0) {
+                    message = `Generated:\n• ${autoPricesGenerated} automated prices (Auto)\n• ${realPricesGenerated} real prices (AUTOPRUDENTE)`;
+                } else if (realPricesGenerated > 0) {
+                    message = `Generated:\n• ${realPricesGenerated} real prices (AUTOPRUDENTE)\n• 0 automated prices (no strategies configured)`;
                 } else {
-                    showNotification(`Generated ${pricesGenerated} automated prices successfully!`, 'success');
+                    message = 'No prices generated.\nPlease fill Current Prices first.';
                 }
+                
+                showNotification(message, realPricesGenerated > 0 ? 'success' : 'warning');
                 
             } catch (error) {
                 console.error('Error generating automated prices:', error);
