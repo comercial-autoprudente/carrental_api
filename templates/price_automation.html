@@ -254,7 +254,13 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
+        // Grupos visíveis na automação (C não aparece pois copia D automaticamente)
         const grupos = ['B1', 'B2', 'D', 'E1', 'E2', 'F', 'G', 'X', 'J1', 'J2', 'L1', 'L2', 'M1', 'M2', 'N'];
+        
+        // Grupos que copiam preços de outros (C = D)
+        const gruposCopia = {
+            'C': 'D'  // Grupo C sempre tem o mesmo preço do Grupo D
+        };
         const dias = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31, 60];
 
         // Carregar configurações
@@ -1215,6 +1221,21 @@
                             real: inputReal.value || ''
                         };
                         priceCount++;
+                    }
+                });
+            });
+            
+            // Copiar automaticamente preços de grupos dependentes (C = D)
+            Object.keys(gruposCopia).forEach(grupoDestino => {
+                const grupoOrigem = gruposCopia[grupoDestino];
+                dias.forEach(day => {
+                    const keyOrigem = `${grupoOrigem}_${day}`;
+                    const keyDestino = `${grupoDestino}_${day}`;
+                    if (prices[keyOrigem]) {
+                        prices[keyDestino] = {
+                            net: prices[keyOrigem].net,
+                            real: prices[keyOrigem].real
+                        };
                     }
                 });
             });
