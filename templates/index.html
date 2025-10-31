@@ -447,7 +447,7 @@
           </div>
         </div>
         <div class="px-5 md:px-8">
-          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Pesquisando em mais de 1000 locadoras<span class="dots"></span></div>
+          <div class="loading-title text-base font-medium text-gray-800 loading-gap">Searching over 1000 rental companies<span class="dots"></span></div>
           <div class="mx-auto" style="max-width: 520px;">
             <div id="movingScene" class="scene" style="margin-bottom: 0px;">
             <!-- Inline SVG landscape (mountains, clouds, trees) with transparent background -->
@@ -501,38 +501,23 @@
             <ul class="list-none space-y-1 text-sm text-gray-800 m-0 p-0">
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>O melhor preço garantido</span>
+                <span>Best price guaranteed</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Rápido e fácil</span>
+                <span>Fast and easy</span>
               </li>
               <li class="flex items-start gap-2">
                 <svg class="mt-0.5 h-4 w-4 text-green-500 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-7.25 7.25a1 1 0 01-1.414 0L3.293 9.957a1 1 0 111.414-1.414l3.004 3.004 6.543-6.543a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-                <span>Mais de <strong>7,9 milhões</strong> de clientes</span>
+                <span>More than <strong>7.9 million</strong> customers</span>
               </li>
             </ul>
           </div>
           <div class="border-t border-gray-200 my-3"></div>
-          <!-- Suppliers logos: two centered rows, 4 per row -->
+          <!-- Suppliers logos: dynamic, Auto Prudente always first -->
           <div class="mx-auto" style="max-width: 520px;">
-            <div class="logos-grid-4">
-              <div class="logo-badge"><img src="/static/logos/logo_AUP.png" alt="AUP"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_THR.png.avif" alt="THR"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_ECR.png.avif" alt="ECR"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_HER.png" alt="HER"/></div>
-            </div>
-            <div class="logos-grid-4" style="margin-top: 8px;">
-              <div class="logo-badge"><img src="/static/logos/logo_BGX.png.avif" alt="BGX"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_CEN.png.avif" alt="CEN"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_OKR.png" alt="OKR"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_SUR.png" alt="SUR"/></div>
-            </div>
-            <div class="logos-grid-4" style="margin-top: 8px;">
-              <div class="logo-badge"><img src="/static/logos/logo_TAN.png" alt="TAN"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_TAN1.png" alt="TAN1"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_YNO.png.avif" alt="YNO"/></div>
-              <div class="logo-badge"><img src="/static/logos/logo_ICT.png" alt="ICT"/></div>
+            <div id="loadingLogos" class="space-y-2">
+              <!-- Logos will be loaded dynamically -->
             </div>
           </div>
         </div>
@@ -1500,6 +1485,50 @@
       const fetchAllBtn = document.getElementById('fetchAllBtn');
       function debounce(fn, wait){ let t; return function(...args){ clearTimeout(t); t = setTimeout(() => fn.apply(this, args), wait); }; }
       let fetchInFlight = false;
+      
+      // Função para carregar logos dinamicamente
+      function loadDynamicLogos() {
+        const container = document.getElementById('loadingLogos');
+        if (!container) return;
+        
+        // Lista de logos disponíveis (Auto Prudente sempre primeiro)
+        const allLogos = [
+          { code: 'AUP', file: 'logo_AUP.png', name: 'Auto Prudente' },
+          { code: 'THR', file: 'logo_THR.png.avif', name: 'Thrifty' },
+          { code: 'ECR', file: 'logo_ECR.png.avif', name: 'Europcar' },
+          { code: 'HER', file: 'logo_HER.png', name: 'Hertz' },
+          { code: 'BGX', file: 'logo_BGX.png.avif', name: 'Budget' },
+          { code: 'CEN', file: 'logo_CEN.png.avif', name: 'Centauro' },
+          { code: 'OKR', file: 'logo_OKR.png', name: 'OK Mobility' },
+          { code: 'SUR', file: 'logo_SUR.png', name: 'Surprice' },
+          { code: 'TAN', file: 'logo_TAN.png', name: 'Tangerine' },
+          { code: 'SXT', file: 'logo_SXT.png', name: 'Sixt' },
+          { code: 'YNO', file: 'logo_YNO.png.avif', name: 'Ynot' },
+          { code: 'ICT', file: 'logo_ICT.png', name: 'Interrent' }
+        ];
+        
+        // Selecionar 11 logos aleatórios (excluindo AUP que já está garantido)
+        const otherLogos = allLogos.slice(1); // Remove AUP
+        const shuffled = otherLogos.sort(() => 0.5 - Math.random());
+        const selected = [allLogos[0], ...shuffled.slice(0, 11)]; // AUP + 11 aleatórios
+        
+        // Criar 3 linhas de 4 logos
+        let html = '';
+        for (let i = 0; i < 3; i++) {
+          html += '<div class="logos-grid-4"' + (i > 0 ? ' style="margin-top: 8px;"' : '') + '>';
+          for (let j = 0; j < 4; j++) {
+            const idx = i * 4 + j;
+            if (idx < selected.length) {
+              const logo = selected[idx];
+              html += `<div class="logo-badge"><img src="/static/logos/${logo.file}" alt="${logo.code}" title="${logo.name}"/></div>`;
+            }
+          }
+          html += '</div>';
+        }
+        
+        container.innerHTML = html;
+      }
+      
       // Tornar global para poder chamar dos chips
       window.runBulkFetch = async function runBulkFetch(e){
         if (e && e.preventDefault) e.preventDefault();
@@ -1567,7 +1596,11 @@
         if (results) results.innerHTML = '';
         const modal = document.getElementById('loadingModal');
         const bar = document.querySelector('#loadingModal .progress .bar');
-        if (modal) { modal.classList.add('loading'); modal.classList.remove('hidden'); }
+        if (modal) { 
+          modal.classList.add('loading'); 
+          modal.classList.remove('hidden'); 
+          loadDynamicLogos(); // Carregar logos dinamicamente
+        }
         // Progressive loading bar controller
         let progTimer = null;
         function setBarWidth(p){ try { if (bar) bar.style.width = Math.max(0, Math.min(100, p)) + '%'; } catch(_){} }
