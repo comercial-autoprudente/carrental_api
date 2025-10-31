@@ -16,6 +16,10 @@
         document.addEventListener("DOMContentLoaded", function() {
           const header = document.querySelector("header");
           if (header) header.style.display = "none";
+          
+          // Esconder também os botões de navegação dentro do iframe
+          const navButtons = document.querySelector("main > div > div.flex.items-center.gap-2");
+          if (navButtons) navButtons.style.display = "none";
         });
       }
     </script>
