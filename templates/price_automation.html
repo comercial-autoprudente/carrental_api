@@ -1481,6 +1481,9 @@
         async function loadCurrentPrices(location, pickupDate) {
             // Carregar preços do Current Prices (coluna Real)
             const prices = {};
+            let totalPricesFound = 0;
+            
+            console.log('🔍 Loading Current Prices from tab...');
             
             grupos.forEach(grupo => {
                 prices[grupo] = {};
@@ -1490,10 +1493,14 @@
                         const price = parseFloat(input.value);
                         if (!isNaN(price) && price > 0) {
                             prices[grupo][day] = price;
+                            totalPricesFound++;
+                            console.log(`  ✓ ${grupo} ${day}d: ${price}€`);
                         }
                     }
                 });
             });
+            
+            console.log(`📊 Total prices found in Current Prices: ${totalPricesFound}`);
             
             return prices;
         }
