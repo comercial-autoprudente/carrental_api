@@ -920,6 +920,21 @@
                         </div>
                     </button>
                     
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'follow_average', 'Follow Average Price')" 
+                            class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-[#009cb6] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-1">Follow Average Price</h4>
+                                <p class="text-sm text-gray-600">Calculate the average (middle) price between selected suppliers with configurable difference</p>
+                            </div>
+                        </div>
+                    </button>
+                    
                     <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'fixed_margin', 'Fixed Margin %')" 
                             class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
                         <div class="flex items-start gap-3">
@@ -1134,6 +1149,9 @@
             if (strategy === 'follow_lowest') {
                 followOptions.classList.remove('hidden');
             } else if (strategy === 'follow_suppliers') {
+                suppliersOptions.classList.remove('hidden');
+            } else if (strategy === 'follow_average') {
+                // Follow average usa os mesmos campos que follow_suppliers
                 suppliersOptions.classList.remove('hidden');
             } else if (strategy === 'fixed_margin') {
                 marginOptions.classList.remove('hidden');
