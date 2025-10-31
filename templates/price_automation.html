@@ -1297,9 +1297,9 @@
                 dias.forEach((day, dayIndex) => {
                     const bgColor = dayIndex % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                     
-                    // Coluna Auto (purple) - vermelha se não tiver regras
+                    // Coluna Auto (amarelo) - laranja se não tiver regras
                     const tdAuto = document.createElement('td');
-                    tdAuto.className = `px-1 py-1 ${bgColor} bg-purple-50`;
+                    tdAuto.className = `px-1 py-1 ${bgColor} bg-[#f4ad0f] bg-opacity-20`;
                     tdAuto.dataset.grupo = grupo;
                     tdAuto.dataset.day = day;
                     tdAuto.dataset.cellType = 'auto';
@@ -1307,7 +1307,7 @@
                     const inputAuto = document.createElement('input');
                     inputAuto.type = 'text';
                     inputAuto.placeholder = '-';
-                    inputAuto.className = 'w-full px-1 py-1 text-center text-xs border-0 bg-transparent focus:ring-1 focus:ring-purple-300';
+                    inputAuto.className = 'w-full px-1 py-1 text-center text-xs border-0 bg-transparent focus:ring-1 focus:ring-[#f4ad0f]';
                     inputAuto.dataset.grupo = grupo;
                     inputAuto.dataset.dias = day;
                     inputAuto.dataset.type = 'auto';
@@ -1375,14 +1375,14 @@
                         }
                     }
                     
-                    // Se não há regras, marcar células como vermelhas
+                    // Se não há regras, marcar células como laranja
                     if (!hasRules) {
                         const cellsAuto = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="auto"]`);
                         const cellsReal = document.querySelectorAll(`td[data-grupo="${grupo}"][data-day="${day}"][data-cell-type="real"]`);
                         
                         cellsAuto.forEach(cell => {
-                            cell.classList.remove('bg-purple-50');
-                            cell.classList.add('bg-red-100');
+                            cell.classList.remove('bg-[#f4ad0f]', 'bg-opacity-20');
+                            cell.classList.add('bg-orange-200');
                             const input = cell.querySelector('input');
                             if (input) {
                                 input.value = ''; // Deixar vazio
@@ -1392,7 +1392,7 @@
                         
                         cellsReal.forEach(cell => {
                             cell.classList.remove('bg-[#009cb6]', 'bg-opacity-50');
-                            cell.classList.add('bg-red-100');
+                            cell.classList.add('bg-orange-200');
                             const input = cell.querySelector('input');
                             if (input) {
                                 input.value = ''; // Deixar vazio
