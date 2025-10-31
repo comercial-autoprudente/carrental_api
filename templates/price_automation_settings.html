@@ -382,7 +382,7 @@
         function initializeAutomatedRules() {
             createGroupRules('Albufeira', 'groupRulesAlbufeira');
             createGroupRules('Aeroporto de Faro', 'groupRulesFaro');
-            loadAutomatedRules();
+            // Rules are loaded per day when user clicks on day chip
         }
         
         function createGroupRules(location, containerId) {
@@ -397,23 +397,28 @@
                     <div class="mb-3">
                         <div class="flex items-center justify-between mb-2">
                             <h3 class="font-semibold text-gray-900">${grupo} - ${grupoNames[grupo]}</h3>
-                            <button onclick="toggleGroupRule('${location}', '${grupo}')" class="text-xs text-purple-600 hover:text-purple-800">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </button>
                         </div>
                         
                         <!-- Days Selection -->
                         <div class="flex flex-wrap gap-1 mb-2">
-                            <span class="text-xs text-gray-600 mr-2">Apply to days:</span>
+                            <span class="text-xs text-gray-600 mr-2">Select day to configure:</span>
                             <div id="daysChips_${location}_${grupo}" class="flex flex-wrap gap-1">
                                 <!-- Days chips will be generated here -->
                             </div>
                         </div>
+                        
+                        <!-- Selected Day Indicator -->
+                        <div id="selectedDayInfo_${location}_${grupo}" class="hidden mb-2 p-2 bg-[#f4ad0f] bg-opacity-20 border border-[#f4ad0f] rounded text-xs">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold text-gray-800">Configuring: <span id="selectedDayText_${location}_${grupo}"></span></span>
+                                <button onclick="copyFromDay('${location}', '${grupo}')" class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-xs">
+                                    Copy from another day
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div id="ruleContent_${location}_${grupo}" class="space-y-3">
+                    <div id="ruleContent_${location}_${grupo}" class="hidden space-y-3">
                         <!-- Strategy Selection -->
                         <div>
                             <label class="block text-xs font-medium text-gray-700 mb-1">Pricing Strategy</label>
@@ -517,7 +522,7 @@
             availableDays.forEach(day => {
                 const chip = document.createElement('button');
                 chip.type = 'button';
-                chip.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-purple-400 transition-colors';
+                chip.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-[#f4ad0f] transition-colors';
                 chip.textContent = `${day}d`;
                 chip.dataset.location = location;
                 chip.dataset.grupo = grupo;
@@ -525,34 +530,175 @@
                 chip.dataset.selected = 'false';
                 
                 chip.onclick = function() {
-                    toggleDaySelection(this);
+                    selectDayForConfig(location, grupo, day, this);
                 };
                 
                 container.appendChild(chip);
             });
         }
         
-        function toggleDaySelection(chipElement) {
-            const isSelected = chipElement.dataset.selected === 'true';
+        function selectDayForConfig(location, grupo, day, chipElement) {
+            // Deselect all chips for this group
+            const allChips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"]`);
+            allChips.forEach(chip => {
+                chip.dataset.selected = 'false';
+                chip.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-[#f4ad0f] transition-colors';
+            });
             
-            if (isSelected) {
-                // Deselect
-                chipElement.dataset.selected = 'false';
-                chipElement.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-purple-400 transition-colors';
-            } else {
-                // Select
-                chipElement.dataset.selected = 'true';
-                chipElement.className = 'px-2 py-0.5 text-xs border border-yellow-500 bg-yellow-100 text-yellow-800 font-semibold rounded hover:bg-yellow-200 transition-colors';
+            // Select clicked chip (amarelo - cor do UI)
+            chipElement.dataset.selected = 'true';
+            chipElement.className = 'px-2 py-0.5 text-xs border border-[#f4ad0f] bg-[#f4ad0f] bg-opacity-20 text-gray-900 font-semibold rounded';
+            
+            // Show selected day info
+            const dayInfo = document.getElementById(`selectedDayInfo_${location}_${grupo}`);
+            const dayText = document.getElementById(`selectedDayText_${location}_${grupo}`);
+            if (dayInfo && dayText) {
+                dayInfo.classList.remove('hidden');
+                dayText.textContent = `${day} day(s)`;
+            }
+            
+            // Show rule content
+            const ruleContent = document.getElementById(`ruleContent_${location}_${grupo}`);
+            if (ruleContent) {
+                ruleContent.classList.remove('hidden');
+            }
+            
+            // Load configuration for this specific day
+            loadDayConfiguration(location, grupo, day);
+        }
+        
+        function loadDayConfiguration(location, grupo, day) {
+            const saved = localStorage.getItem('automatedPriceRules');
+            if (!saved) return;
+            
+            try {
+                const rules = JSON.parse(saved);
+                const dayRule = rules[location]?.[grupo]?.days?.[day];
+                
+                if (dayRule) {
+                    // Load existing configuration for this day
+                    const strategyEl = document.getElementById(`strategy_${location}_${grupo}`);
+                    if (strategyEl && dayRule.strategy) {
+                        strategyEl.value = dayRule.strategy;
+                        updateStrategyFields(location, grupo);
+                        
+                        // Load all fields
+                        if (dayRule.diffType) document.getElementById(`diffType_${location}_${grupo}`).value = dayRule.diffType;
+                        if (dayRule.diffValue) document.getElementById(`diffValue_${location}_${grupo}`).value = dayRule.diffValue;
+                        if (dayRule.margin) document.getElementById(`margin_${location}_${grupo}`).value = dayRule.margin;
+                        if (dayRule.fixedPrice) document.getElementById(`fixedPrice_${location}_${grupo}`).value = dayRule.fixedPrice;
+                        if (dayRule.minPriceDay) document.getElementById(`minPriceDay_${location}_${grupo}`).value = dayRule.minPriceDay;
+                        if (dayRule.minPriceMonth) document.getElementById(`minPriceMonth_${location}_${grupo}`).value = dayRule.minPriceMonth;
+                        
+                        // Load suppliers
+                        if (dayRule.selectedSuppliers) {
+                            // Clear all checkboxes first
+                            const allCheckboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]`);
+                            allCheckboxes.forEach(cb => cb.checked = false);
+                            
+                            // Check selected ones
+                            dayRule.selectedSuppliers.forEach(supplier => {
+                                const checkbox = document.getElementById(`supplier_${location}_${grupo}_${supplier.replace(/\s+/g, '_')}`);
+                                if (checkbox) checkbox.checked = true;
+                            });
+                        }
+                        if (dayRule.supplierDiffType) document.getElementById(`supplierDiffType_${location}_${grupo}`).value = dayRule.supplierDiffType;
+                        if (dayRule.supplierDiffValue) document.getElementById(`supplierDiffValue_${location}_${grupo}`).value = dayRule.supplierDiffValue;
+                    }
+                } else {
+                    // No configuration for this day - reset to defaults
+                    resetDayConfiguration(location, grupo);
+                }
+            } catch (e) {
+                console.error('Error loading day configuration:', e);
             }
         }
         
-        function getSelectedDays(location, grupo) {
-            const chips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"][data-selected="true"]`);
-            const selectedDays = [];
-            chips.forEach(chip => {
-                selectedDays.push(parseInt(chip.dataset.day));
+        function resetDayConfiguration(location, grupo) {
+            // Reset all fields to default
+            const strategyEl = document.getElementById(`strategy_${location}_${grupo}`);
+            if (strategyEl) {
+                strategyEl.value = 'follow_lowest';
+                updateStrategyFields(location, grupo);
+            }
+            
+            // Clear all inputs
+            const inputs = document.querySelectorAll(`#ruleContent_${location}_${grupo} input`);
+            inputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    input.checked = false;
+                } else {
+                    input.value = '';
+                }
             });
-            return selectedDays;
+        }
+        
+        function copyFromDay(location, grupo) {
+            const currentDay = getCurrentSelectedDay(location, grupo);
+            if (!currentDay) {
+                alert('No day selected');
+                return;
+            }
+            
+            // Show dialog to select day to copy from
+            const daysList = availableDays.filter(d => d !== currentDay).join(', ');
+            const sourceDayStr = prompt(`Copy configuration from which day?\nAvailable: ${daysList}`);
+            
+            if (sourceDayStr) {
+                const sourceDay = parseInt(sourceDayStr);
+                if (availableDays.includes(sourceDay)) {
+                    const saved = localStorage.getItem('automatedPriceRules');
+                    if (saved) {
+                        try {
+                            const rules = JSON.parse(saved);
+                            const sourceDayRule = rules[location]?.[grupo]?.days?.[sourceDay];
+                            
+                            if (sourceDayRule) {
+                                // Copy configuration to current day
+                                loadDayConfigurationFromObject(location, grupo, sourceDayRule);
+                                alert(`✅ Configuration copied from ${sourceDay}d to ${currentDay}d`);
+                            } else {
+                                alert(`⚠️ No configuration found for ${sourceDay}d`);
+                            }
+                        } catch (e) {
+                            alert('Error copying configuration');
+                        }
+                    }
+                } else {
+                    alert('Invalid day number');
+                }
+            }
+        }
+        
+        function loadDayConfigurationFromObject(location, grupo, config) {
+            const strategyEl = document.getElementById(`strategy_${location}_${grupo}`);
+            if (strategyEl && config.strategy) {
+                strategyEl.value = config.strategy;
+                updateStrategyFields(location, grupo);
+                
+                if (config.diffType) document.getElementById(`diffType_${location}_${grupo}`).value = config.diffType;
+                if (config.diffValue) document.getElementById(`diffValue_${location}_${grupo}`).value = config.diffValue;
+                if (config.margin) document.getElementById(`margin_${location}_${grupo}`).value = config.margin;
+                if (config.fixedPrice) document.getElementById(`fixedPrice_${location}_${grupo}`).value = config.fixedPrice;
+                if (config.minPriceDay) document.getElementById(`minPriceDay_${location}_${grupo}`).value = config.minPriceDay;
+                if (config.minPriceMonth) document.getElementById(`minPriceMonth_${location}_${grupo}`).value = config.minPriceMonth;
+                
+                if (config.selectedSuppliers) {
+                    const allCheckboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]`);
+                    allCheckboxes.forEach(cb => cb.checked = false);
+                    config.selectedSuppliers.forEach(supplier => {
+                        const checkbox = document.getElementById(`supplier_${location}_${grupo}_${supplier.replace(/\s+/g, '_')}`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                }
+                if (config.supplierDiffType) document.getElementById(`supplierDiffType_${location}_${grupo}`).value = config.supplierDiffType;
+                if (config.supplierDiffValue) document.getElementById(`supplierDiffValue_${location}_${grupo}`).value = config.supplierDiffValue;
+            }
+        }
+        
+        function getCurrentSelectedDay(location, grupo) {
+            const selectedChip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-selected="true"]`);
+            return selectedChip ? parseInt(selectedChip.dataset.day) : null;
         }
         
         function generateSuppliersCheckboxes(location, grupo) {
@@ -606,92 +752,47 @@
             }
         }
         
-        function toggleGroupRule(location, grupo) {
-            const content = document.getElementById(`ruleContent_${location}_${grupo}`);
-            content.classList.toggle('hidden');
-        }
-        
-        function loadAutomatedRules() {
-            const saved = localStorage.getItem('automatedPriceRules');
-            if (saved) {
-                try {
-                    const rules = JSON.parse(saved);
-                    // Load rules into form fields
-                    Object.keys(rules).forEach(location => {
-                        Object.keys(rules[location]).forEach(grupo => {
-                            const rule = rules[location][grupo];
-                            const strategyEl = document.getElementById(`strategy_${location}_${grupo}`);
-                            if (strategyEl && rule.strategy) {
-                                strategyEl.value = rule.strategy;
-                                updateStrategyFields(location, grupo);
-                                
-                                // Load specific values
-                                if (rule.diffType) document.getElementById(`diffType_${location}_${grupo}`).value = rule.diffType;
-                                if (rule.diffValue) document.getElementById(`diffValue_${location}_${grupo}`).value = rule.diffValue;
-                                if (rule.margin) document.getElementById(`margin_${location}_${grupo}`).value = rule.margin;
-                                if (rule.fixedPrice) document.getElementById(`fixedPrice_${location}_${grupo}`).value = rule.fixedPrice;
-                                if (rule.minPriceDay) document.getElementById(`minPriceDay_${location}_${grupo}`).value = rule.minPriceDay;
-                                if (rule.minPriceMonth) document.getElementById(`minPriceMonth_${location}_${grupo}`).value = rule.minPriceMonth;
-                                
-                                // Load suppliers selection
-                                if (rule.selectedSuppliers && Array.isArray(rule.selectedSuppliers)) {
-                                    rule.selectedSuppliers.forEach(supplier => {
-                                        const checkbox = document.getElementById(`supplier_${location}_${grupo}_${supplier.replace(/\s+/g, '_')}`);
-                                        if (checkbox) checkbox.checked = true;
-                                    });
-                                }
-                                if (rule.supplierDiffType) document.getElementById(`supplierDiffType_${location}_${grupo}`).value = rule.supplierDiffType;
-                                if (rule.supplierDiffValue) document.getElementById(`supplierDiffValue_${location}_${grupo}`).value = rule.supplierDiffValue;
-                                
-                                // Load selected days
-                                if (rule.selectedDays && Array.isArray(rule.selectedDays)) {
-                                    rule.selectedDays.forEach(day => {
-                                        const chip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-day="${day}"]`);
-                                        if (chip) {
-                                            chip.dataset.selected = 'true';
-                                            chip.className = 'px-2 py-0.5 text-xs border border-yellow-500 bg-yellow-100 text-yellow-800 font-semibold rounded hover:bg-yellow-200 transition-colors';
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    });
-                } catch (e) {
-                    console.error('Error loading automated rules:', e);
-                }
-            }
-        }
+        // Removed old loadAutomatedRules - now loading happens per day when chip is clicked
         
         function saveAutomatedRules() {
-            const rules = {};
+            // Load existing rules
+            const saved = localStorage.getItem('automatedPriceRules');
+            let rules = saved ? JSON.parse(saved) : {};
+            
             const locations = ['Albufeira', 'Aeroporto de Faro'];
             
             locations.forEach(location => {
-                rules[location] = {};
+                if (!rules[location]) rules[location] = {};
+                
                 grupos.forEach(grupo => {
-                    const strategy = document.getElementById(`strategy_${location}_${grupo}`)?.value;
-                    if (strategy) {
-                        // Get selected suppliers
-                        const selectedSuppliers = [];
-                        const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]:checked`);
-                        checkboxes.forEach(cb => selectedSuppliers.push(cb.value));
-                        
-                        // Get selected days
-                        const selectedDays = getSelectedDays(location, grupo);
-                        
-                        rules[location][grupo] = {
-                            strategy: strategy,
-                            selectedDays: selectedDays,
-                            diffType: document.getElementById(`diffType_${location}_${grupo}`)?.value,
-                            diffValue: parseFloat(document.getElementById(`diffValue_${location}_${grupo}`)?.value) || 0,
-                            selectedSuppliers: selectedSuppliers,
-                            supplierDiffType: document.getElementById(`supplierDiffType_${location}_${grupo}`)?.value,
-                            supplierDiffValue: parseFloat(document.getElementById(`supplierDiffValue_${location}_${grupo}`)?.value) || 0,
-                            margin: parseFloat(document.getElementById(`margin_${location}_${grupo}`)?.value) || 0,
-                            fixedPrice: parseFloat(document.getElementById(`fixedPrice_${location}_${grupo}`)?.value) || 0,
-                            minPriceDay: parseFloat(document.getElementById(`minPriceDay_${location}_${grupo}`)?.value) || null,
-                            minPriceMonth: parseFloat(document.getElementById(`minPriceMonth_${location}_${grupo}`)?.value) || null
-                        };
+                    const currentDay = getCurrentSelectedDay(location, grupo);
+                    if (currentDay) {
+                        // Save configuration for the currently selected day
+                        const strategy = document.getElementById(`strategy_${location}_${grupo}`)?.value;
+                        if (strategy) {
+                            // Get selected suppliers
+                            const selectedSuppliers = [];
+                            const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]:checked`);
+                            checkboxes.forEach(cb => selectedSuppliers.push(cb.value));
+                            
+                            // Initialize group if not exists
+                            if (!rules[location][grupo]) rules[location][grupo] = { days: {} };
+                            if (!rules[location][grupo].days) rules[location][grupo].days = {};
+                            
+                            // Save configuration for this specific day
+                            rules[location][grupo].days[currentDay] = {
+                                strategy: strategy,
+                                diffType: document.getElementById(`diffType_${location}_${grupo}`)?.value,
+                                diffValue: parseFloat(document.getElementById(`diffValue_${location}_${grupo}`)?.value) || 0,
+                                selectedSuppliers: selectedSuppliers,
+                                supplierDiffType: document.getElementById(`supplierDiffType_${location}_${grupo}`)?.value,
+                                supplierDiffValue: parseFloat(document.getElementById(`supplierDiffValue_${location}_${grupo}`)?.value) || 0,
+                                margin: parseFloat(document.getElementById(`margin_${location}_${grupo}`)?.value) || 0,
+                                fixedPrice: parseFloat(document.getElementById(`fixedPrice_${location}_${grupo}`)?.value) || 0,
+                                minPriceDay: parseFloat(document.getElementById(`minPriceDay_${location}_${grupo}`)?.value) || null,
+                                minPriceMonth: parseFloat(document.getElementById(`minPriceMonth_${location}_${grupo}`)?.value) || null
+                            };
+                        }
                     }
                 });
             });
