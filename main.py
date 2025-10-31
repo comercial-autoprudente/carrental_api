@@ -282,16 +282,23 @@ def scrape_with_playwright(url: str) -> List[Dict[str, Any]]:
                 # === SUPPLIER (CARJET ESPECÍFICO) ===
                 supplier = ""
                 try:
-                    # Prioridade 1: Logo do supplier
-                    im = h.query_selector("img[src*='/prv/'], img[src*='logo_']")
-                    if im:
-                        src = im.get_attribute("src") or ""
-                        # Extrair código do supplier da URL: /logo_AUP.png → AUP
-                        match = re.search(r'logo_([A-Z0-9]+)', src)
-                        if match:
-                            supplier = match.group(1)
-                        else:
-                            supplier = (im.get_attribute("alt") or "").strip()
+                    # Prioridade 1: Atributo data-prv do article (mais confiável)
+                    prv_code = h.get_attribute("data-prv")
+                    if prv_code:
+                        supplier = prv_code.strip()
+                        print(f"[PLAYWRIGHT] Supplier extraído de data-prv: {supplier}", file=sys.stderr, flush=True)
+                    
+                    # Prioridade 2: Logo do supplier
+                    if not supplier:
+                        im = h.query_selector("img[src*='/prv/'], img[src*='logo_']")
+                        if im:
+                            src = im.get_attribute("src") or ""
+                            # Extrair código do supplier da URL: /logo_AUP.png → AUP
+                            match = re.search(r'logo_([A-Z0-9]+)', src)
+                            if match:
+                                supplier = match.group(1)
+                            else:
+                                supplier = (im.get_attribute("alt") or "").strip()
                     
                     # Fallback: texto do supplier
                     if not supplier:
@@ -4258,13 +4265,18 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
                     "HER": "Hertz",
                     "LOC": "Million",
                 }
-                code = ""
-                for im in card.select("img[src]"):
-                    src = im.get("src") or ""
-                    mcode = LOGO_CODE_RX.search(src)
-                    if mcode:
-                        code = (mcode.group(1) or "").upper()
-                        break
+                # Prioridade 1: Atributo data-prv do card (mais confiável)
+                code = (card.get("data-prv") or "").strip().upper()
+                
+                # Prioridade 2: Logo do supplier
+                if not code:
+                    for im in card.select("img[src]"):
+                        src = im.get("src") or ""
+                        mcode = LOGO_CODE_RX.search(src)
+                        if mcode:
+                            code = (mcode.group(1) or "").upper()
+                            break
+                
                 if code:
                     supplier = supplier_alias.get(code, code)
                 if not supplier:
