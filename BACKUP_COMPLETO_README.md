@@ -62,8 +62,9 @@ O script irá:
 8. ✅ Comprimir tudo num arquivo `.tar.gz`
 
 **Resultado:**
-- Pasta: `backups/FULL_BACKUP_YYYYMMDD_HHMMSS/`
-- Arquivo: `backups/FULL_BACKUP_YYYYMMDD_HHMMSS.tar.gz`
+- 📁 **LOCAL**: Pasta `backups/FULL_BACKUP_YYYYMMDD_HHMMSS/`
+- 📦 **LOCAL**: Arquivo `backups/FULL_BACKUP_YYYYMMDD_HHMMSS.tar.gz`
+- ☁️ **GITHUB**: Push automático para `comercial-autoprudente/carrental_api`
 
 ### Método 2: Manual
 
