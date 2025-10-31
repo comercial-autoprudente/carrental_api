@@ -152,28 +152,28 @@
             <!-- Gestão de Colunas -->
             <div class="border-t pt-4 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-600">Gerir colunas:</span>
-                    <button onclick="showAddColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Adicionar coluna">
+                    <span class="text-sm text-gray-600">Manage columns:</span>
+                    <button onclick="showAddColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Add column">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                         </svg>
-                        Adicionar
+                        Add
                     </button>
-                    <button onclick="showRemoveColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Remover coluna">
+                    <button onclick="showRemoveColumnDialog()" class="px-3 py-1 border border-gray-300 hover:bg-gray-50 rounded text-sm flex items-center gap-1" title="Remove column">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                         </svg>
-                        Remover
+                        Remove
                     </button>
                 </div>
                 <div class="flex items-center gap-3">
-                    <span class="text-sm text-gray-600">Descarregar Excel:</span>
-                    <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Way2Rentals">
+                    <span class="text-sm text-gray-600">Download Excel:</span>
+                    <button onclick="downloadExcel('way2rentals')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Download Way2Rentals">
                         <svg class="w-6 h-6 text-[#f4ad0f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </button>
-                    <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Descarregar Abbycar">
+                    <button onclick="downloadExcel('abbycar')" class="p-2 hover:bg-gray-100 rounded transition-colors" title="Download Abbycar">
                         <svg class="w-6 h-6 text-[#009cb6]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -205,7 +205,7 @@
             <table class="w-full text-xs">
                 <thead class="bg-gray-50 sticky top-0">
                     <tr>
-                        <th rowspan="2" class="px-2 py-3 text-left font-semibold border-r">Grupo</th>
+                        <th rowspan="2" class="px-2 py-3 text-left font-semibold border-r">Group</th>
                         <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">1d</th>
                         <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">2d</th>
                         <th colspan="2" class="px-2 py-2 text-center font-semibold border-r">3d</th>
@@ -361,7 +361,7 @@
             const thead = table.querySelector('thead');
             
             // Primeira linha do header (dias)
-            let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Grupo</th>';
+            let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Group</th>';
             dias.forEach((d, index) => {
                 const bgColor = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                 headerRow1 += `<th colspan="2" class="px-2 py-2 text-center font-semibold border-r ${bgColor}">${d}d</th>`;
@@ -1204,7 +1204,7 @@
                     const thead = document.createElement('thead');
                     thead.className = 'bg-gray-50';
                     
-                    let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Grupo</th>';
+                    let headerRow1 = '<tr><th rowspan="2" class="px-2 py-3 text-left font-semibold border-r bg-gray-100">Group</th>';
                     historyData.dias.forEach((d, idx) => {
                         const bgColor = idx % 2 === 0 ? 'bg-gray-50' : 'bg-white';
                         headerRow1 += `<th colspan="2" class="px-2 py-2 text-center font-semibold border-r ${bgColor}">${d}d</th>`;

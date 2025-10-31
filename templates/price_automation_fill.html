@@ -50,16 +50,16 @@
                     </div>
                     <div class="flex items-end">
                         <button onclick="searchAllPrices()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                            🔍 Pesquisar Todos os Preços
+                            🔍 Search All Prices
                         </button>
                     </div>
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="exportToExcel()" class="px-6 py-2 bg-green-600 text-white hover:bg-green-700 transition-colors">
-                        📥 Exportar Excel
+                        📅 Export Excel
                     </button>
                     <button onclick="saveToDatabase()" class="px-6 py-2 bg-[#009cb6] text-white hover:bg-[#f4ad0f] transition-colors">
-                        💾 Guardar
+                        💾 Save
                     </button>
                 </div>
             </div>
@@ -88,7 +88,7 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 sticky top-0">
                     <tr>
-                        <th class="px-4 py-3 text-left font-semibold">Grupo</th>
+                        <th class="px-4 py-3 text-left font-semibold">Group</th>
                         <th class="px-4 py-3 text-center font-semibold">1d</th>
                         <th class="px-4 py-3 text-center font-semibold">2d</th>
                         <th class="px-4 py-3 text-center font-semibold">3d</th>
@@ -142,10 +142,10 @@
                 tr.className = 'grupo-row border-t';
                 
                 // Coluna do grupo
-                const tdGrupo = document.createElement('td');
-                tdGrupo.className = 'px-4 py-3 font-semibold';
-                tdGrupo.textContent = grupo;
-                tr.appendChild(tdGrupo);
+                const tdGroup = document.createElement('td');
+                tdGroup.className = 'px-4 py-3 font-semibold';
+                tdGroup.textContent = grupo;
+                tr.appendChild(tdGroup);
 
                 // Colunas dos dias
                 dias.forEach(day => {
@@ -268,7 +268,7 @@
         }
 
         function exportToExcel() {
-            alert('🚧 Funcionalidade de exportar Excel em desenvolvimento');
+            alert('🚧 Excel export feature under development');
         }
 
         function saveToDatabase() {
