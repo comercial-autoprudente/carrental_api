@@ -1133,7 +1133,7 @@
             
             months.forEach(date => {
                 const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                const monthName = date.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+                const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
                 const historyKey = `priceHistory_${monthKey}`;
                 const hasData = localStorage.getItem(historyKey) !== null;
                 
@@ -1178,7 +1178,7 @@
                 // Criar uma tabela para cada versão
                 historyArray.forEach((historyData, index) => {
                     const versionDate = new Date(historyData.date);
-                    const dateStr = versionDate.toLocaleString('pt-PT', {
+                    const dateStr = versionDate.toLocaleString('en-US', {
                         day: '2-digit',
                         month: '2-digit',
                         year: 'numeric',
