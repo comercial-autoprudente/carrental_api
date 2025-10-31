@@ -399,6 +399,14 @@
                             <h3 class="font-semibold text-gray-900">${grupo} - ${grupoNames[grupo]}</h3>
                         </div>
                         
+                        <!-- Month Selection -->
+                        <div class="mb-3">
+                            <span class="text-xs text-gray-600 mb-1 block">Select month:</span>
+                            <div id="monthsChips_${location}_${grupo}" class="flex flex-wrap gap-1">
+                                <!-- Month chips will be generated here -->
+                            </div>
+                        </div>
+                        
                         <!-- Days Selection -->
                         <div class="flex flex-wrap gap-1 mb-2">
                             <span class="text-xs text-gray-600 mr-2">Select day to configure:</span>
@@ -407,10 +415,12 @@
                             </div>
                         </div>
                         
-                        <!-- Selected Day Indicator -->
+                        <!-- Selected Month & Day Indicator -->
                         <div id="selectedDayInfo_${location}_${grupo}" class="hidden mb-2 p-2 bg-[#f4ad0f] bg-opacity-20 border border-[#f4ad0f] rounded text-xs">
                             <div class="flex items-center justify-between">
-                                <span class="font-semibold text-gray-800">Configuring: <span id="selectedDayText_${location}_${grupo}"></span></span>
+                                <span class="font-semibold text-gray-800">
+                                    Configuring: <span id="selectedMonthText_${location}_${grupo}"></span> - <span id="selectedDayText_${location}_${grupo}"></span>
+                                </span>
                                 <button onclick="copyFromDay('${location}', '${grupo}')" class="px-2 py-1 bg-white border border-gray-300 rounded hover:bg-gray-50 text-xs">
                                     Copy from another day
                                 </button>
@@ -516,12 +526,75 @@
                 
                 container.appendChild(ruleCard);
                 
+                // Generate months chips
+                generateMonthsChips(location, grupo);
+                
                 // Generate days chips
                 generateDaysChips(location, grupo);
                 
                 // Generate suppliers checkboxes
                 generateSuppliersCheckboxes(location, grupo);
             });
+        }
+        
+        function generateMonthsChips(location, grupo) {
+            const container = document.getElementById(`monthsChips_${location}_${grupo}`);
+            if (!container) return;
+            
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            container.innerHTML = '';
+            months.forEach((month, index) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'px-2 py-1 text-xs border border-gray-300 rounded hover:border-[#009cb6] transition-colors';
+                chip.textContent = month.substring(0, 3); // Jan, Feb, Mar...
+                chip.dataset.location = location;
+                chip.dataset.grupo = grupo;
+                chip.dataset.month = index + 1; // 1-12
+                chip.dataset.monthName = month;
+                chip.dataset.selected = 'false';
+                
+                chip.onclick = function() {
+                    selectMonth(location, grupo, index + 1, month, this);
+                };
+                
+                container.appendChild(chip);
+            });
+        }
+        
+        function selectMonth(location, grupo, monthNumber, monthName, chipElement) {
+            // Deselect all month chips for this group
+            const allMonthChips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"][data-month]`);
+            allMonthChips.forEach(chip => {
+                chip.dataset.selected = 'false';
+                chip.className = 'px-2 py-1 text-xs border border-gray-300 rounded hover:border-[#009cb6] transition-colors';
+            });
+            
+            // Select clicked chip (azul - cor do UI)
+            chipElement.dataset.selected = 'true';
+            chipElement.className = 'px-2 py-1 text-xs border border-[#009cb6] bg-[#009cb6] text-white font-semibold rounded';
+            
+            // Update selected month text if day is also selected
+            const currentDay = getCurrentSelectedDay(location, grupo);
+            if (currentDay) {
+                const monthText = document.getElementById(`selectedMonthText_${location}_${grupo}`);
+                if (monthText) {
+                    monthText.textContent = monthName;
+                }
+            }
+        }
+        
+        function getCurrentSelectedMonth(location, grupo) {
+            const selectedChip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-month][data-selected="true"]`);
+            if (!selectedChip) return null;
+            return {
+                number: parseInt(selectedChip.dataset.month),
+                name: selectedChip.dataset.monthName
+            };
         }
         
         function generateDaysChips(location, grupo) {
@@ -548,9 +621,16 @@
         }
         
         function selectDayForConfig(location, grupo, day, chipElement) {
-            // Deselect all chips for this group
-            const allChips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"]`);
-            allChips.forEach(chip => {
+            // Check if month is selected
+            const selectedMonth = getCurrentSelectedMonth(location, grupo);
+            if (!selectedMonth) {
+                alert('Please select a month first');
+                return;
+            }
+            
+            // Deselect all day chips for this group
+            const allDayChips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"][data-day]`);
+            allDayChips.forEach(chip => {
                 chip.dataset.selected = 'false';
                 chip.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-[#f4ad0f] transition-colors';
             });
@@ -559,11 +639,13 @@
             chipElement.dataset.selected = 'true';
             chipElement.className = 'px-2 py-0.5 text-xs border border-[#f4ad0f] bg-[#f4ad0f] bg-opacity-20 text-gray-900 font-semibold rounded';
             
-            // Show selected day info
+            // Show selected month & day info
             const dayInfo = document.getElementById(`selectedDayInfo_${location}_${grupo}`);
+            const monthText = document.getElementById(`selectedMonthText_${location}_${grupo}`);
             const dayText = document.getElementById(`selectedDayText_${location}_${grupo}`);
-            if (dayInfo && dayText) {
+            if (dayInfo && monthText && dayText) {
                 dayInfo.classList.remove('hidden');
+                monthText.textContent = selectedMonth.name;
                 dayText.textContent = `${day} day(s)`;
             }
             
@@ -573,17 +655,17 @@
                 ruleContent.classList.remove('hidden');
             }
             
-            // Load configuration for this specific day
-            loadDayConfiguration(location, grupo, day);
+            // Load configuration for this specific month and day
+            loadDayConfiguration(location, grupo, selectedMonth.number, day);
         }
         
-        function loadDayConfiguration(location, grupo, day) {
+        function loadDayConfiguration(location, grupo, month, day) {
             const saved = localStorage.getItem('automatedPriceRules');
             if (!saved) return;
             
             try {
                 const rules = JSON.parse(saved);
-                const dayRule = rules[location]?.[grupo]?.days?.[day];
+                const dayRule = rules[location]?.[grupo]?.months?.[month]?.days?.[day];
                 
                 if (dayRule) {
                     // Load existing configuration for this day
@@ -716,6 +798,12 @@
         let strategiesData = {}; // Store strategies per location/grupo/day
         
         function addStrategy(location, grupo) {
+            const selectedMonth = getCurrentSelectedMonth(location, grupo);
+            if (!selectedMonth) {
+                alert('Please select a month first');
+                return;
+            }
+            
             const currentDay = getCurrentSelectedDay(location, grupo);
             if (!currentDay) {
                 alert('Please select a day first');
@@ -723,10 +811,10 @@
             }
             
             // Show strategy selection dialog
-            showStrategySelectionDialog(location, grupo, currentDay);
+            showStrategySelectionDialog(location, grupo, selectedMonth.number, currentDay);
         }
         
-        function showStrategySelectionDialog(location, grupo, day) {
+        function showStrategySelectionDialog(location, grupo, month, day) {
             // Create modal overlay
             const overlay = document.createElement('div');
             overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
@@ -749,7 +837,7 @@
                 </div>
                 
                 <div class="space-y-3">
-                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'follow_lowest', 'Follow Lowest Price')" 
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'follow_lowest', 'Follow Lowest Price')" 
                             class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 bg-[#009cb6] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -764,7 +852,7 @@
                         </div>
                     </button>
                     
-                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'follow_suppliers', 'Follow Specific Suppliers')" 
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'follow_suppliers', 'Follow Specific Suppliers')" 
                             class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 bg-[#009cb6] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -779,7 +867,7 @@
                         </div>
                     </button>
                     
-                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'fixed_margin', 'Fixed Margin %')" 
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'fixed_margin', 'Fixed Margin %')" 
                             class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 bg-[#f4ad0f] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -794,7 +882,7 @@
                         </div>
                     </button>
                     
-                    <button onclick="selectStrategy('${location}', '${grupo}', ${day}, 'fixed_price', 'Fixed Price')" 
+                    <button onclick="selectStrategy('${location}', '${grupo}', ${month}, ${day}, 'fixed_price', 'Fixed Price')" 
                             class="w-full text-left p-4 border-2 border-gray-200 rounded-lg hover:border-[#009cb6] hover:bg-blue-50 transition-all">
                         <div class="flex items-start gap-3">
                             <div class="w-10 h-10 bg-[#f4ad0f] bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -815,8 +903,8 @@
             document.body.appendChild(overlay);
         }
         
-        function selectStrategy(location, grupo, day, strategyType, strategyName) {
-            const key = `${location}_${grupo}_${day}`;
+        function selectStrategy(location, grupo, month, day, strategyType, strategyName) {
+            const key = `${location}_${grupo}_${month}_${day}`;
             if (!strategiesData[key]) strategiesData[key] = [];
             
             const strategyId = Date.now();
@@ -832,7 +920,7 @@
             document.querySelector('.fixed.inset-0').remove();
             
             // Render updated list
-            renderStrategiesList(location, grupo, day);
+            renderStrategiesList(location, grupo, month, day);
             
             // Show success message
             showNotification(`✅ ${strategyName} added as strategy #${strategiesData[key].length}`);
