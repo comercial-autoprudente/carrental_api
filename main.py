@@ -1804,8 +1804,22 @@ async def home(request: Request):
             user_ctx = _get_user_by_username(uname)
     except Exception:
         user_ctx = None
+    
+    # Load supplier logos for preloading
+    supplier_logos = []
+    try:
+        with get_db() as conn:
+            rows = conn.execute("SELECT DISTINCT logo_path FROM suppliers WHERE logo_path IS NOT NULL AND active = 1").fetchall()
+            supplier_logos = [row[0] for row in rows if row[0]]
+    except Exception as e:
+        print(f"Error loading supplier logos: {e}", file=sys.stderr, flush=True)
+    
     # FORCE NO CACHE - prevent browser from caching HTML/JS
-    response = templates.TemplateResponse("index.html", {"request": request, "current_user": user_ctx})
+    response = templates.TemplateResponse("index.html", {
+        "request": request, 
+        "current_user": user_ctx,
+        "supplier_logos": supplier_logos
+    })
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
