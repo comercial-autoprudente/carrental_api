@@ -351,9 +351,9 @@
         <aside id="suppliersSidebar" class="lg:col-span-3" style="display: none;">
           <div class="suppliers-sidebar bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between mb-3">
-              <h3 class="font-semibold text-sm text-gray-900">Filtrar por empresa</h3>
-              <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Selecionar/Desselecionar todos">
-                Todos
+              <h3 class="font-semibold text-sm text-gray-900">Filter by Company</h3>
+              <button onclick="toggleAllSuppliers()" class="text-xs text-[#009cb6] hover:text-[#f4ad0f]" title="Select/Deselect All">
+                All
               </button>
             </div>
             <div id="suppliersFilter" class="suppliers-grid">
@@ -367,11 +367,11 @@
       
       <section class="bg-white rounded-lg shadow p-4">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Pesquisar por parâmetros</h2>
+          <h2 class="font-medium border-l-4 border-[#f6b511] pl-3">Search by Parameters</h2>
         </div>
         <form id="paramForm" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end" onsubmit="return false">
           <div class="md:col-span-3 seg">
-            <label class="sr-only">Local de entrega</label>
+            <label class="sr-only">Pickup Location</label>
             <select id="location" style="flex:1; min-width:0;">
               <option value="Aeroporto de Faro">Aeroporto de Faro</option>
               <option value="Albufeira">Albufeira</option>
@@ -380,18 +380,18 @@
           <!-- Data de início (segundo campo) -->
           <div class="md:col-span-2 seg">
             <span class="seg-badge"><svg width="14" height="14" viewBox="0 0 20 20" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M6 2a1 1 0 012 0v1h4V2a1 1 0 112 0v1h1a2 2 0 012 2v2H3V5a2 2 0 012-2h1V2zM3 9h14v6a2 2 0 01-2 2H5a2 2 0 01-2-2V9zm4 2a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg></span>
-            <label class="sr-only">Início (data)</label>
-            <input id="startDate" type="date" placeholder="Início" class="date-input" style="flex:1; min-width:0;" min=""/>
+            <label class="sr-only">Start Date</label>
+            <input id="startDate" type="date" placeholder="Start Date" class="date-input" style="flex:1; min-width:0;" min=""/>
           </div>
           <!-- Dias (terceiro campo na mesma linha) -->
           <div class="md:col-span-7 seg" style="flex-wrap: nowrap; overflow-x: auto;">
-            <label class="sr-only">Dias</label>
+            <label class="sr-only">Days</label>
             <input id="days" type="hidden" value="7" />
             <div id="daysChips" class="flex flex-nowrap gap-1"></div>
           </div>
           <!-- Botões -->
           <div class="md:col-span-12 flex gap-3 items-center flex-wrap">
-            <button id="fetchAllBtn" type="button" class="btn-search">Pesquisar</button>
+            <button id="fetchAllBtn" type="button" class="btn-search">Search</button>
             <button id="searchAllDaysBtn" type="button" class="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white hover:bg-[#009cb6] transition-colors">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -400,12 +400,12 @@
             </button>
             <!-- Fetch All temporariamente removido -->
             <button id="fetchAllDaysBtn" type="button" class="hidden px-4 py-2.5 text-sm font-semibold bg-[#f4ad0f] text-white rounded-lg hover:bg-[#009cb6] transition-colors">
-              📊 Fetch All (Todos os Dias)
+              📊 Fetch All Days
             </button>
             <span id="fetchAllStatus" class="text-xs text-gray-500"></span>
           </div>
           <div class="md:col-span-1 seg hidden">
-            <label class="sr-only">Início (hora)</label>
+            <label class="sr-only">Start Time</label>
             <input id="startTime" type="time" value="15:00" placeholder="15:00" class="time-input w-full rounded-md border-gray-300" />
           </div>
           <div class="md:col-span-2 seg hidden">
@@ -1491,7 +1491,7 @@
                 console.log('[RENDER] Cache renderizado:', items.length, 'carros');
               }
             } else {
-              console.log('[CHIP] Não está em cache. Use o botão Pesquisar.');
+              console.log('[CHIP] Not in cache. Use the Search button.');
             }
           });
           cont.appendChild(btn);
@@ -1872,7 +1872,7 @@
             }
           } finally {
             fetchAllDaysBtn.disabled = false;
-            fetchAllDaysBtn.textContent = '📊 Fetch All (Todos os Dias)';
+            fetchAllDaysBtn.textContent = '📊 Fetch All Days';
           }
         });
         fetchAllDaysBtn._bound = true;
