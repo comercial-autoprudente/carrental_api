@@ -150,13 +150,13 @@
                 </div>
             `;
             
-            // Map sections to URLs - REDIRECIONAR DIRETAMENTE
+            // Map sections to URLs
             const urls = {
-                'users': '/admin/users',
-                'vehicles': '/admin/vehicles-editor',
-                'price-adjustment': '/admin/settings',
-                'price-validation': '/admin/price-validation',
-                'price-automation-settings': '/admin/price-automation-settings'
+                'users': '/admin/users?iframe=1',
+                'vehicles': '/admin/vehicles-editor?iframe=1',
+                'price-adjustment': '/admin/settings?iframe=1',
+                'price-validation': '/admin/price-validation?iframe=1',
+                'price-automation-settings': '/admin/price-automation-settings?iframe=1'
             };
             
             const url = urls[section];
@@ -165,8 +165,8 @@
                 return;
             }
             
-            // Redirecionar para a página (sem iframe para evitar problemas de autenticação)
-            window.location.href = url;
+            // Load content via iframe (fixed height, no onload to avoid loops)
+            contentArea.innerHTML = `<iframe src="${url}" class="w-full border-0" style="height: 85vh; width: 100%;"></iframe>`;
         }
         
         // Users already loaded in HTML, no need for DOMContentLoaded
