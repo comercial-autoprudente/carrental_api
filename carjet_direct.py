@@ -580,8 +580,9 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                 if data_prv:
                     supplier = normalize_supplier(data_prv)
                     print(f"[PARSE] Supplier de data-prv: {data_prv} → {supplier}")
-                else:
-                    # PRIORIDADE 2: procurar por logo ou texto (fallback)
+                
+                # PRIORIDADE 2: procurar por logo ou texto (fallback se não tiver data-prv)
+                if not data_prv or supplier == 'CarJet':
                     img_tags = block.find_all('img')
                     for img in img_tags:
                         src = img.get('src', '')
@@ -607,6 +608,10 @@ def parse_carjet_html_complete(html: str) -> List[Dict[str, Any]]:
                             if normalized != 'CarJet' and normalized != title:
                                 supplier = normalized
                                 break
+                
+                # Garantir que img_tags existe para uso posterior
+                if 'img_tags' not in locals():
+                    img_tags = block.find_all('img')
 
                 # Preço - PRIORIZAR .price.pr-euros (preço total, NÃO por dia)
                 price = '€0.00'
