@@ -7727,7 +7727,7 @@ async def get_vehicle_name_overrides(request: Request):
 @app.post("/api/vehicles/images/download")
 async def download_vehicle_images(request: Request):
     """Download automático de todas as imagens de veículos dos URLs"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         from carjet_direct import VEHICLES
         import httpx

@@ -13,6 +13,11 @@
             <h1 class="text-white text-xl font-bold">Vehicle Names Editor</h1>
             <div class="flex items-center gap-3 text-white text-sm">
                 <span id="totalVehicles">0</span> vehicles
+                <button onclick="downloadAllPhotos()" class="p-2 hover:bg-white/10 transition-all" title="Download All Photos">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </button>
                 <button onclick="exportVehicles()" class="p-2 hover:bg-white/10 transition-all" title="Export">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -332,6 +337,7 @@
                     <table class="min-w-full">
                         <thead class="bg-gray-50">
                             <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Photo</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Original Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Clean Name</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
@@ -342,21 +348,28 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             ${brandVehicles.map(v => {
                                 const group = categoryToGroup[v.category] || '—';
-                                return `
+                                const photoUrl = \`/api/vehicles/\${encodeURIComponent(v.clean)}/photo?t=\${Date.now()}\`;
+                                return \`
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm text-gray-500">${v.original}</td>
-                                        <td class="px-6 py-4 text-sm font-semibold text-blue-600">${v.clean}</td>
-                                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-mono rounded bg-[#f4ad0f] text-gray-900 font-bold">${group}</span></td>
-                                        <td class="px-6 py-4 text-sm text-gray-500">${v.category}</td>
                                         <td class="px-6 py-4">
-                                            <button onclick='editVehicle(${JSON.stringify(v)})' class="text-[#009cb6] hover:text-[#007a8e]">
+                                            <img src="\${photoUrl}" 
+                                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2760%27 height=%2740%27%3E%3Crect width=%2760%27 height=%2740%27 fill=%27%23e5e7eb%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 dominant-baseline=%27middle%27 text-anchor=%27middle%27 fill=%27%23999%27 font-size=%2712%27%3E🚗%3C/text%3E%3C/svg%3E'" 
+                                                 alt="\${v.clean}" 
+                                                 class="h-12 w-auto rounded border shadow-sm">
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">\${v.original}</td>
+                                        <td class="px-6 py-4 text-sm font-semibold text-blue-600">\${v.clean}</td>
+                                        <td class="px-6 py-4"><span class="px-2 py-1 text-xs font-mono rounded bg-[#f4ad0f] text-gray-900 font-bold">\${group}</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">\${v.category}</td>
+                                        <td class="px-6 py-4">
+                                            <button onclick='editVehicle(\${JSON.stringify(v)})' class="text-[#009cb6] hover:text-[#007a8e]">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                                 </svg>
                                             </button>
                                         </td>
                                     </tr>
-                                `;
+                                \`;
                             }).join('')}
                         </tbody>
                     </table>
@@ -474,6 +487,39 @@
             
             alert(`✅ Group "${code} - ${name}" created!`);
             closeNewGroupModal();
+        }
+        
+        async function downloadAllPhotos() {
+            if (!confirm('📸 Download all vehicle photos?\n\nThis may take a few minutes.')) {
+                return;
+            }
+            
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+            
+            try {
+                const response = await fetch('/api/vehicles/images/download', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.ok) {
+                    alert(`✅ Download complete!\n\nDownloaded: ${data.downloaded}\nAlready existed: ${data.skipped}\nErrors: ${data.errors?.length || 0}`);
+                    
+                    // Recarregar tabela para mostrar as fotos
+                    renderVehicles();
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         }
         
         function exportVehicles() {
