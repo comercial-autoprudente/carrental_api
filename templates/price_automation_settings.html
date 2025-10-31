@@ -246,6 +246,9 @@
             'M1': '7 Seater', 'M2': '7 Seater Automatic', 'N': '9 Seater'
         };
         
+        // Dias disponíveis (padrão)
+        const availableDays = [1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 22, 28, 31, 60];
+        
         // Lista de suppliers principais
         const suppliers = [
             'Hertz', 'Avis', 'Europcar', 'Budget', 'Sixt', 'Enterprise',
@@ -391,13 +394,23 @@
                 ruleCard.className = 'border border-gray-200 rounded-lg p-4 bg-gray-50';
                 
                 ruleCard.innerHTML = `
-                    <div class="flex items-center justify-between mb-3">
-                        <h3 class="font-semibold text-gray-900">${grupo} - ${grupoNames[grupo]}</h3>
-                        <button onclick="toggleGroupRule('${location}', '${grupo}')" class="text-xs text-purple-600 hover:text-purple-800">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
+                    <div class="mb-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-semibold text-gray-900">${grupo} - ${grupoNames[grupo]}</h3>
+                            <button onclick="toggleGroupRule('${location}', '${grupo}')" class="text-xs text-purple-600 hover:text-purple-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Days Selection -->
+                        <div class="flex flex-wrap gap-1 mb-2">
+                            <span class="text-xs text-gray-600 mr-2">Apply to days:</span>
+                            <div id="daysChips_${location}_${grupo}" class="flex flex-wrap gap-1">
+                                <!-- Days chips will be generated here -->
+                            </div>
+                        </div>
                     </div>
                     
                     <div id="ruleContent_${location}_${grupo}" class="space-y-3">
@@ -488,9 +501,58 @@
                 
                 container.appendChild(ruleCard);
                 
+                // Generate days chips
+                generateDaysChips(location, grupo);
+                
                 // Generate suppliers checkboxes
                 generateSuppliersCheckboxes(location, grupo);
             });
+        }
+        
+        function generateDaysChips(location, grupo) {
+            const container = document.getElementById(`daysChips_${location}_${grupo}`);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            availableDays.forEach(day => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-purple-400 transition-colors';
+                chip.textContent = `${day}d`;
+                chip.dataset.location = location;
+                chip.dataset.grupo = grupo;
+                chip.dataset.day = day;
+                chip.dataset.selected = 'false';
+                
+                chip.onclick = function() {
+                    toggleDaySelection(this);
+                };
+                
+                container.appendChild(chip);
+            });
+        }
+        
+        function toggleDaySelection(chipElement) {
+            const isSelected = chipElement.dataset.selected === 'true';
+            
+            if (isSelected) {
+                // Deselect
+                chipElement.dataset.selected = 'false';
+                chipElement.className = 'px-2 py-0.5 text-xs border border-gray-300 rounded hover:border-purple-400 transition-colors';
+            } else {
+                // Select
+                chipElement.dataset.selected = 'true';
+                chipElement.className = 'px-2 py-0.5 text-xs border border-yellow-500 bg-yellow-100 text-yellow-800 font-semibold rounded hover:bg-yellow-200 transition-colors';
+            }
+        }
+        
+        function getSelectedDays(location, grupo) {
+            const chips = document.querySelectorAll(`button[data-location="${location}"][data-grupo="${grupo}"][data-selected="true"]`);
+            const selectedDays = [];
+            chips.forEach(chip => {
+                selectedDays.push(parseInt(chip.dataset.day));
+            });
+            return selectedDays;
         }
         
         function generateSuppliersCheckboxes(location, grupo) {
@@ -580,6 +642,17 @@
                                 }
                                 if (rule.supplierDiffType) document.getElementById(`supplierDiffType_${location}_${grupo}`).value = rule.supplierDiffType;
                                 if (rule.supplierDiffValue) document.getElementById(`supplierDiffValue_${location}_${grupo}`).value = rule.supplierDiffValue;
+                                
+                                // Load selected days
+                                if (rule.selectedDays && Array.isArray(rule.selectedDays)) {
+                                    rule.selectedDays.forEach(day => {
+                                        const chip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-day="${day}"]`);
+                                        if (chip) {
+                                            chip.dataset.selected = 'true';
+                                            chip.className = 'px-2 py-0.5 text-xs border border-yellow-500 bg-yellow-100 text-yellow-800 font-semibold rounded hover:bg-yellow-200 transition-colors';
+                                        }
+                                    });
+                                }
                             }
                         });
                     });
@@ -603,8 +676,12 @@
                         const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]:checked`);
                         checkboxes.forEach(cb => selectedSuppliers.push(cb.value));
                         
+                        // Get selected days
+                        const selectedDays = getSelectedDays(location, grupo);
+                        
                         rules[location][grupo] = {
                             strategy: strategy,
+                            selectedDays: selectedDays,
                             diffType: document.getElementById(`diffType_${location}_${grupo}`)?.value,
                             diffValue: parseFloat(document.getElementById(`diffValue_${location}_${grupo}`)?.value) || 0,
                             selectedSuppliers: selectedSuppliers,
