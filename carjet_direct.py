@@ -83,18 +83,18 @@ SUPPLIER_MAP = {
 
 # Mapeamento manual de veículos para categorias
 VEHICLES = {
-    # MINI 4 Portas
-    'fiat 500 4p': 'MINI 4 Portas',
+    # MINI 4 Lugares
+    'fiat 500 4p': 'MINI 4 Lugares',
     
-    # MINI 5 Portas
-    'fiat 500': 'MINI 5 Portas',
-    'citroen c1': 'MINI 5 Portas',
-    'toyota aygo': 'MINI 5 Portas',
-    'volkswagen up': 'MINI 5 Portas',
-    'peugeot 108': 'MINI 5 Portas',
-    'hyundai i10': 'MINI 5 Portas',
-    'kia picanto': 'MINI 5 Portas',
-    'fiat panda': 'MINI 5 Portas',
+    # MINI 5 Lugares
+    'fiat 500': 'MINI 5 Lugares',
+    'citroen c1': 'MINI 5 Lugares',
+    'toyota aygo': 'MINI 5 Lugares',
+    'volkswagen up': 'MINI 5 Lugares',
+    'peugeot 108': 'MINI 5 Lugares',
+    'hyundai i10': 'MINI 5 Lugares',
+    'kia picanto': 'MINI 5 Lugares',
+    'fiat panda': 'MINI 5 Lugares',
     
     # MINI Auto
     'fiat 500 auto': 'MINI Auto',
@@ -115,9 +115,9 @@ VEHICLES = {
     'kia ceed': 'ECONOMY',
     'dacia sandero': 'ECONOMY',
     'skoda fabia': 'ECONOMY',
-    'renault twingo': 'MINI 4 Portas',
+    'renault twingo': 'MINI 4 Lugares',
     'citroen c3': 'ECONOMY',
-    'opel adam': 'MINI 4 Portas',
+    'opel adam': 'MINI 4 Lugares',
     
     # ECONOMY Auto
     'renault clio auto': 'ECONOMY Auto',
@@ -175,7 +175,7 @@ VEHICLES = {
     'vw taigo': 'Crossover',
     'jeep avenger': 'Crossover',
     'citroen c3 aircross': 'Crossover',
-    'seat arona': 'Crossover',
+    'seat arona': 'SUV',
     'ford puma': 'Crossover',
     'fiat 500l': 'Crossover',
     'citroen c4 cactus': 'Crossover',
@@ -290,6 +290,10 @@ VEHICLES = {
     'mercedes e class auto': 'Luxury',
     'mercedes e class sw auto': 'Station Wagon Auto',
     'mercedes s class auto': 'Luxury',
+    'citroen c4': 'Crossover',
+    'fiat 500': 'MINI 4 Portas',
+    'fiat 500 auto': 'MINI Auto',
+    'renault megane sw auto': 'Station Wagon Auto',
 }
 
 
