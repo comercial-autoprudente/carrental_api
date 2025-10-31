@@ -842,7 +842,7 @@
         }
         
         function getCurrentSelectedDay(location, grupo) {
-            const selectedChip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-selected="true"]`);
+            const selectedChip = document.querySelector(`button[data-location="${location}"][data-grupo="${grupo}"][data-day][data-selected="true"]`);
             return selectedChip ? parseInt(selectedChip.dataset.day) : null;
         }
         
