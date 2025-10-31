@@ -27,6 +27,7 @@ SUPPLIER_MAP = {
     'AUTOPRUDENTE': 'Auto Prudente Rent a Car',
     'THR': 'Thrifty',
     'ECR': 'Europcar',
+    'ACE': 'Europcar',  # Ace é o mesmo que Europcar
     'HER': 'Hertz',
     'CEN': 'Centauro',
     'OKR': 'OK Mobility',
@@ -55,7 +56,6 @@ SUPPLIER_MAP = {
     'AVS': 'Avis',
     'AVI': 'Avis',
     'DOL': 'Dollar',
-    'ACE': 'Ace Rent a Car',
     'ALA': 'Alamo',
     'LOC': 'Localiza',
     'MOV': 'Movida',
