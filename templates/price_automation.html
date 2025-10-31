@@ -1254,7 +1254,7 @@
         
         // ===== AUTOMATED PRICES FUNCTIONS =====
         
-        function generateAutomatedPrices() {
+        async function generateAutomatedPrices() {
             const btn = document.getElementById('btnGenerateAuto');
             const generateIcon = btn.querySelector('.generate-icon');
             const loadingIcon = btn.querySelector('.loading-icon-auto');
@@ -1264,19 +1264,175 @@
             loadingIcon.classList.remove('hidden');
             btn.disabled = true;
             
-            // Simulate generation (will be replaced with actual logic)
-            setTimeout(() => {
-                alert('🚧 Automated price generation will be implemented with parametrizations');
+            try {
+                // Obter localização e data selecionadas
+                const currentLocation = document.getElementById('locationSelectAuto')?.value || 'Albufeira';
+                const pickupDate = document.getElementById('pickupDateAuto')?.value;
                 
+                if (!pickupDate) {
+                    alert('⚠️ Please select a pickup date first');
+                    return;
+                }
+                
+                // Carregar estratégias configuradas
+                const strategiesData = JSON.parse(localStorage.getItem('pricingStrategies') || '{}');
+                
+                // Obter mês da data selecionada
+                const date = new Date(pickupDate);
+                const month = date.getMonth() + 1; // 1-12
+                
+                console.log(`🚀 Generating automated prices for ${currentLocation}, Month: ${month}, Date: ${pickupDate}`);
+                
+                // Carregar preços do Current Prices (Real column)
+                const currentPrices = await loadCurrentPrices(currentLocation, pickupDate);
+                
+                let pricesGenerated = 0;
+                let pricesSkipped = 0;
+                
+                // Para cada grupo
+                for (const grupo of grupos) {
+                    // Para cada dia
+                    for (const day of dias) {
+                        // Verificar se há estratégias configuradas para este grupo/mês/dia
+                        const key = `${currentLocation}_${grupo}_${month}_${day}`;
+                        const strategies = strategiesData[key];
+                        
+                        if (!strategies || strategies.length === 0) {
+                            // Sem estratégias configuradas, pular
+                            pricesSkipped++;
+                            continue;
+                        }
+                        
+                        // Aplicar primeira estratégia (prioridade)
+                        const strategy = strategies[0];
+                        let autoPrice = null;
+                        
+                        // Calcular preço baseado na estratégia
+                        if (strategy.type === 'follow_lowest') {
+                            autoPrice = await calculateFollowLowest(currentPrices, grupo, day, strategy.config);
+                        } else if (strategy.type === 'follow_suppliers') {
+                            autoPrice = await calculateFollowSuppliers(currentPrices, grupo, day, strategy.config);
+                        } else if (strategy.type === 'follow_average') {
+                            autoPrice = await calculateFollowAverage(currentPrices, grupo, day, strategy.config);
+                        } else if (strategy.type === 'fixed_margin') {
+                            autoPrice = await calculateFixedMargin(currentPrices, grupo, day, strategy.config);
+                        } else if (strategy.type === 'fixed_price') {
+                            autoPrice = calculateFixedPrice(strategy.config);
+                        }
+                        
+                        if (autoPrice && autoPrice > 0) {
+                            // Preencher campo Auto
+                            const inputAuto = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="auto"]`);
+                            if (inputAuto) {
+                                inputAuto.value = autoPrice.toFixed(2);
+                                
+                                // Calcular e preencher Real (Auto + comissão)
+                                const realPrice = calculateGross(autoPrice);
+                                const inputReal = document.querySelector(`#pricesTableAuto input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                                if (inputReal) {
+                                    inputReal.value = realPrice.toFixed(2);
+                                }
+                                
+                                pricesGenerated++;
+                            }
+                        }
+                    }
+                }
+                
+                console.log(`✅ Generated ${pricesGenerated} prices, skipped ${pricesSkipped} (no rules)`);
+                alert(`✅ Generated ${pricesGenerated} automated prices!\n\n⚠️ ${pricesSkipped} cells skipped (no rules configured)`);
+                
+            } catch (error) {
+                console.error('Error generating automated prices:', error);
+                alert('❌ Error generating prices: ' + error.message);
+            } finally {
                 // Hide loading animation
                 loadingIcon.classList.add('hidden');
                 generateIcon.classList.remove('hidden');
                 btn.disabled = false;
-            }, 500);
+            }
+        }
+        
+        async function loadCurrentPrices(location, pickupDate) {
+            // Carregar preços do Current Prices (coluna Real)
+            const prices = {};
             
-            // TODO: Implement automated price generation based on parametrizations
-            // The Auto column will be calculated automatically
-            // The Real column works exactly like in Current Prices (editable, with commission calculation)
+            grupos.forEach(grupo => {
+                prices[grupo] = {};
+                dias.forEach(day => {
+                    const input = document.querySelector(`#pricesTable input[data-grupo="${grupo}"][data-dias="${day}"][data-type="real"]`);
+                    if (input && input.value) {
+                        const price = parseFloat(input.value);
+                        if (!isNaN(price) && price > 0) {
+                            prices[grupo][day] = price;
+                        }
+                    }
+                });
+            });
+            
+            return prices;
+        }
+        
+        async function calculateFollowLowest(currentPrices, grupo, day, config) {
+            // Buscar preço mais baixo de TODOS os suppliers (usando Current Prices)
+            const groupPrices = currentPrices[grupo];
+            if (!groupPrices || !groupPrices[day]) return null;
+            
+            const basePrice = groupPrices[day];
+            return applyDifference(basePrice, config);
+        }
+        
+        async function calculateFollowSuppliers(currentPrices, grupo, day, config) {
+            // Buscar preço mais baixo dos suppliers SELECIONADOS
+            // Por enquanto, usar o preço do Current Prices como base
+            const groupPrices = currentPrices[grupo];
+            if (!groupPrices || !groupPrices[day]) return null;
+            
+            const basePrice = groupPrices[day];
+            return applyDifference(basePrice, config);
+        }
+        
+        async function calculateFollowAverage(currentPrices, grupo, day, config) {
+            // Calcular média entre suppliers selecionados
+            // Por enquanto, usar o preço do Current Prices como base
+            const groupPrices = currentPrices[grupo];
+            if (!groupPrices || !groupPrices[day]) return null;
+            
+            const basePrice = groupPrices[day];
+            return applyDifference(basePrice, config);
+        }
+        
+        async function calculateFixedMargin(currentPrices, grupo, day, config) {
+            // Aplicar margem fixa sobre o preço base
+            const groupPrices = currentPrices[grupo];
+            if (!groupPrices || !groupPrices[day]) return null;
+            
+            const basePrice = groupPrices[day];
+            const margin = parseFloat(config.margin) || 0;
+            
+            return basePrice * (1 + margin / 100);
+        }
+        
+        function calculateFixedPrice(config) {
+            // Retornar preço fixo configurado
+            return parseFloat(config.fixedPrice) || null;
+        }
+        
+        function applyDifference(basePrice, config) {
+            if (!config) return basePrice;
+            
+            const diffType = config.differenceType || 'cents';
+            const diffValue = parseFloat(config.differenceValue) || 0;
+            
+            if (diffType === 'cents') {
+                return basePrice + diffValue;
+            } else if (diffType === 'euros') {
+                return basePrice + diffValue;
+            } else if (diffType === 'percentage') {
+                return basePrice * (1 + diffValue / 100);
+            }
+            
+            return basePrice;
         }
         
         function initTableAuto() {
