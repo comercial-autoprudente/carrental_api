@@ -7726,18 +7726,53 @@ async def get_vehicle_name_overrides(request: Request):
 
 @app.post("/api/vehicles/images/download")
 async def download_vehicle_images(request: Request):
-    """Download automático de todas as imagens de veículos dos URLs"""
+    """Download automático de todas as imagens de veículos dos URLs do scraping"""
     # Não requer autenticação para funcionar em iframes
     try:
         from carjet_direct import VEHICLES
         import httpx
+        import re
         
         downloaded = 0
         skipped = 0
         errors = []
         
-        # Mapeamento COMPLETO de veículos para URLs de imagens (124 veículos)
-        # Baseado na função imageUrlFor() do frontend
+        # PRIMEIRO: Buscar URLs de fotos do histórico recente de scraping
+        photo_urls_from_scraping = {}
+        with _db_lock:
+            conn = sqlite3.connect(DB_PATH)
+            try:
+                # Buscar fotos dos últimos 30 dias
+                query = """
+                    SELECT DISTINCT car, photo 
+                    FROM price_snapshots 
+                    WHERE ts >= datetime('now', '-30 days')
+                    AND photo IS NOT NULL
+                    AND photo != ''
+                    ORDER BY ts DESC
+                """
+                rows = conn.execute(query).fetchall()
+                
+                for row in rows:
+                    original_name = row[0]
+                    photo_url = row[1]
+                    
+                    # Limpar nome para encontrar no VEHICLES
+                    clean = original_name.lower().strip()
+                    clean = re.sub(r'\s+(ou\s*similar|or\s*similar).*$', '', clean, flags=re.IGNORECASE)
+                    clean = re.sub(r'\s*\|\s*.*$', '', clean)
+                    clean = re.sub(r'\s+(pequeno|médio|medio|grande|compacto|economico|econômico).*$', '', clean, flags=re.IGNORECASE)
+                    clean = re.sub(r'\s+', ' ', clean).strip()
+                    
+                    if clean in VEHICLES and clean not in photo_urls_from_scraping:
+                        photo_urls_from_scraping[clean] = photo_url
+                        
+            finally:
+                conn.close()
+        
+        print(f"[PHOTOS] Encontradas {len(photo_urls_from_scraping)} fotos no histórico de scraping", file=sys.stderr, flush=True)
+        
+        # SEGUNDO: Mapeamento manual para veículos sem dados recentes
         image_mappings = {
             # MINI / B1 / B2
             'fiat 500 cabrio': 'https://www.carjet.com/cdn/img/cars/M/car_L154.jpg',
@@ -7973,17 +8008,20 @@ async def download_vehicle_images(request: Request):
                 with _db_lock:
                     con = _db_connect()
                     try:
-                        existing = con.execute("SELECT vehicle_key FROM vehicle_images WHERE vehicle_key = ?", (vehicle_key,)).fetchone()
+                        existing = con.execute("SELECT vehicle_name FROM vehicle_photos WHERE vehicle_name = ?", (vehicle_key,)).fetchone()
                         if existing:
                             skipped += 1
                             continue
                     finally:
                         con.close()
                 
-                # Buscar URL da imagem
-                image_url = image_mappings.get(vehicle_key)
+                # Buscar URL da imagem - PRIORIDADE: scraping recente
+                image_url = photo_urls_from_scraping.get(vehicle_key) or image_mappings.get(vehicle_key)
                 if not image_url:
+                    errors.append(f"{vehicle_key}: No photo URL found")
                     continue
+                
+                print(f"[PHOTOS] Downloading {vehicle_key} from {image_url[:80]}...", file=sys.stderr, flush=True)
                 
                 # Download da imagem
                 async with httpx.AsyncClient(timeout=30.0) as client:
@@ -7997,8 +8035,8 @@ async def download_vehicle_images(request: Request):
                             con = _db_connect()
                             try:
                                 con.execute("""
-                                    INSERT INTO vehicle_images (vehicle_key, image_data, content_type, source_url, downloaded_at)
-                                    VALUES (?, ?, ?, ?, datetime('now'))
+                                    INSERT OR REPLACE INTO vehicle_photos (vehicle_name, photo_data, content_type, photo_url)
+                                    VALUES (?, ?, ?, ?)
                                 """, (vehicle_key, image_data, content_type, image_url))
                                 con.commit()
                                 downloaded += 1
