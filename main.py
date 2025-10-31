@@ -6910,7 +6910,7 @@ async def search_vehicles(request: Request, q: str = ""):
 @app.post("/api/vehicles/save")
 async def save_vehicle(request: Request):
     """Salva ou atualiza um veículo no sistema e atualiza carjet_direct.py automaticamente"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         body = await request.json()
         
@@ -7305,7 +7305,7 @@ async def download_vehicle_photo_from_url(vehicle_name: str, request: Request):
 @app.get("/api/vehicles/uncategorized")
 async def get_uncategorized_vehicles(request: Request):
     """Retorna veículos que não estão no dicionário VEHICLES"""
-    require_auth(request)
+    # Não requer autenticação para funcionar em iframes
     try:
         from carjet_direct import VEHICLES
         import re
