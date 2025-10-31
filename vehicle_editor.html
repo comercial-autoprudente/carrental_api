@@ -593,7 +593,7 @@
                 const data = await response.json();
                 
                 if (data.ok) {
-                    alert('✅ Vehicle saved!');
+                    alert('✅ Vehicle saved!\n\ncarjet_direct.py updated automatically.\nChanges will appear in next search.');
                     closeEditModal();
                     await loadVehicles();
                 } else {
