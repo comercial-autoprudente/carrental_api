@@ -430,29 +430,12 @@
         
         async function loadVehicles() {
             try {
-                console.log('[LOAD VEHICLES] Fetching from /api/vehicles/with-originals...');
                 const response = await fetch('/api/vehicles/with-originals');
-                console.log('[LOAD VEHICLES] Response status:', response.status);
-                
                 const data = await response.json();
-                console.log('[LOAD VEHICLES] Data received:', data);
-                console.log('[LOAD VEHICLES] OK:', data.ok);
-                console.log('[LOAD VEHICLES] Total:', data.total);
-                console.log('[LOAD VEHICLES] Vehicles keys:', Object.keys(data.vehicles || {}).length);
                 
-                if (!data.ok) {
-                    console.error('[LOAD VEHICLES] Error:', data.error);
-                    throw new Error(data.error);
-                }
-                
-                if (!data.vehicles || Object.keys(data.vehicles).length === 0) {
-                    console.error('[LOAD VEHICLES] No vehicles in response!');
-                    alert('⚠️ Nenhum veículo encontrado! Verifica o console (F12) para mais detalhes.');
-                    return;
-                }
+                if (!data.ok) throw new Error(data.error);
                 
                 // Processar veículos
-                console.log('[LOAD VEHICLES] Processing vehicles...');
                 vehiclesData = Object.entries(data.vehicles).map(([cleanName, vehicleData]) => {
                     // Extrair marca e modelo do nome limpo
                     const parts = cleanName.split(' ');
