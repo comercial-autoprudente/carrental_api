@@ -16,6 +16,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Car Rental Tracker">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Preload common supplier logos for faster rendering -->
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_AUTOPRUDENTE.png" />
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_HERTZ.png" />
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_AVIS.png" />
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_EUROPCAR.png" />
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_SIXT.png" />
+    <link rel="preload" as="image" href="https://images.carjet.com/suppliers/logo_BUDGET.png" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       * { 
@@ -1319,7 +1328,7 @@
         const asterisk = isNonRefundable ? '<span style="position:absolute; top:-2px; right:-2px; color:#ff0000; font-weight:bold; font-size:16px;" title="Não reembolsável">*</span>' : '';
         
         if (logoUrl) {
-          return `<div style="position:relative; display:inline-block;"><img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" onerror="this.style.display='none';" />${asterisk}</div>`;
+          return `<div style="position:relative; display:inline-block;"><img src="${logoUrl}" alt="${escapeHtml(supplierName)}" title="${escapeHtml(supplierName)}" class="h-5 w-auto max-w-[80px] object-contain" loading="lazy" decoding="async" onerror="this.style.display='none';" />${asterisk}</div>`;
         } else {
           return `<span class="text-xs">${escapeHtml(supplierName)}</span>`;
         }
