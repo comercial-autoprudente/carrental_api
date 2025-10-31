@@ -419,16 +419,25 @@
                     </div>
                     
                     <div id="ruleContent_${location}_${grupo}" class="hidden space-y-3">
-                        <!-- Strategy Selection -->
-                        <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Pricing Strategy</label>
-                            <select id="strategy_${location}_${grupo}" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-[#009cb6]" onchange="updateStrategyFields('${location}', '${grupo}')">
-                                <option value="follow_lowest">Follow Lowest Price</option>
-                                <option value="follow_suppliers">Follow Specific Suppliers</option>
-                                <option value="fixed_margin">Fixed Margin %</option>
-                                <option value="fixed_price">Fixed Price</option>
-                            </select>
+                        <!-- Multiple Strategies -->
+                        <div class="border-b pb-3 mb-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-xs font-medium text-gray-700">Pricing Strategies (Priority Order)</label>
+                                <button onclick="addStrategy('${location}', '${grupo}')" class="px-2 py-1 text-xs bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f] transition-colors">
+                                    + Add Strategy
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-2">First strategy has priority. If no price available, tries next strategy.</p>
+                            <div id="strategiesList_${location}_${grupo}" class="space-y-2">
+                                <!-- Strategies will be added here -->
+                            </div>
                         </div>
+                        
+                        <!-- Strategy Configuration (shown when strategy is selected) -->
+                        <div id="strategyConfig_${location}_${grupo}" class="hidden">
+                            <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-3 text-xs">
+                                <strong>Configuring:</strong> <span id="currentStrategyName_${location}_${grupo}"></span>
+                            </div>
                         
                         <!-- Follow Lowest Options -->
                         <div id="followOptions_${location}_${grupo}" class="space-y-2">
@@ -500,6 +509,7 @@
                                     <input type="number" id="minPriceMonth_${location}_${grupo}" step="0.01" placeholder="e.g. 600.00" class="w-full px-2 py-1 text-sm border border-gray-300 rounded mt-1">
                                 </div>
                             </div>
+                        </div>
                         </div>
                     </div>
                 `;
@@ -701,6 +711,153 @@
             return selectedChip ? parseInt(selectedChip.dataset.day) : null;
         }
         
+        // ===== MULTIPLE STRATEGIES MANAGEMENT =====
+        
+        let strategiesData = {}; // Store strategies per location/grupo/day
+        
+        function addStrategy(location, grupo) {
+            const currentDay = getCurrentSelectedDay(location, grupo);
+            if (!currentDay) {
+                alert('Please select a day first');
+                return;
+            }
+            
+            const key = `${location}_${grupo}_${currentDay}`;
+            if (!strategiesData[key]) strategiesData[key] = [];
+            
+            // Show strategy type selector
+            const strategyType = prompt('Select strategy type:\n1 - Follow Lowest Price\n2 - Follow Specific Suppliers\n3 - Fixed Margin %\n4 - Fixed Price\n\nEnter number (1-4):');
+            
+            if (!strategyType || !['1','2','3','4'].includes(strategyType)) return;
+            
+            const strategyMap = {
+                '1': 'follow_lowest',
+                '2': 'follow_suppliers',
+                '3': 'fixed_margin',
+                '4': 'fixed_price'
+            };
+            
+            const strategyNames = {
+                'follow_lowest': 'Follow Lowest Price',
+                'follow_suppliers': 'Follow Specific Suppliers',
+                'fixed_margin': 'Fixed Margin %',
+                'fixed_price': 'Fixed Price'
+            };
+            
+            const strategy = strategyMap[strategyType];
+            const strategyId = Date.now();
+            
+            strategiesData[key].push({
+                id: strategyId,
+                type: strategy,
+                name: strategyNames[strategy],
+                config: {}
+            });
+            
+            renderStrategiesList(location, grupo, currentDay);
+        }
+        
+        function renderStrategiesList(location, grupo, day) {
+            const key = `${location}_${grupo}_${day}`;
+            const container = document.getElementById(`strategiesList_${location}_${grupo}`);
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            const strategies = strategiesData[key] || [];
+            
+            if (strategies.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-500 italic">No strategies added yet. Click "+ Add Strategy" to start.</p>';
+                return;
+            }
+            
+            strategies.forEach((strategy, index) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between p-2 bg-white border border-gray-300 rounded';
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold text-[#f4ad0f]">#${index + 1}</span>
+                        <span class="text-xs font-medium">${strategy.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="configureStrategy('${location}', '${grupo}', ${day}, ${strategy.id})" class="px-2 py-1 text-xs bg-[#009cb6] text-white rounded hover:bg-[#f4ad0f]" title="Configure">
+                            ⚙️
+                        </button>
+                        <button onclick="moveStrategyUp('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move up" ${index === 0 ? 'disabled' : ''}>
+                            ↑
+                        </button>
+                        <button onclick="moveStrategyDown('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-100" title="Move down" ${index === strategies.length - 1 ? 'disabled' : ''}>
+                            ↓
+                        </button>
+                        <button onclick="removeStrategy('${location}', '${grupo}', ${day}, ${index})" class="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600" title="Remove">
+                            ✕
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+        }
+        
+        function configureStrategy(location, grupo, day, strategyId) {
+            const key = `${location}_${grupo}_${day}`;
+            const strategy = strategiesData[key]?.find(s => s.id === strategyId);
+            
+            if (!strategy) return;
+            
+            // Show strategy config section
+            const configSection = document.getElementById(`strategyConfig_${location}_${grupo}`);
+            const strategyName = document.getElementById(`currentStrategyName_${location}_${grupo}`);
+            
+            if (configSection && strategyName) {
+                configSection.classList.remove('hidden');
+                strategyName.textContent = strategy.name;
+                
+                // Show appropriate fields based on strategy type
+                updateStrategyFields(location, grupo, strategy.type);
+                
+                // Load existing configuration
+                loadStrategyConfiguration(location, grupo, strategy);
+            }
+        }
+        
+        function loadStrategyConfiguration(location, grupo, strategy) {
+            // Load configuration into form fields
+            // This will be implemented based on strategy type
+        }
+        
+        function moveStrategyUp(location, grupo, day, index) {
+            const key = `${location}_${grupo}_${day}`;
+            if (index === 0) return;
+            
+            const temp = strategiesData[key][index];
+            strategiesData[key][index] = strategiesData[key][index - 1];
+            strategiesData[key][index - 1] = temp;
+            
+            renderStrategiesList(location, grupo, day);
+        }
+        
+        function moveStrategyDown(location, grupo, day, index) {
+            const key = `${location}_${grupo}_${day}`;
+            if (index === strategiesData[key].length - 1) return;
+            
+            const temp = strategiesData[key][index];
+            strategiesData[key][index] = strategiesData[key][index + 1];
+            strategiesData[key][index + 1] = temp;
+            
+            renderStrategiesList(location, grupo, day);
+        }
+        
+        function removeStrategy(location, grupo, day, index) {
+            if (!confirm('Remove this strategy?')) return;
+            
+            const key = `${location}_${grupo}_${day}`;
+            strategiesData[key].splice(index, 1);
+            
+            renderStrategiesList(location, grupo, day);
+        }
+        
         function generateSuppliersCheckboxes(location, grupo) {
             const container = document.getElementById(`suppliersList_${location}_${grupo}`);
             if (!container) return;
@@ -729,12 +886,14 @@
             });
         }
         
-        function updateStrategyFields(location, grupo) {
-            const strategy = document.getElementById(`strategy_${location}_${grupo}`).value;
+        function updateStrategyFields(location, grupo, strategyType = null) {
+            const strategy = strategyType || document.getElementById(`strategy_${location}_${grupo}`)?.value;
             const followOptions = document.getElementById(`followOptions_${location}_${grupo}`);
             const suppliersOptions = document.getElementById(`suppliersOptions_${location}_${grupo}`);
             const marginOptions = document.getElementById(`marginOptions_${location}_${grupo}`);
             const fixedOptions = document.getElementById(`fixedOptions_${location}_${grupo}`);
+            
+            if (!followOptions) return; // Elements not yet created
             
             followOptions.classList.add('hidden');
             suppliersOptions.classList.add('hidden');
