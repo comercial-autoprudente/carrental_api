@@ -277,12 +277,37 @@
         ].sort();
         
         // Carregar configurações ao iniciar
-        window.addEventListener('DOMContentLoaded', function() {
-            loadSettings();
+        window.addEventListener('DOMContentLoaded', async function() {
+            await loadSettings();
+            await loadStrategies();
             initializeAutomatedRules();
         });
 
-        function loadSettings() {
+        async function loadSettings() {
+            try {
+                // Try to load from database first
+                const response = await fetch('/api/price-automation/settings/load');
+                const result = await response.json();
+                
+                if (result.ok && result.settings) {
+                    const settings = result.settings;
+                    if (settings.comissaoBroker) document.getElementById('comissaoBroker').value = settings.comissaoBroker;
+                    if (settings.defaultMargin !== undefined) document.getElementById('defaultMargin').value = settings.defaultMargin;
+                    if (settings.rounding) document.getElementById('rounding').value = settings.rounding;
+                    if (settings.maxAlternativeDays !== undefined) document.getElementById('maxAlternativeDays').value = settings.maxAlternativeDays;
+                    if (settings.defaultLocation) document.getElementById('defaultLocation').value = settings.defaultLocation;
+                    if (settings.autoSaveHistory !== undefined) document.getElementById('autoSaveHistory').value = settings.autoSaveHistory ? 'true' : 'false';
+                    
+                    // Also save to localStorage as backup
+                    localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
+                    console.log('✅ Settings loaded from database');
+                    return;
+                }
+            } catch (err) {
+                console.error('Error loading settings from database:', err);
+            }
+            
+            // Fallback to localStorage
             const saved = localStorage.getItem('priceAutomationSettings');
             if (saved) {
                 try {
@@ -291,13 +316,14 @@
                     if (settings.defaultMargin) document.getElementById('defaultMargin').value = settings.defaultMargin;
                     if (settings.rounding) document.getElementById('rounding').value = settings.rounding;
                     if (settings.maxAlternativeDays !== undefined) document.getElementById('maxAlternativeDays').value = settings.maxAlternativeDays;
+                    console.log('⚠️ Settings loaded from localStorage (fallback)');
                 } catch (e) {
                     console.error('Erro ao carregar configurações:', e);
                 }
             }
         }
 
-        function saveSettings() {
+        async function saveSettings() {
             // Collect all values
             const settings = {
                 comissaoBroker: parseFloat(document.getElementById('comissaoBroker').value),
@@ -314,29 +340,39 @@
                 return;
             }
 
-            // Save locally
-            localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
-            
-            // Save automated rules
-            const automatedRules = saveAutomatedRules();
+            try {
+                // Save to database via API
+                const response = await fetch('/api/price-automation/settings/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    // Also save locally as backup
+                    localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
+                    
+                    // Save automated rules
+                    await saveAutomatedRules();
+                    
+                    // Save strategies
+                    await saveStrategies();
 
-            // Trigger event for real-time update
-            window.dispatchEvent(new CustomEvent('settingsChanged', { detail: { settings, automatedRules } }));
+                    // Trigger event for real-time update
+                    window.dispatchEvent(new CustomEvent('settingsChanged', { detail: { settings } }));
 
-            // Send to API (optional)
-            fetch('/api/price-automation/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ settings, automatedRules })
-            })
-            .then(r => r.json())
-            .then(data => {
-                showNotification('✅ Settings and automated rules saved successfully!');
-            })
-            .catch(err => {
-                // Even if API fails, already saved locally
-                showNotification('✅ Settings and automated rules saved locally!');
-            });
+                    showNotification('✅ Settings saved to database!');
+                } else {
+                    throw new Error(result.error || 'Failed to save settings');
+                }
+            } catch (err) {
+                console.error('Error saving settings:', err);
+                // Fallback to localStorage
+                localStorage.setItem('priceAutomationSettings', JSON.stringify(settings));
+                showNotification('⚠️ Saved locally only (database error)');
+            }
         }
 
         function showNotification(message) {
@@ -1108,8 +1144,8 @@
         
         // Removed old loadAutomatedRules - now loading happens per day when chip is clicked
         
-        function saveAutomatedRules() {
-            // Load existing rules
+        async function saveAutomatedRules() {
+            // Load existing rules from localStorage as base
             const saved = localStorage.getItem('automatedPriceRules');
             let rules = saved ? JSON.parse(saved) : {};
             
@@ -1120,8 +1156,10 @@
                 
                 grupos.forEach(grupo => {
                     const currentDay = getCurrentSelectedDay(location, grupo);
-                    if (currentDay) {
-                        // Save configuration for the currently selected day
+                    const currentMonth = getCurrentSelectedMonth(location, grupo);
+                    
+                    if (currentDay && currentMonth) {
+                        // Save configuration for the currently selected month and day
                         const strategy = document.getElementById(`strategy_${location}_${grupo}`)?.value;
                         if (strategy) {
                             // Get selected suppliers
@@ -1129,12 +1167,14 @@
                             const checkboxes = document.querySelectorAll(`input[type="checkbox"][data-location="${location}"][data-grupo="${grupo}"]:checked`);
                             checkboxes.forEach(cb => selectedSuppliers.push(cb.value));
                             
-                            // Initialize group if not exists
-                            if (!rules[location][grupo]) rules[location][grupo] = { days: {} };
-                            if (!rules[location][grupo].days) rules[location][grupo].days = {};
+                            // Initialize structure if not exists
+                            if (!rules[location][grupo]) rules[location][grupo] = { months: {} };
+                            if (!rules[location][grupo].months) rules[location][grupo].months = {};
+                            if (!rules[location][grupo].months[currentMonth.number]) rules[location][grupo].months[currentMonth.number] = { days: {} };
+                            if (!rules[location][grupo].months[currentMonth.number].days) rules[location][grupo].months[currentMonth.number].days = {};
                             
-                            // Save configuration for this specific day
-                            rules[location][grupo].days[currentDay] = {
+                            // Save configuration for this specific month and day
+                            rules[location][grupo].months[currentMonth.number].days[currentDay] = {
                                 strategy: strategy,
                                 diffType: document.getElementById(`diffType_${location}_${grupo}`)?.value,
                                 diffValue: parseFloat(document.getElementById(`diffValue_${location}_${grupo}`)?.value) || 0,
@@ -1151,9 +1191,79 @@
                 });
             });
             
-            localStorage.setItem('automatedPriceRules', JSON.stringify(rules));
-            console.log('Automated rules saved:', rules);
+            try {
+                // Save to database via API
+                const response = await fetch('/api/price-automation/rules/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(rules)
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    // Also save to localStorage as backup
+                    localStorage.setItem('automatedPriceRules', JSON.stringify(rules));
+                    console.log('✅ Automated rules saved to database:', rules);
+                } else {
+                    throw new Error(result.error || 'Failed to save rules');
+                }
+            } catch (err) {
+                console.error('Error saving rules to database:', err);
+                // Fallback to localStorage only
+                localStorage.setItem('automatedPriceRules', JSON.stringify(rules));
+                console.log('⚠️ Automated rules saved to localStorage only (fallback)');
+            }
+            
             return rules;
+        }
+        
+        async function saveStrategies() {
+            try {
+                // Save strategies to database via API
+                const response = await fetch('/api/price-automation/strategies/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(strategiesData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.ok) {
+                    console.log('✅ Strategies saved to database');
+                } else {
+                    throw new Error(result.error || 'Failed to save strategies');
+                }
+            } catch (err) {
+                console.error('Error saving strategies to database:', err);
+            }
+        }
+        
+        async function loadStrategies() {
+            try {
+                // Load strategies from database
+                const response = await fetch('/api/price-automation/strategies/load');
+                const result = await response.json();
+                
+                if (result.ok && result.strategies) {
+                    strategiesData = result.strategies;
+                    console.log('✅ Strategies loaded from database');
+                    
+                    // Render strategies for all groups
+                    const locations = ['Albufeira', 'Aeroporto de Faro'];
+                    locations.forEach(location => {
+                        grupos.forEach(grupo => {
+                            const currentDay = getCurrentSelectedDay(location, grupo);
+                            const currentMonth = getCurrentSelectedMonth(location, grupo);
+                            if (currentDay && currentMonth) {
+                                renderStrategiesList(location, grupo, currentMonth.number, currentDay);
+                            }
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading strategies from database:', err);
+            }
         }
         
         // ===== EXPORT / IMPORT SETTINGS =====
