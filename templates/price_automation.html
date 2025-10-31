@@ -1385,6 +1385,9 @@
                 
                 if (!pickupDate) {
                     showNotification('Please select a pickup date first', 'warning');
+                    loadingIcon.classList.add('hidden');
+                    generateIcon.classList.remove('hidden');
+                    btn.disabled = false;
                     return;
                 }
                 
