@@ -4276,39 +4276,59 @@ def parse_prices(html: str, base_url: str) -> List[Dict[str, Any]]:
             # photo: pick an image that is not a provider logo
             photo = ""
             try:
-                # prefer <picture> sources
-                picture_src = None
-                for src_el in card.select("picture source[srcset], img[srcset], picture source[data-srcset], img[data-srcset]"):
-                    sset = (src_el.get("srcset") or src_el.get("data-srcset") or "").strip()
-                    if sset:
-                        # pick the first candidate (split by comma for multiple entries, then URL before whitespace)
-                        first_entry = sset.split(',')[0].strip()
-                        picture_src = first_entry.split()[0]
-                        if picture_src:
-                            break
-                imgs = card.select("img")
-                for im in imgs:
-                    src = picture_src or (
-                        im.get("src") or im.get("data-src") or im.get("data-original") or im.get("data-lazy") or im.get("data-lazy-src") or ""
-                    ).strip()
-                    if not src:
-                        continue
-                    # skip logos and icons
-                    if re.search(r"logo_", src, re.I):
-                        continue
-                    if src.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')):
-                        # make absolute if needed
+                # PRIORIDADE 1: img.cl--car-img (CarJet específico)
+                car_img = card.select_one("img.cl--car-img")
+                if car_img:
+                    src = (car_img.get("src") or car_img.get("data-src") or car_img.get("data-original") or "").strip()
+                    if src:
                         try:
                             from urllib.parse import urljoin
                             photo = urljoin(base_url, src)
                         except Exception:
                             photo = src
-                        # use alt/title as car_name fallback
+                        # Extrair nome limpo do alt
                         if not car_name:
-                            alt_t = (im.get("alt") or im.get("title") or "").strip()
-                            if alt_t:
-                                car_name = alt_t
-                        break
+                            alt_text = (car_img.get("alt") or "").strip()
+                            if alt_text:
+                                # "Toyota Aygo ou similar | Pequeno" -> "Toyota Aygo"
+                                car_name = alt_text.split('ou similar')[0].split('|')[0].strip()
+                
+                # PRIORIDADE 2: prefer <picture> sources
+                if not photo:
+                    picture_src = None
+                    for src_el in card.select("picture source[srcset], img[srcset], picture source[data-srcset], img[data-srcset]"):
+                        sset = (src_el.get("srcset") or src_el.get("data-srcset") or "").strip()
+                        if sset:
+                            # pick the first candidate (split by comma for multiple entries, then URL before whitespace)
+                            first_entry = sset.split(',')[0].strip()
+                            picture_src = first_entry.split()[0]
+                            if picture_src:
+                                break
+                    
+                    # PRIORIDADE 3: Outras imagens
+                    imgs = card.select("img")
+                    for im in imgs:
+                        src = picture_src or (
+                            im.get("src") or im.get("data-src") or im.get("data-original") or im.get("data-lazy") or im.get("data-lazy-src") or ""
+                        ).strip()
+                        if not src:
+                            continue
+                        # skip logos and icons
+                        if re.search(r"logo_", src, re.I):
+                            continue
+                        if src.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')):
+                            # make absolute if needed
+                            try:
+                                from urllib.parse import urljoin
+                                photo = urljoin(base_url, src)
+                            except Exception:
+                                photo = src
+                            # use alt/title as car_name fallback
+                            if not car_name:
+                                alt_t = (im.get("alt") or im.get("title") or "").strip()
+                                if alt_t:
+                                    car_name = alt_t
+                            break
                 # Also check inline background-image on card and descendants
                 if not photo:
                     style_el = card.get("style") or ""
